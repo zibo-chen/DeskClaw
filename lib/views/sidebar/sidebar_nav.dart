@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:deskclaw/constants.dart';
+import 'package:deskclaw/l10n/app_localizations.dart';
 import 'package:deskclaw/providers/providers.dart';
 import 'package:deskclaw/theme/app_theme.dart';
 
@@ -11,6 +12,7 @@ class SidebarNav extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentNav = ref.watch(currentNavProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       width: AppConstants.sidebarWidth,
@@ -36,13 +38,13 @@ class SidebarNav extends ConsumerWidget {
                 children: [
                   _buildNavSection(
                     icon: Icons.chat_bubble_outline,
-                    title: 'Chat',
+                    title: l10n.navSectionChat,
                     isExpanded: true,
                     children: [
                       _buildNavItem(
                         ref: ref,
                         icon: Icons.circle_outlined,
-                        label: 'Chat',
+                        label: l10n.navChat,
                         section: NavSection.chat,
                         isActive: currentNav == NavSection.chat,
                       ),
@@ -53,27 +55,27 @@ class SidebarNav extends ConsumerWidget {
                   // Control section
                   _buildNavSection(
                     icon: Icons.wifi_tethering,
-                    title: 'Control',
+                    title: l10n.navSectionControl,
                     isExpanded: true,
                     children: [
                       _buildNavItem(
                         ref: ref,
                         icon: Icons.wifi,
-                        label: 'Channels',
+                        label: l10n.navChannels,
                         section: NavSection.channels,
                         isActive: currentNav == NavSection.channels,
                       ),
                       _buildNavItem(
                         ref: ref,
                         icon: Icons.people_outline,
-                        label: 'Sessions',
+                        label: l10n.navSessions,
                         section: NavSection.sessions,
                         isActive: currentNav == NavSection.sessions,
                       ),
                       _buildNavItem(
                         ref: ref,
                         icon: Icons.schedule,
-                        label: 'Cron Jobs',
+                        label: l10n.navCronJobs,
                         section: NavSection.cronJobs,
                         isActive: currentNav == NavSection.cronJobs,
                       ),
@@ -84,34 +86,34 @@ class SidebarNav extends ConsumerWidget {
                   // Agent section
                   _buildNavSection(
                     icon: Icons.auto_awesome,
-                    title: 'Agent',
+                    title: l10n.navSectionAgent,
                     isExpanded: true,
                     children: [
                       _buildNavItem(
                         ref: ref,
                         icon: Icons.business,
-                        label: 'Workspace',
+                        label: l10n.navWorkspace,
                         section: NavSection.workspace,
                         isActive: currentNav == NavSection.workspace,
                       ),
                       _buildNavItem(
                         ref: ref,
                         icon: Icons.psychology,
-                        label: 'Skills',
+                        label: l10n.navSkills,
                         section: NavSection.skills,
                         isActive: currentNav == NavSection.skills,
                       ),
                       _buildNavItem(
                         ref: ref,
                         icon: Icons.extension,
-                        label: 'MCP',
+                        label: l10n.navMcp,
                         section: NavSection.mcp,
                         isActive: currentNav == NavSection.mcp,
                       ),
                       _buildNavItem(
                         ref: ref,
                         icon: Icons.settings,
-                        label: 'Configuration',
+                        label: l10n.navConfiguration,
                         section: NavSection.configuration,
                         isActive: currentNav == NavSection.configuration,
                       ),
@@ -122,20 +124,20 @@ class SidebarNav extends ConsumerWidget {
                   // Settings section
                   _buildNavSection(
                     icon: Icons.settings_outlined,
-                    title: 'Settings',
+                    title: l10n.navSectionSettings,
                     isExpanded: true,
                     children: [
                       _buildNavItem(
                         ref: ref,
                         icon: Icons.model_training,
-                        label: 'Models',
+                        label: l10n.navModels,
                         section: NavSection.models,
                         isActive: currentNav == NavSection.models,
                       ),
                       _buildNavItem(
                         ref: ref,
                         icon: Icons.language,
-                        label: 'Environments',
+                        label: l10n.navEnvironments,
                         section: NavSection.environments,
                         isActive: currentNav == NavSection.environments,
                       ),
@@ -146,8 +148,8 @@ class SidebarNav extends ConsumerWidget {
             ),
           ),
 
-          // Theme toggle at bottom
-          _buildThemeToggle(ref),
+          // Bottom bar: language toggle + theme toggle
+          _buildBottomBar(ref, l10n),
         ],
       ),
     );
@@ -281,8 +283,9 @@ class SidebarNav extends ConsumerWidget {
     );
   }
 
-  Widget _buildThemeToggle(WidgetRef ref) {
-    final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
+  Widget _buildBottomBar(WidgetRef ref, AppLocalizations l10n) {
+    final locale = ref.watch(localeProvider);
+    final isZh = locale.languageCode == 'zh';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: const BoxDecoration(
@@ -290,30 +293,93 @@ class SidebarNav extends ConsumerWidget {
           top: BorderSide(color: AppColors.chatListBorder, width: 1),
         ),
       ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: () {
-          ref.read(themeModeProvider.notifier).state = isDark
-              ? ThemeMode.light
-              : ThemeMode.dark;
-        },
-        child: Row(
-          children: [
-            Icon(
-              isDark ? Icons.dark_mode : Icons.light_mode,
-              size: 18,
-              color: AppColors.sidebarText,
-            ),
-            const SizedBox(width: 10),
-            Text(
-              isDark ? 'Dark Mode' : 'Light Mode',
-              style: const TextStyle(
-                fontSize: 13,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Language toggle
+          Row(
+            children: [
+              const Icon(
+                Icons.language,
+                size: 16,
                 color: AppColors.sidebarText,
               ),
-            ),
-          ],
+              const SizedBox(width: 8),
+              _buildLangChip(
+                label: 'EN',
+                selected: !isZh,
+                onTap: () {
+                  ref.read(localeProvider.notifier).state = const Locale('en');
+                },
+              ),
+              const SizedBox(width: 4),
+              _buildLangChip(
+                label: '中文',
+                selected: isZh,
+                onTap: () {
+                  ref.read(localeProvider.notifier).state = const Locale('zh');
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Theme toggle
+          _buildThemeToggle(ref),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLangChip({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(6),
+          color: selected ? AppColors.primary : Colors.transparent,
+          border: Border.all(
+            color: selected ? AppColors.primary : AppColors.chatListBorder,
+          ),
         ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: selected ? Colors.white : AppColors.sidebarText,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildThemeToggle(WidgetRef ref) {
+    final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: () {
+        ref.read(themeModeProvider.notifier).state = isDark
+            ? ThemeMode.light
+            : ThemeMode.dark;
+      },
+      child: Row(
+        children: [
+          Icon(
+            isDark ? Icons.dark_mode : Icons.light_mode,
+            size: 18,
+            color: AppColors.sidebarText,
+          ),
+          const SizedBox(width: 10),
+          Text(
+            isDark ? 'Dark Mode' : 'Light Mode',
+            style: const TextStyle(fontSize: 13, color: AppColors.sidebarText),
+          ),
+        ],
       ),
     );
   }

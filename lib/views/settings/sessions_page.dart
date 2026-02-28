@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:deskclaw/l10n/app_localizations.dart';
 import 'package:deskclaw/theme/app_theme.dart';
 import 'package:deskclaw/src/rust/api/sessions_api.dart' as sessions_api;
 
@@ -184,9 +185,9 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
         children: [
           const Icon(Icons.history, color: AppColors.primary, size: 22),
           const SizedBox(width: 12),
-          const Text(
-            'Sessions',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context)!.pageSessions,
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,

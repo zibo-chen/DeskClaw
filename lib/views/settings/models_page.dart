@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:deskclaw/l10n/app_localizations.dart';
 import 'package:deskclaw/theme/app_theme.dart';
 import 'package:deskclaw/src/rust/api/config_api.dart' as config_api;
 import 'package:deskclaw/src/rust/api/agent_api.dart' as agent_api;
@@ -107,7 +108,7 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
     }
 
     return _SettingsPageScaffold(
-      title: 'Models',
+      title: AppLocalizations.of(context)!.pageModels,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

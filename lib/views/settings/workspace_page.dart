@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:deskclaw/l10n/app_localizations.dart';
 import 'package:deskclaw/theme/app_theme.dart';
 import 'package:deskclaw/src/rust/api/workspace_api.dart' as ws_api;
 
@@ -64,13 +65,13 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
           bottom: BorderSide(color: AppColors.chatListBorder, width: 1),
         ),
       ),
-      child: const Row(
+      child: Row(
         children: [
           Icon(Icons.business, size: 20, color: AppColors.primary),
           SizedBox(width: 10),
           Text(
-            'Workspace',
-            style: TextStyle(
+            AppLocalizations.of(context)!.pageWorkspace,
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,

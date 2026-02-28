@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:deskclaw/constants.dart';
+import 'package:deskclaw/l10n/app_localizations.dart';
 import 'package:deskclaw/providers/providers.dart';
 import 'package:deskclaw/theme/app_theme.dart';
 
@@ -38,6 +39,7 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
   @override
   Widget build(BuildContext context) {
     final isProcessing = ref.watch(isProcessingProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(40, 8, 40, 12),
@@ -83,8 +85,8 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
                       enabled: !isProcessing,
                       decoration: InputDecoration(
                         hintText: isProcessing
-                            ? 'Processing...'
-                            : 'Type your message...',
+                            ? l10n.processing
+                            : l10n.typeYourMessage,
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
                         focusedBorder: InputBorder.none,
@@ -127,7 +129,7 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
                         onPressed: () {
                           setState(() => _isExpanded = !_isExpanded);
                         },
-                        tooltip: _isExpanded ? 'Collapse' : 'Expand',
+                        tooltip: _isExpanded ? l10n.collapse : l10n.expand,
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(
                           minWidth: 32,
@@ -180,9 +182,9 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
           ),
           const SizedBox(height: 8),
           // Tagline
-          const Text(
-            AppConstants.appTagline,
-            style: TextStyle(fontSize: 12, color: AppColors.textHint),
+          Text(
+            l10n.appTagline,
+            style: const TextStyle(fontSize: 12, color: AppColors.textHint),
           ),
         ],
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:deskclaw/constants.dart';
+import 'package:deskclaw/l10n/app_localizations.dart';
 import 'package:deskclaw/providers/providers.dart';
 import 'package:deskclaw/theme/app_theme.dart';
 import 'package:deskclaw/src/rust/api/agent_api.dart' as agent_api;
@@ -13,6 +14,7 @@ class ChatListPanel extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final sessions = ref.watch(sessionsProvider);
     final activeId = ref.watch(activeSessionIdProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       width: AppConstants.chatListWidth,
@@ -30,9 +32,9 @@ class ChatListPanel extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(20, 20, 12, 12),
             child: Row(
               children: [
-                const Text(
-                  'Work with DeskClaw',
-                  style: TextStyle(
+                Text(
+                  l10n.workWithDeskClaw,
+                  style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
@@ -43,7 +45,7 @@ class ChatListPanel extends ConsumerWidget {
                   icon: const Icon(Icons.copy_all, size: 18),
                   color: AppColors.textHint,
                   onPressed: () {},
-                  tooltip: 'Copy',
+                  tooltip: l10n.tooltipCopy,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(
                     minWidth: 32,
@@ -68,9 +70,9 @@ class ChatListPanel extends ConsumerWidget {
                   ref.read(messagesProvider.notifier).clear();
                 },
                 icon: const Icon(Icons.add, size: 18),
-                label: const Text(
-                  'New Chat',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                label: Text(
+                  l10n.newChat,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
@@ -88,7 +90,7 @@ class ChatListPanel extends ConsumerWidget {
           // Session list
           Expanded(
             child: sessions.isEmpty
-                ? _buildEmptyState()
+                ? _buildEmptyState(l10n)
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     itemCount: sessions.length,
@@ -125,21 +127,25 @@ class ChatListPanel extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState() {
-    return const Center(
+  Widget _buildEmptyState(AppLocalizations l10n) {
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.chat_bubble_outline, size: 40, color: AppColors.textHint),
-          SizedBox(height: 12),
-          Text(
-            'No conversations yet',
-            style: TextStyle(color: AppColors.textHint, fontSize: 13),
+          const Icon(
+            Icons.chat_bubble_outline,
+            size: 40,
+            color: AppColors.textHint,
           ),
-          SizedBox(height: 4),
+          const SizedBox(height: 12),
           Text(
-            'Start a new chat',
-            style: TextStyle(color: AppColors.textHint, fontSize: 12),
+            l10n.noConversationsYet,
+            style: const TextStyle(color: AppColors.textHint, fontSize: 13),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            l10n.startNewChat,
+            style: const TextStyle(color: AppColors.textHint, fontSize: 12),
           ),
         ],
       ),

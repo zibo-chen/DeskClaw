@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:deskclaw/l10n/app_localizations.dart';
 import 'package:deskclaw/theme/app_theme.dart';
 import 'package:deskclaw/src/rust/api/workspace_api.dart' as ws_api;
 
@@ -96,9 +97,9 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
         children: [
           const Icon(Icons.extension, size: 20, color: AppColors.primary),
           const SizedBox(width: 10),
-          const Text(
-            'Tools & MCP',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context)!.pageTools,
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:deskclaw/l10n/app_localizations.dart';
 import 'package:deskclaw/theme/app_theme.dart';
 import 'package:deskclaw/src/rust/api/cron_api.dart' as cron_api;
 
@@ -165,9 +166,9 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
         children: [
           const Icon(Icons.schedule, color: AppColors.primary, size: 22),
           const SizedBox(width: 12),
-          const Text(
-            'Cron Jobs',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context)!.pageCronJobs,
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,

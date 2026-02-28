@@ -1,0 +1,60 @@
+{
+  "@@locale": "zh",
+
+  "appTitle": "DeskClaw",
+  "appTagline": "为你而工作，与你共成长",
+
+  "navSectionChat": "聊天",
+  "navSectionControl": "控制",
+  "navSectionAgent": "代理",
+  "navSectionSettings": "设置",
+
+  "navChat": "聊天",
+  "navChannels": "频道",
+  "navSessions": "会话",
+  "navCronJobs": "定时任务",
+  "navWorkspace": "工作区",
+  "navSkills": "技能",
+  "navMcp": "MCP",
+  "navConfiguration": "配置",
+  "navModels": "模型",
+  "navEnvironments": "环境",
+
+  "workWithDeskClaw": "与 DeskClaw 一起工作",
+  "newChat": "新对话",
+  "noConversationsYet": "暂无对话",
+  "startNewChat": "开始新对话",
+
+  "welcomeTitle": "你好，今天我能帮你什么？",
+  "welcomeSubtitle": "我是一个智能助手，可以帮助你解答各种问题。",
+
+  "suggestionWhatCanYouDo": "你能做什么？",
+  "suggestionWriteArticle": "帮我写一篇关于人工智能的文章。",
+
+  "thinking": "💭 思考中...",
+
+  "errorOccurred": "⚠️ **错误：** {message}\n\n请检查你的 API 密钥和供应商设置。",
+  "errorGeneric": "⚠️ **错误：** {message}\n\n请检查你的设置后重试。",
+
+  "chatTitle": "聊天",
+  "processing": "处理中...",
+  "typeYourMessage": "输入消息…",
+  "collapse": "收起",
+  "expand": "展开",
+
+  "pageChannels": "频道",
+  "pageConfiguration": "配置",
+  "pageCronJobs": "定时任务",
+  "pageModels": "模型",
+  "pageSessions": "会话",
+  "pageSkills": "技能",
+  "pageTools": "工具与 MCP",
+  "pageWorkspace": "工作区",
+
+  "languageLabel": "语言",
+  "switchToEnglish": "English",
+  "switchToChinese": "中文",
+
+  "tooltipCopy": "复制",
+  "tooltipRefresh": "刷新"
+}

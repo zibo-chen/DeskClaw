@@ -1,0 +1,148 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "DeskClaw",
+  "@appTitle": { "description": "The application title" },
+
+  "appTagline": "Works for you, grows with you",
+  "@appTagline": { "description": "App tagline shown below input bar" },
+
+  "navSectionChat": "Chat",
+  "@navSectionChat": { "description": "Chat section label in sidebar" },
+
+  "navSectionControl": "Control",
+  "@navSectionControl": { "description": "Control section label in sidebar" },
+
+  "navSectionAgent": "Agent",
+  "@navSectionAgent": { "description": "Agent section label in sidebar" },
+
+  "navSectionSettings": "Settings",
+  "@navSectionSettings": { "description": "Settings section label in sidebar" },
+
+  "navChat": "Chat",
+  "@navChat": { "description": "Chat nav item" },
+
+  "navChannels": "Channels",
+  "@navChannels": { "description": "Channels nav item" },
+
+  "navSessions": "Sessions",
+  "@navSessions": { "description": "Sessions nav item" },
+
+  "navCronJobs": "Cron Jobs",
+  "@navCronJobs": { "description": "Cron Jobs nav item" },
+
+  "navWorkspace": "Workspace",
+  "@navWorkspace": { "description": "Workspace nav item" },
+
+  "navSkills": "Skills",
+  "@navSkills": { "description": "Skills nav item" },
+
+  "navMcp": "MCP",
+  "@navMcp": { "description": "MCP nav item" },
+
+  "navConfiguration": "Configuration",
+  "@navConfiguration": { "description": "Configuration nav item" },
+
+  "navModels": "Models",
+  "@navModels": { "description": "Models nav item" },
+
+  "navEnvironments": "Environments",
+  "@navEnvironments": { "description": "Environments nav item" },
+
+  "workWithDeskClaw": "Work with DeskClaw",
+  "@workWithDeskClaw": { "description": "Chat list panel header" },
+
+  "newChat": "New Chat",
+  "@newChat": { "description": "New chat button label" },
+
+  "noConversationsYet": "No conversations yet",
+  "@noConversationsYet": { "description": "Chat list empty state title" },
+
+  "startNewChat": "Start a new chat",
+  "@startNewChat": { "description": "Chat list empty state subtitle" },
+
+  "welcomeTitle": "Hello, how can I help you today?",
+  "@welcomeTitle": { "description": "Welcome view title" },
+
+  "welcomeSubtitle": "I am a helpful assistant that can help you with your questions.",
+  "@welcomeSubtitle": { "description": "Welcome view subtitle" },
+
+  "suggestionWhatCanYouDo": "What can you do?",
+  "@suggestionWhatCanYouDo": { "description": "Suggestion card 1" },
+
+  "suggestionWriteArticle": "Help me write an article about AI.",
+  "@suggestionWriteArticle": { "description": "Suggestion card 2" },
+
+  "thinking": "💭 Thinking...",
+  "@thinking": { "description": "Thinking indicator" },
+
+  "errorOccurred": "⚠️ **Error:** {message}\n\nPlease check your API key and provider settings.",
+  "@errorOccurred": {
+    "description": "Error message with detail",
+    "placeholders": {
+      "message": { "type": "String" }
+    }
+  },
+
+  "errorGeneric": "⚠️ **Error:** {message}\n\nPlease check your settings and try again.",
+  "@errorGeneric": {
+    "description": "Generic error message",
+    "placeholders": {
+      "message": { "type": "String" }
+    }
+  },
+
+  "chatTitle": "Chat",
+  "@chatTitle": { "description": "Chat view top bar title" },
+
+  "processing": "Processing...",
+  "@processing": { "description": "Input placeholder when processing" },
+
+  "typeYourMessage": "Type your message...",
+  "@typeYourMessage": { "description": "Input placeholder" },
+
+  "collapse": "Collapse",
+  "@collapse": { "description": "Collapse button tooltip" },
+
+  "expand": "Expand",
+  "@expand": { "description": "Expand button tooltip" },
+
+  "pageChannels": "Channels",
+  "@pageChannels": { "description": "Channels page title" },
+
+  "pageConfiguration": "Configuration",
+  "@pageConfiguration": { "description": "Configuration page title" },
+
+  "pageCronJobs": "Cron Jobs",
+  "@pageCronJobs": { "description": "Cron Jobs page title" },
+
+  "pageModels": "Models",
+  "@pageModels": { "description": "Models page title" },
+
+  "pageSessions": "Sessions",
+  "@pageSessions": { "description": "Sessions page title" },
+
+  "pageSkills": "Skills",
+  "@pageSkills": { "description": "Skills page title" },
+
+  "pageTools": "Tools & MCP",
+  "@pageTools": { "description": "Tools page title" },
+
+  "pageWorkspace": "Workspace",
+  "@pageWorkspace": { "description": "Workspace page title" },
+
+  "languageLabel": "Language",
+  "@languageLabel": { "description": "Language selector label" },
+
+  "switchToEnglish": "English",
+  "@switchToEnglish": { "description": "English language option" },
+
+  "switchToChinese": "中文",
+  "@switchToChinese": { "description": "Chinese language option" },
+
+  "tooltipCopy": "Copy",
+  "@tooltipCopy": { "description": "Copy tooltip" },
+
+  "tooltipRefresh": "Refresh",
+  "@tooltipRefresh": { "description": "Refresh tooltip" }
+}

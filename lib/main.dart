@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:deskclaw/l10n/app_localizations.dart';
 import 'package:deskclaw/src/rust/frb_generated.dart';
 import 'package:deskclaw/src/rust/api/agent_api.dart' as agent_api;
 import 'package:deskclaw/src/rust/api/sessions_api.dart' as sessions_api;
@@ -28,12 +30,21 @@ class DeskClawApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
+    final locale = ref.watch(localeProvider);
     return MaterialApp(
       title: 'DeskClaw',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: themeMode,
+      locale: locale,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('en'), Locale('zh')],
       home: const AppShell(),
     );
   }

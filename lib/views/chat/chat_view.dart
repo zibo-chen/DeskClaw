@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:deskclaw/constants.dart';
+import 'package:deskclaw/l10n/app_localizations.dart';
 import 'package:deskclaw/models/models.dart';
 import 'package:deskclaw/providers/providers.dart';
 import 'package:deskclaw/theme/app_theme.dart';
@@ -107,12 +107,10 @@ class _ChatViewState extends ConsumerState<ChatView> {
         event.when(
           thinking: () {
             // Show thinking indicator
+            final l10n = AppLocalizations.of(context)!;
             ref
                 .read(messagesProvider.notifier)
-                .updateLastAssistantMessage(
-                  '💭 Thinking...',
-                  isStreaming: true,
-                );
+                .updateLastAssistantMessage(l10n.thinking, isStreaming: true);
             _scrollToBottom();
           },
           textDelta: (text) {
@@ -168,10 +166,9 @@ class _ChatViewState extends ConsumerState<ChatView> {
             // Message is complete
           },
           error: (message) {
+            final l10n = AppLocalizations.of(context)!;
             responseBuffer.clear();
-            responseBuffer.write(
-              '⚠️ **Error:** $message\n\nPlease check your API key and provider settings.',
-            );
+            responseBuffer.write(l10n.errorOccurred(message));
           },
         );
       }
@@ -186,10 +183,11 @@ class _ChatViewState extends ConsumerState<ChatView> {
           );
       ref.read(sessionsProvider.notifier).incrementMessageCount(sessionId);
     } catch (e) {
+      final l10n = AppLocalizations.of(context)!;
       ref
           .read(messagesProvider.notifier)
           .updateLastAssistantMessage(
-            '⚠️ **Error:** ${e.toString()}\n\nPlease check your settings and try again.',
+            l10n.errorGeneric(e.toString()),
             isStreaming: false,
           );
     } finally {
@@ -243,17 +241,17 @@ class _ChatViewState extends ConsumerState<ChatView> {
   Widget build(BuildContext context) {
     final messages = ref.watch(messagesProvider);
     ref.watch(activeSessionIdProvider);
-    final language = ref.watch(languageProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Column(
       children: [
         // Top bar
-        _buildTopBar(language),
+        _buildTopBar(l10n),
 
         // Main content
         Expanded(
           child: messages.isEmpty
-              ? _buildWelcomeView()
+              ? _buildWelcomeView(l10n)
               : _buildMessageList(messages),
         ),
 
@@ -263,7 +261,7 @@ class _ChatViewState extends ConsumerState<ChatView> {
     );
   }
 
-  Widget _buildTopBar(String language) {
+  Widget _buildTopBar(AppLocalizations l10n) {
     return Container(
       height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -275,36 +273,12 @@ class _ChatViewState extends ConsumerState<ChatView> {
       ),
       child: Row(
         children: [
-          const Text(
-            'Chat',
-            style: TextStyle(
+          Text(
+            l10n.chatTitle,
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
-            ),
-          ),
-          const Spacer(),
-          // Language selector
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.chatListBorder),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.language, size: 16, color: AppColors.primary),
-                const SizedBox(width: 6),
-                Text(
-                  language,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
             ),
           ),
         ],
@@ -312,7 +286,7 @@ class _ChatViewState extends ConsumerState<ChatView> {
     );
   }
 
-  Widget _buildWelcomeView() {
+  Widget _buildWelcomeView(AppLocalizations l10n) {
     return Center(
       child: SingleChildScrollView(
         child: Column(
@@ -323,25 +297,27 @@ class _ChatViewState extends ConsumerState<ChatView> {
             const SizedBox(height: 20),
 
             // Welcome text
-            const Text(
-              AppConstants.welcomeTitle,
-              style: TextStyle(
+            Text(
+              l10n.welcomeTitle,
+              style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              AppConstants.welcomeSubtitle,
-              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+            Text(
+              l10n.welcomeSubtitle,
+              style: const TextStyle(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+              ),
             ),
             const SizedBox(height: 32),
 
             // Suggestion cards
-            ...AppConstants.defaultSuggestions.map(
-              (suggestion) => _buildSuggestionCard(suggestion),
-            ),
+            _buildSuggestionCard(l10n.suggestionWhatCanYouDo),
+            _buildSuggestionCard(l10n.suggestionWriteArticle),
           ],
         ),
       ),

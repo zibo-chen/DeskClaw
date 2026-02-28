@@ -124,8 +124,8 @@ class MessagesNotifier extends StateNotifier<List<ChatMessage>> {
 /// Whether the agent is currently processing
 final isProcessingProvider = StateProvider<bool>((ref) => false);
 
-/// Language setting
-final languageProvider = StateProvider<String>((ref) => 'English');
+/// Language / Locale setting
+final localeProvider = StateProvider<Locale>((ref) => const Locale('en'));
 
 /// Theme mode
 final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.light);
