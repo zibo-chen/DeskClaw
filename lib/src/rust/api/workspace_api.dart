@@ -6,7 +6,9 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
+// These functions are ignored because they are not marked as `pub`: `json_str_array`, `json_value_to_toml`, `save_channel_config_to_disk`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ChannelConfigField`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 /// Get workspace configuration
 Future<WorkspaceConfig> getWorkspaceConfig() =>
@@ -81,6 +83,30 @@ Future<String> updateFeatureToggle({
   required bool enabled,
 }) => RustLib.instance.api.crateApiWorkspaceApiUpdateFeatureToggle(
   feature: feature,
+  enabled: enabled,
+);
+
+/// Get channel configuration fields (returns JSON string for flexibility)
+Future<String> getChannelConfig({required String channelType}) => RustLib
+    .instance
+    .api
+    .crateApiWorkspaceApiGetChannelConfig(channelType: channelType);
+
+/// Save channel configuration from JSON string
+Future<String> saveChannelConfig({
+  required String channelType,
+  required String configJson,
+}) => RustLib.instance.api.crateApiWorkspaceApiSaveChannelConfig(
+  channelType: channelType,
+  configJson: configJson,
+);
+
+/// Toggle a channel on/off. If disabling, removes config. If enabling, needs save_channel_config.
+Future<String> toggleChannel({
+  required String channelType,
+  required bool enabled,
+}) => RustLib.instance.api.crateApiWorkspaceApiToggleChannel(
+  channelType: channelType,
   enabled: enabled,
 );
 

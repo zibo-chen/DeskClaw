@@ -19,6 +19,7 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
   bool _loading = true;
   String? _message;
   String _searchQuery = '';
+  DeskClawColors get c => DeskClawColors.of(context);
 
   @override
   void initState() {
@@ -175,11 +176,9 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
     return Container(
       height: 64,
       padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: AppColors.chatListBorder, width: 1),
-        ),
+      decoration: BoxDecoration(
+        color: c.surfaceBg,
+        border: Border(bottom: BorderSide(color: c.chatListBorder, width: 1)),
       ),
       child: Row(
         children: [
@@ -187,10 +186,10 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
           const SizedBox(width: 12),
           Text(
             AppLocalizations.of(context)!.pageSessions,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+              color: c.textPrimary,
             ),
           ),
           const SizedBox(width: 16),
@@ -271,21 +270,21 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
           Icon(
             Icons.chat_bubble_outline,
             size: 64,
-            color: AppColors.textHint.withValues(alpha: 0.5),
+            color: c.textHint.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             '暂无已保存的会话',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w500,
-              color: AppColors.textSecondary,
+              color: c.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             '在聊天中发送消息后，会话将自动保存到此处',
-            style: TextStyle(fontSize: 14, color: AppColors.textHint),
+            style: TextStyle(fontSize: 14, color: c.textHint),
           ),
         ],
       ),
@@ -302,11 +301,7 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
           child: TextField(
             decoration: InputDecoration(
               hintText: '搜索会话...',
-              prefixIcon: const Icon(
-                Icons.search,
-                size: 20,
-                color: AppColors.textHint,
-              ),
+              prefixIcon: Icon(Icons.search, size: 20, color: c.textHint),
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 12,
@@ -314,7 +309,7 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: AppColors.inputBorder),
+                borderSide: BorderSide(color: c.inputBorder),
               ),
             ),
             onChanged: (v) => setState(() => _searchQuery = v),
@@ -339,7 +334,7 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 2),
       decoration: BoxDecoration(
-        color: isSelected ? AppColors.sidebarActiveBg : Colors.transparent,
+        color: isSelected ? c.sidebarActiveBg : Colors.transparent,
         borderRadius: BorderRadius.circular(10),
       ),
       child: ListTile(
@@ -354,7 +349,7 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
           style: TextStyle(
             fontSize: 14,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-            color: isSelected ? AppColors.primary : AppColors.textPrimary,
+            color: isSelected ? AppColors.primary : c.textPrimary,
           ),
         ),
         subtitle: Column(
@@ -367,10 +362,7 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
                   session.lastMessagePreview,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textHint,
-                  ),
+                  style: TextStyle(fontSize: 12, color: c.textHint),
                 ),
               ),
             Padding(
@@ -379,10 +371,7 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
                 children: [
                   Text(
                     dateStr,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: AppColors.textHint,
-                    ),
+                    style: TextStyle(fontSize: 11, color: c.textHint),
                   ),
                   const SizedBox(width: 8),
                   Container(
@@ -408,11 +397,7 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
           ],
         ),
         trailing: PopupMenuButton<String>(
-          icon: const Icon(
-            Icons.more_vert,
-            size: 18,
-            color: AppColors.textHint,
-          ),
+          icon: Icon(Icons.more_vert, size: 18, color: c.textHint),
           onSelected: (action) {
             if (action == 'rename') {
               _renameSession(session.id, session.title);
@@ -456,12 +441,12 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
             Icon(
               Icons.touch_app_outlined,
               size: 48,
-              color: AppColors.textHint.withValues(alpha: 0.4),
+              color: c.textHint.withValues(alpha: 0.4),
             ),
             const SizedBox(height: 12),
-            const Text(
+            Text(
               '选择一个会话查看详情',
-              style: TextStyle(color: AppColors.textHint, fontSize: 14),
+              style: TextStyle(color: c.textHint, fontSize: 14),
             ),
           ],
         ),
@@ -474,10 +459,10 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
         // Detail header
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          decoration: const BoxDecoration(
-            color: Colors.white,
+          decoration: BoxDecoration(
+            color: c.surfaceBg,
             border: Border(
-              bottom: BorderSide(color: AppColors.chatListBorder, width: 1),
+              bottom: BorderSide(color: c.chatListBorder, width: 1),
             ),
           ),
           child: Row(
@@ -488,19 +473,16 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
                   children: [
                     Text(
                       detail.title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+                        color: c.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       '${detail.messageCount} 条消息 · 创建于 ${_formatDate(DateTime.fromMillisecondsSinceEpoch(detail.createdAt * 1000))}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textHint,
-                      ),
+                      style: TextStyle(fontSize: 12, color: c.textHint),
                     ),
                   ],
                 ),
@@ -577,10 +559,7 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
                     const SizedBox(width: 8),
                     Text(
                       timeStr,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: AppColors.textHint,
-                      ),
+                      style: TextStyle(fontSize: 11, color: c.textHint),
                     ),
                   ],
                 ),
@@ -590,17 +569,17 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
                   decoration: BoxDecoration(
                     color: isUser
                         ? AppColors.primary.withValues(alpha: 0.04)
-                        : AppColors.mainBg,
+                        : c.mainBg,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: AppColors.chatListBorder.withValues(alpha: 0.5),
+                      color: c.chatListBorder.withValues(alpha: 0.5),
                     ),
                   ),
                   child: SelectableText(
                     msg.content,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
-                      color: AppColors.textPrimary,
+                      color: c.textPrimary,
                       height: 1.5,
                     ),
                   ),

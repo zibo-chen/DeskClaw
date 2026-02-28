@@ -9,8 +9,8 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'agent_api.freezed.dart';
 
-// These functions are ignored because they are not marked as `pub`: `runtime_state`, `truncate_str`
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ChatMessageDto`, `RuntimeState`, `ToolCallDto`
+// These functions are ignored because they are not marked as `pub`: `agent_handle`, `config_state`, `ensure_agent`, `truncate_str`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ChatMessageDto`, `ConfigState`, `ToolCallDto`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 /// Initialize the agent runtime: load zeroclaw config from ~/.zeroclaw/config.toml.
@@ -69,8 +69,12 @@ Future<List<AgentEvent>> sendMessage({
   message: message,
 );
 
-/// Streaming version: sends agent events one-by-one through a StreamSink.
-/// This allows the Flutter UI to update in real-time as the agent processes.
+/// Streaming version: sends agent events in real-time through a StreamSink.
+///
+/// Uses zeroclaw's `Agent::turn_streaming()` which delegates to the internal
+/// `run_tool_call_loop` with an `on_delta` channel.  Tool-start / tool-end /
+/// thinking events are streamed **as they happen**, not after the full turn
+/// completes.
 Stream<AgentEvent> sendMessageStream({
   required String sessionId,
   required String message,
@@ -79,7 +83,11 @@ Stream<AgentEvent> sendMessageStream({
   message: message,
 );
 
-/// List available tools (static list of zeroclaw's built-in tools)
+/// List available tools dynamically from the agent's registered tool specs.
+/// Falls back to a minimal static list if no agent is currently initialized.
+///
+/// Note: kept as sync (#[frb(sync)]) to match the existing FRB generated binding.
+/// Uses `try_lock` to avoid blocking if agent is mid-turn.
 List<ToolSpecDto> listTools() =>
     RustLib.instance.api.crateApiAgentApiListTools();
 

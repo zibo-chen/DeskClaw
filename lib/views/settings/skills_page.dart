@@ -17,6 +17,7 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
   List<skills_api.SkillDto> _skills = [];
   bool _loading = true;
   String? _message;
+  DeskClawColors get c => DeskClawColors.of(context);
 
   @override
   void initState() {
@@ -82,11 +83,9 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
     return Container(
       height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: AppColors.chatListBorder, width: 1),
-        ),
+      decoration: BoxDecoration(
+        color: c.surfaceBg,
+        border: Border(bottom: BorderSide(color: c.chatListBorder, width: 1)),
       ),
       child: Row(
         children: [
@@ -94,10 +93,10 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
           const SizedBox(width: 10),
           Text(
             AppLocalizations.of(context)!.pageSkills,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+              color: c.textPrimary,
             ),
           ),
           const Spacer(),
@@ -147,14 +146,14 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: c.cardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.chatListBorder),
+        border: Border.all(color: c.chatListBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
               Icon(Icons.tune, size: 18, color: AppColors.primary),
               SizedBox(width: 8),
@@ -163,7 +162,7 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: c.textPrimary,
                 ),
               ),
             ],
@@ -184,9 +183,7 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
                 '社区技能',
                 '${config.communitySkillsCount}',
                 Icons.public,
-                config.openSkillsEnabled
-                    ? AppColors.success
-                    : AppColors.textHint,
+                config.openSkillsEnabled ? AppColors.success : c.textHint,
               ),
             ],
           ),
@@ -202,11 +199,11 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
           const SizedBox(height: 12),
 
           // Injection mode
-          const Text(
+          Text(
             '提示词注入模式',
             style: TextStyle(
               fontSize: 13,
-              color: AppColors.textSecondary,
+              color: c.textSecondary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -233,18 +230,14 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
             const SizedBox(height: 16),
             Row(
               children: [
-                const Icon(
-                  Icons.folder_open,
-                  size: 14,
-                  color: AppColors.textHint,
-                ),
+                Icon(Icons.folder_open, size: 14, color: c.textHint),
                 const SizedBox(width: 6),
                 Flexible(
                   child: Text(
                     config.skillsDir,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
-                      color: AppColors.textHint,
+                      color: c.textHint,
                       fontFamily: 'monospace',
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -292,40 +285,40 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: c.cardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.chatListBorder),
+        border: Border.all(color: c.chatListBorder),
       ),
       child: Column(
         children: [
           Icon(
             Icons.psychology_outlined,
             size: 48,
-            color: AppColors.textHint.withValues(alpha: 0.5),
+            color: c.textHint.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             '暂无可用技能',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
-              color: AppColors.textSecondary,
+              color: c.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             '在工作区的 skills/ 目录下创建 SKILL.toml 或 SKILL.md 文件来添加自定义技能，\n或启用社区开源技能来获取更多能力。',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13, color: AppColors.textHint),
+            style: TextStyle(fontSize: 13, color: c.textHint),
           ),
           const SizedBox(height: 20),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.inputBg,
+              color: c.inputBg,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Column(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -333,7 +326,7 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: c.textPrimary,
                   ),
                 ),
                 SizedBox(height: 8),
@@ -352,7 +345,7 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
                   style: TextStyle(
                     fontSize: 11,
                     fontFamily: 'monospace',
-                    color: AppColors.textSecondary,
+                    color: c.textSecondary,
                     height: 1.5,
                   ),
                 ),
@@ -371,10 +364,10 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
         const SizedBox(width: 8),
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: c.textPrimary,
           ),
         ),
         const SizedBox(width: 8),
@@ -404,9 +397,9 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
         width: double.infinity,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: c.cardBg,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.chatListBorder),
+          border: Border.all(color: c.chatListBorder),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -434,18 +427,18 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
                     children: [
                       Text(
                         skill.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+                          color: c.textPrimary,
                         ),
                       ),
                       if (skill.description.isNotEmpty)
                         Text(
                           skill.description,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: AppColors.textSecondary,
+                            color: c.textSecondary,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -462,7 +455,7 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
                   decoration: BoxDecoration(
                     color: skill.source == 'local'
                         ? AppColors.primary.withValues(alpha: 0.1)
-                        : Colors.green.withValues(alpha: 0.1),
+                        : AppColors.success.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
@@ -485,30 +478,20 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
               Row(
                 children: [
                   if (skill.version.isNotEmpty) ...[
-                    Icon(Icons.tag, size: 12, color: AppColors.textHint),
+                    Icon(Icons.tag, size: 12, color: c.textHint),
                     const SizedBox(width: 4),
                     Text(
                       'v${skill.version}',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: AppColors.textHint,
-                      ),
+                      style: TextStyle(fontSize: 11, color: c.textHint),
                     ),
                     const SizedBox(width: 12),
                   ],
                   if (skill.author.isNotEmpty) ...[
-                    Icon(
-                      Icons.person_outline,
-                      size: 12,
-                      color: AppColors.textHint,
-                    ),
+                    Icon(Icons.person_outline, size: 12, color: c.textHint),
                     const SizedBox(width: 4),
                     Text(
                       skill.author,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: AppColors.textHint,
-                      ),
+                      style: TextStyle(fontSize: 11, color: c.textHint),
                     ),
                   ],
                 ],
@@ -528,15 +511,12 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
                       vertical: 3,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.inputBg,
+                      color: c.inputBg,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
                       tag,
-                      style: const TextStyle(
-                        fontSize: 10,
-                        color: AppColors.textSecondary,
-                      ),
+                      style: TextStyle(fontSize: 10, color: c.textSecondary),
                     ),
                   );
                 }).toList(),
@@ -546,12 +526,12 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
             // Tools
             if (skill.tools.isNotEmpty) ...[
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 '自带工具',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
+                  color: c.textSecondary,
                 ),
               ),
               const SizedBox(height: 6),
@@ -564,21 +544,18 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
                       const SizedBox(width: 8),
                       Text(
                         tool.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                           fontFamily: 'monospace',
-                          color: AppColors.textPrimary,
+                          color: c.textPrimary,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           tool.description,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: AppColors.textHint,
-                          ),
+                          style: TextStyle(fontSize: 11, color: c.textHint),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -594,10 +571,10 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
               ExpansionTile(
                 title: Text(
                   '指令 (${skill.prompts.length})',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
+                    color: c.textSecondary,
                   ),
                 ),
                 tilePadding: EdgeInsets.zero,
@@ -609,19 +586,16 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           '•  ',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textHint,
-                          ),
+                          style: TextStyle(fontSize: 12, color: c.textHint),
                         ),
                         Expanded(
                           child: Text(
                             prompt,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
-                              color: AppColors.textSecondary,
+                              color: c.textSecondary,
                               height: 1.4,
                             ),
                             maxLines: 3,
@@ -645,7 +619,7 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
       'shell' => (Icons.terminal, Colors.orange),
       'http' => (Icons.http, Colors.blue),
       'script' => (Icons.code, Colors.purple),
-      _ => (Icons.extension, AppColors.textHint),
+      _ => (Icons.extension, c.textHint),
     };
     return Icon(icon, size: 14, color: color);
   }
@@ -700,16 +674,13 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
             children: [
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.textPrimary,
+                  color: c.textPrimary,
                 ),
               ),
-              Text(
-                subtitle,
-                style: const TextStyle(fontSize: 12, color: AppColors.textHint),
-              ),
+              Text(subtitle, style: TextStyle(fontSize: 12, color: c.textHint)),
             ],
           ),
         ),
@@ -739,9 +710,9 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
             borderRadius: BorderRadius.circular(8),
             color: isSelected
                 ? AppColors.primary.withValues(alpha: 0.08)
-                : AppColors.inputBg,
+                : c.inputBg,
             border: Border.all(
-              color: isSelected ? AppColors.primary : AppColors.inputBorder,
+              color: isSelected ? AppColors.primary : c.inputBorder,
               width: isSelected ? 2 : 1,
             ),
           ),
@@ -755,7 +726,7 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
                         ? Icons.radio_button_checked
                         : Icons.radio_button_off,
                     size: 16,
-                    color: isSelected ? AppColors.primary : AppColors.textHint,
+                    color: isSelected ? AppColors.primary : c.textHint,
                   ),
                   const SizedBox(width: 6),
                   Text(
@@ -765,9 +736,7 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
                       fontWeight: isSelected
                           ? FontWeight.w600
                           : FontWeight.w400,
-                      color: isSelected
-                          ? AppColors.primary
-                          : AppColors.textPrimary,
+                      color: isSelected ? AppColors.primary : c.textPrimary,
                     ),
                   ),
                 ],
@@ -775,7 +744,7 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
               const SizedBox(height: 4),
               Text(
                 description,
-                style: const TextStyle(fontSize: 11, color: AppColors.textHint),
+                style: TextStyle(fontSize: 11, color: c.textHint),
               ),
             ],
           ),

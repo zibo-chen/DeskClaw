@@ -29,3 +29,17 @@ rusqlite = { version = "0.37", features = ["bundled"] }
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
+
+# Override zeroclaw's server-oriented release profile with desktop-optimized settings.
+# zeroclaw uses opt-level="z" + codegen-units=1 (sized for embedded/IoT);
+# for a desktop app we prefer faster execution over minimal binary size.
+[profile.release]
+opt-level = 2     # Balanced performance (not "z" which sacrifices speed for size)
+lto = "thin"      # Faster link times than "fat", still good cross-crate optimization
+codegen-units = 8 # Parallel codegen — faster builds on machines with ample RAM
+strip = true      # Remove debug symbols
+panic = "abort"   # Smaller binary, no unwinding overhead
+
+[profile.dev]
+opt-level = 0
+debug = 1     # Reduced debug info for faster dev builds

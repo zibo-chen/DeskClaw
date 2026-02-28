@@ -5,6 +5,7 @@ import 'package:deskclaw/l10n/app_localizations.dart';
 import 'package:deskclaw/src/rust/frb_generated.dart';
 import 'package:deskclaw/src/rust/api/agent_api.dart' as agent_api;
 import 'package:deskclaw/src/rust/api/sessions_api.dart' as sessions_api;
+import 'package:deskclaw/src/rust/api/cron_api.dart' as cron_api;
 import 'package:deskclaw/theme/app_theme.dart';
 import 'package:deskclaw/views/shell/app_shell.dart';
 import 'package:deskclaw/providers/providers.dart';
@@ -20,6 +21,14 @@ Future<void> main() async {
   // Initialize session persistence store
   final sessionsStatus = await sessions_api.initSessionStore();
   debugPrint('DeskClaw sessions: $sessionsStatus');
+
+  // Start cron scheduler in background
+  try {
+    final cronStatus = await cron_api.startCronScheduler();
+    debugPrint('DeskClaw cron scheduler: $cronStatus');
+  } catch (e) {
+    debugPrint('DeskClaw cron scheduler failed: $e');
+  }
 
   runApp(const ProviderScope(child: DeskClawApp()));
 }

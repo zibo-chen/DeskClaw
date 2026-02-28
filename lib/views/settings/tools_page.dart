@@ -17,6 +17,7 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
   List<ws_api.ToolInfo> _tools = [];
   bool _loading = true;
   String? _message;
+  DeskClawColors get c => DeskClawColors.of(context);
 
   @override
   void initState() {
@@ -87,11 +88,9 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
     return Container(
       height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: AppColors.chatListBorder, width: 1),
-        ),
+      decoration: BoxDecoration(
+        color: c.surfaceBg,
+        border: Border(bottom: BorderSide(color: c.chatListBorder, width: 1)),
       ),
       child: Row(
         children: [
@@ -99,10 +98,10 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
           const SizedBox(width: 10),
           Text(
             AppLocalizations.of(context)!.pageTools,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+              color: c.textPrimary,
             ),
           ),
           const Spacer(),
@@ -145,14 +144,14 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: c.cardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.chatListBorder),
+        border: Border.all(color: c.chatListBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
               Icon(
                 Icons.toggle_on_outlined,
@@ -165,15 +164,15 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: c.textPrimary,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             '快速启用或停用 Agent 功能模块，选中即可直接使用',
-            style: TextStyle(fontSize: 12, color: AppColors.textHint),
+            style: TextStyle(fontSize: 12, color: c.textHint),
           ),
           const SizedBox(height: 16),
 
@@ -257,9 +256,9 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
             borderRadius: BorderRadius.circular(10),
             color: enabled
                 ? AppColors.primary.withValues(alpha: 0.06)
-                : AppColors.inputBg,
+                : c.inputBg,
             border: Border.all(
-              color: enabled ? AppColors.primary : AppColors.inputBorder,
+              color: enabled ? AppColors.primary : c.inputBorder,
               width: enabled ? 2 : 1,
             ),
           ),
@@ -271,13 +270,13 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
                 decoration: BoxDecoration(
                   color: enabled
                       ? AppColors.primary.withValues(alpha: 0.15)
-                      : Colors.grey.withValues(alpha: 0.1),
+                      : c.inputBg,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
                   icon,
                   size: 18,
-                  color: enabled ? AppColors.primary : AppColors.textHint,
+                  color: enabled ? AppColors.primary : c.textHint,
                 ),
               ),
               const SizedBox(width: 12),
@@ -290,17 +289,12 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: enabled
-                            ? AppColors.primary
-                            : AppColors.textPrimary,
+                        color: enabled ? AppColors.primary : c.textPrimary,
                       ),
                     ),
                     Text(
                       description,
-                      style: const TextStyle(
-                        fontSize: 10,
-                        color: AppColors.textHint,
-                      ),
+                      style: TextStyle(fontSize: 10, color: c.textHint),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -311,7 +305,7 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
               Icon(
                 enabled ? Icons.check_circle : Icons.circle_outlined,
                 size: 20,
-                color: enabled ? AppColors.success : AppColors.textHint,
+                color: enabled ? AppColors.success : c.textHint,
               ),
             ],
           ),
@@ -333,9 +327,9 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: c.cardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.chatListBorder),
+        border: Border.all(color: c.chatListBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -348,25 +342,25 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
                 color: AppColors.primary,
               ),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 '内置工具',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: c.textPrimary,
                 ),
               ),
               const Spacer(),
               Text(
                 '${_tools.length} 个工具',
-                style: const TextStyle(fontSize: 12, color: AppColors.textHint),
+                style: TextStyle(fontSize: 12, color: c.textHint),
               ),
             ],
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             '点击审批状态标签快速切换工具权限',
-            style: TextStyle(fontSize: 12, color: AppColors.textHint),
+            style: TextStyle(fontSize: 12, color: c.textHint),
           ),
           const SizedBox(height: 16),
           // Legend
@@ -383,11 +377,19 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
   Widget _buildApprovalLegend() {
     return Row(
       children: [
-        _buildLegendItem('自动审批', Colors.green.shade50, Colors.green),
+        _buildLegendItem(
+          '自动审批',
+          AppColors.success.withValues(alpha: 0.1),
+          Colors.green,
+        ),
         const SizedBox(width: 12),
-        _buildLegendItem('需要确认', Colors.orange.shade50, Colors.orange),
+        _buildLegendItem(
+          '需要确认',
+          AppColors.warning.withValues(alpha: 0.1),
+          Colors.orange,
+        ),
         const SizedBox(width: 12),
-        _buildLegendItem('默认', Colors.grey.shade100, AppColors.textHint),
+        _buildLegendItem('默认', c.inputBg, c.textHint),
       ],
     );
   }
@@ -430,25 +432,21 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
         children: [
           Row(
             children: [
-              Icon(
-                _categoryIcon(category),
-                size: 14,
-                color: AppColors.textHint,
-              ),
+              Icon(_categoryIcon(category), size: 14, color: c.textHint),
               const SizedBox(width: 6),
               Text(
                 categoryLabels[category] ?? category.toUpperCase(),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textHint,
+                  color: c.textHint,
                   letterSpacing: 0.5,
                 ),
               ),
               const SizedBox(width: 6),
               Text(
                 '(${tools.length})',
-                style: const TextStyle(fontSize: 11, color: AppColors.textHint),
+                style: TextStyle(fontSize: 11, color: c.textHint),
               ),
             ],
           ),
@@ -464,31 +462,24 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
         children: [
-          Icon(
-            _categoryIcon(tool.category),
-            size: 16,
-            color: AppColors.textSecondary,
-          ),
+          Icon(_categoryIcon(tool.category), size: 16, color: c.textSecondary),
           const SizedBox(width: 10),
           SizedBox(
             width: 140,
             child: Text(
               tool.name,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
                 fontFamily: 'monospace',
-                color: AppColors.textPrimary,
+                color: c.textPrimary,
               ),
             ),
           ),
           Expanded(
             child: Text(
               tool.description,
-              style: const TextStyle(
-                fontSize: 12,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 12, color: c.textSecondary),
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -526,7 +517,7 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
           color: isActive ? color.withValues(alpha: 0.15) : Colors.transparent,
           borderRadius: BorderRadius.circular(4),
           border: Border.all(
-            color: isActive ? color : AppColors.chatListBorder,
+            color: isActive ? color : c.chatListBorder,
             width: isActive ? 1.5 : 1,
           ),
         ),
@@ -535,7 +526,7 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
           style: TextStyle(
             fontSize: 10,
             fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-            color: isActive ? color : AppColors.textHint,
+            color: isActive ? color : c.textHint,
           ),
         ),
       ),

@@ -16,6 +16,7 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage> {
   ws_api.AutonomyConfig? _autonomy;
   List<ws_api.ToolInfo>? _tools;
   bool _loading = true;
+  DeskClawColors get c => DeskClawColors.of(context);
 
   @override
   void initState() {
@@ -53,11 +54,9 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage> {
     return Container(
       height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: AppColors.chatListBorder, width: 1),
-        ),
+      decoration: BoxDecoration(
+        color: c.surfaceBg,
+        border: Border(bottom: BorderSide(color: c.chatListBorder, width: 1)),
       ),
       child: Row(
         children: [
@@ -65,10 +64,10 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage> {
           SizedBox(width: 10),
           Text(
             AppLocalizations.of(context)!.pageConfiguration,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+              color: c.textPrimary,
             ),
           ),
         ],
@@ -98,14 +97,14 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: c.cardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.chatListBorder),
+        border: Border.all(color: c.chatListBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
               Icon(Icons.shield_outlined, size: 18, color: AppColors.primary),
               SizedBox(width: 8),
@@ -114,7 +113,7 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: c.textPrimary,
                 ),
               ),
             ],
@@ -122,11 +121,11 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage> {
           const SizedBox(height: 16),
 
           // Autonomy level selector
-          const Text(
+          Text(
             'Autonomy Level',
             style: TextStyle(
               fontSize: 13,
-              color: AppColors.textSecondary,
+              color: c.textSecondary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -167,11 +166,11 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage> {
 
           if (a.allowedCommands.isNotEmpty) ...[
             const SizedBox(height: 12),
-            const Text(
+            Text(
               'Allowed Commands',
               style: TextStyle(
                 fontSize: 13,
-                color: AppColors.textSecondary,
+                color: c.textSecondary,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -193,11 +192,11 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage> {
 
           if (a.autoApprove.isNotEmpty) ...[
             const SizedBox(height: 12),
-            const Text(
+            Text(
               'Auto-Approved Tools',
               style: TextStyle(
                 fontSize: 13,
-                color: AppColors.textSecondary,
+                color: c.textSecondary,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -241,9 +240,9 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage> {
           borderRadius: BorderRadius.circular(8),
           color: isSelected
               ? AppColors.primary.withValues(alpha: 0.1)
-              : Colors.grey.shade50,
+              : c.inputBg,
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.chatListBorder,
+            color: isSelected ? AppColors.primary : c.chatListBorder,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -253,7 +252,7 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage> {
             Icon(
               icon,
               size: 16,
-              color: isSelected ? AppColors.primary : AppColors.textSecondary,
+              color: isSelected ? AppColors.primary : c.textSecondary,
             ),
             const SizedBox(width: 6),
             Text(
@@ -261,7 +260,7 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage> {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                color: isSelected ? AppColors.primary : c.textPrimary,
               ),
             ),
           ],
@@ -284,9 +283,9 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: c.cardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.chatListBorder),
+        border: Border.all(color: c.chatListBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -299,18 +298,18 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage> {
                 color: AppColors.primary,
               ),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Tools',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: c.textPrimary,
                 ),
               ),
               const Spacer(),
               Text(
                 '${tools.length} tools',
-                style: const TextStyle(fontSize: 12, color: AppColors.textHint),
+                style: TextStyle(fontSize: 12, color: c.textHint),
               ),
             ],
           ),
@@ -345,7 +344,7 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage> {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: AppColors.textHint,
+              color: c.textHint,
               letterSpacing: 0.5,
             ),
           ),
@@ -361,31 +360,24 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage> {
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
         children: [
-          Icon(
-            _toolIcon(tool.category),
-            size: 16,
-            color: AppColors.textSecondary,
-          ),
+          Icon(_toolIcon(tool.category), size: 16, color: c.textSecondary),
           const SizedBox(width: 10),
           SizedBox(
             width: 140,
             child: Text(
               tool.name,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
                 fontFamily: 'monospace',
-                color: AppColors.textPrimary,
+                color: c.textPrimary,
               ),
             ),
           ),
           Expanded(
             child: Text(
               tool.description,
-              style: const TextStyle(
-                fontSize: 12,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 12, color: c.textSecondary),
             ),
           ),
           if (tool.autoApproved)
@@ -448,17 +440,14 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage> {
             width: 220,
             child: Text(
               label,
-              style: const TextStyle(
-                fontSize: 13,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 13, color: c.textSecondary),
             ),
           ),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
-              color: AppColors.textPrimary,
+              color: c.textPrimary,
               fontWeight: FontWeight.w500,
             ),
           ),

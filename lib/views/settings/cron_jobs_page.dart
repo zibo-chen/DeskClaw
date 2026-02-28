@@ -19,6 +19,8 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
   String? _message;
   String? _expandedJobId; // For viewing run history
   List<cron_api.CronRunDto> _runs = [];
+  String? _runningJobId; // Track which job is currently being run manually
+  DeskClawColors get c => DeskClawColors.of(context);
 
   @override
   void initState() {
@@ -96,6 +98,23 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
     }
   }
 
+  Future<void> _runJobNow(String jobId) async {
+    setState(() => _runningJobId = jobId);
+    try {
+      final result = await cron_api.runCronJobNow(jobId: jobId);
+      if (result.startsWith('ok')) {
+        _showMessage('执行成功');
+      } else {
+        _showMessage('执行失败: $result');
+      }
+      _loadAll();
+    } catch (e) {
+      _showMessage('执行出错: $e');
+    } finally {
+      if (mounted) setState(() => _runningJobId = null);
+    }
+  }
+
   Future<void> _showAddDialog() async {
     final result = await showDialog<_NewJobData>(
       context: context,
@@ -156,11 +175,9 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
     return Container(
       height: 64,
       padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: AppColors.chatListBorder, width: 1),
-        ),
+      decoration: BoxDecoration(
+        color: c.surfaceBg,
+        border: Border(bottom: BorderSide(color: c.chatListBorder, width: 1)),
       ),
       child: Row(
         children: [
@@ -168,10 +185,10 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
           const SizedBox(width: 12),
           Text(
             AppLocalizations.of(context)!.pageCronJobs,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+              color: c.textPrimary,
             ),
           ),
           const SizedBox(width: 16),
@@ -258,21 +275,21 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
           Icon(
             Icons.schedule,
             size: 64,
-            color: AppColors.textHint.withValues(alpha: 0.5),
+            color: c.textHint.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             '暂无定时任务',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w500,
-              color: AppColors.textSecondary,
+              color: c.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             '点击上方「新建任务」来创建 Shell 或 AI Agent 定时任务',
-            style: TextStyle(fontSize: 14, color: AppColors.textHint),
+            style: TextStyle(fontSize: 14, color: c.textHint),
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
@@ -326,10 +343,10 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
                         children: [
                           Text(
                             job.name.isNotEmpty ? job.name : job.id,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
+                              color: c.textPrimary,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -344,7 +361,7 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
                               const SizedBox(width: 6),
                               _chipLabel(
                                 job.scheduleDisplay,
-                                color: AppColors.textSecondary,
+                                color: c.textSecondary,
                               ),
                               if (isAgent && job.sessionTarget == 'main') ...[
                                 const SizedBox(width: 6),
@@ -361,17 +378,44 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
                       activeTrackColor: AppColors.success,
                       onChanged: (v) => _toggleJob(job.id, v),
                     ),
+                    // Run Now button
+                    _runningJobId == job.id
+                        ? const SizedBox(
+                            width: 32,
+                            height: 32,
+                            child: Padding(
+                              padding: EdgeInsets.all(6),
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : IconButton(
+                            icon: const Icon(Icons.play_arrow, size: 22),
+                            tooltip: '立即执行',
+                            color: AppColors.success,
+                            onPressed: () => _runJobNow(job.id),
+                          ),
                     PopupMenuButton<String>(
-                      icon: const Icon(
-                        Icons.more_vert,
-                        size: 20,
-                        color: AppColors.textHint,
-                      ),
+                      icon: Icon(Icons.more_vert, size: 20, color: c.textHint),
                       onSelected: (action) {
+                        if (action == 'run') _runJobNow(job.id);
                         if (action == 'history') _loadRuns(job.id);
                         if (action == 'delete') _deleteJob(job.id);
                       },
                       itemBuilder: (ctx) => [
+                        const PopupMenuItem(
+                          value: 'run',
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.play_arrow,
+                                size: 16,
+                                color: AppColors.success,
+                              ),
+                              SizedBox(width: 8),
+                              Text('立即执行'),
+                            ],
+                          ),
+                        ),
                         PopupMenuItem(
                           value: 'history',
                           child: Row(
@@ -414,10 +458,10 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.mainBg,
+                    color: c.mainBg,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: AppColors.chatListBorder.withValues(alpha: 0.5),
+                      color: c.chatListBorder.withValues(alpha: 0.5),
                     ),
                   ),
                   child: Text(
@@ -426,7 +470,7 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 13,
-                      color: AppColors.textSecondary,
+                      color: c.textSecondary,
                       fontFamily: isAgent ? null : 'monospace',
                     ),
                   ),
@@ -435,18 +479,11 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
                 // Info row
                 Row(
                   children: [
-                    Icon(
-                      Icons.access_time,
-                      size: 14,
-                      color: AppColors.textHint,
-                    ),
+                    Icon(Icons.access_time, size: 14, color: c.textHint),
                     const SizedBox(width: 4),
                     Text(
                       '下次执行: $nextRunStr',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textHint,
-                      ),
+                      style: TextStyle(fontSize: 12, color: c.textHint),
                     ),
                     if (job.lastStatus.isNotEmpty) ...[
                       const SizedBox(width: 16),
@@ -472,14 +509,11 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
                     ],
                     if (isAgent && job.model.isNotEmpty) ...[
                       const SizedBox(width: 16),
-                      Icon(Icons.memory, size: 14, color: AppColors.textHint),
+                      Icon(Icons.memory, size: 14, color: c.textHint),
                       const SizedBox(width: 4),
                       Text(
                         job.model,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textHint,
-                        ),
+                        style: TextStyle(fontSize: 12, color: c.textHint),
                       ),
                     ],
                     if (job.deleteAfterRun) ...[
@@ -520,25 +554,21 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
     if (_runs.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(16),
-        decoration: const BoxDecoration(
-          border: Border(
-            top: BorderSide(color: AppColors.chatListBorder, width: 1),
-          ),
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: c.chatListBorder, width: 1)),
         ),
-        child: const Center(
+        child: Center(
           child: Text(
             '暂无运行记录',
-            style: TextStyle(fontSize: 13, color: AppColors.textHint),
+            style: TextStyle(fontSize: 13, color: c.textHint),
           ),
         ),
       );
     }
 
     return Container(
-      decoration: const BoxDecoration(
-        border: Border(
-          top: BorderSide(color: AppColors.chatListBorder, width: 1),
-        ),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: c.chatListBorder, width: 1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -547,10 +577,10 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: Text(
               '运行历史 (最近 ${_runs.length} 条)',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
+                color: c.textSecondary,
               ),
             ),
           ),
@@ -566,10 +596,8 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: AppColors.chatListBorder, width: 0.5),
-        ),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: c.chatListBorder, width: 0.5)),
       ),
       child: Row(
         children: [
@@ -581,15 +609,12 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
           const SizedBox(width: 8),
           Text(
             _formatDateTime(started),
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.textSecondary,
-            ),
+            style: TextStyle(fontSize: 12, color: c.textSecondary),
           ),
           const SizedBox(width: 12),
           Text(
             '${run.durationMs}ms',
-            style: const TextStyle(fontSize: 12, color: AppColors.textHint),
+            style: TextStyle(fontSize: 12, color: c.textHint),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -597,9 +622,9 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
               run.output,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: AppColors.textHint,
+                color: c.textHint,
                 fontFamily: 'monospace',
               ),
             ),

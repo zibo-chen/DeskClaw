@@ -1,128 +1,275 @@
 import 'package:flutter/material.dart';
 
-/// DeskClaw design system constants
+/// Brand / accent colors — constant across light & dark modes
 class AppColors {
   AppColors._();
 
-  // Primary brand color (blue-purple like the reference)
   static const primary = Color(0xFF5B6ABF);
   static const primaryLight = Color(0xFF7C8ADB);
   static const primaryDark = Color(0xFF3D4A9E);
-
-  // Sidebar
-  static const sidebarBg = Color(0xFFF8F9FC);
-  static const sidebarText = Color(0xFF4A4D5C);
-  static const sidebarActiveText = Color(0xFF5B6ABF);
-  static const sidebarActiveBg = Color(0xFFEEF0FA);
-  static const sidebarSection = Color(0xFF9498A8);
-
-  // Chat panel
-  static const chatListBg = Color(0xFFFFFFFF);
-  static const chatListBorder = Color(0xFFE8EAF0);
-
-  // Main content
-  static const mainBg = Color(0xFFF5F6FA);
-  static const cardBg = Color(0xFFFFFFFF);
-  static const inputBg = Color(0xFFF5F6FA);
-  static const inputBorder = Color(0xFFE0E3EB);
-
-  // Text
-  static const textPrimary = Color(0xFF1A1D2E);
-  static const textSecondary = Color(0xFF6B7080);
-  static const textHint = Color(0xFFA0A5B5);
-
-  // Accents
   static const success = Color(0xFF4CAF50);
   static const error = Color(0xFFE53935);
   static const warning = Color(0xFFFFA726);
+}
 
-  // Dark theme
-  static const darkBg = Color(0xFF1E1E2E);
-  static const darkSidebarBg = Color(0xFF252536);
-  static const darkCardBg = Color(0xFF2A2A3C);
-  static const darkTextPrimary = Color(0xFFE0E0E8);
-  static const darkTextSecondary = Color(0xFF9498A8);
+/// Theme-dependent custom color palette, accessible via [DeskClawColors.of].
+@immutable
+class DeskClawColors extends ThemeExtension<DeskClawColors> {
+  const DeskClawColors({
+    required this.sidebarBg,
+    required this.sidebarText,
+    required this.sidebarActiveText,
+    required this.sidebarActiveBg,
+    required this.sidebarSection,
+    required this.chatListBg,
+    required this.chatListBorder,
+    required this.mainBg,
+    required this.cardBg,
+    required this.inputBg,
+    required this.inputBorder,
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.textHint,
+    required this.surfaceBg,
+  });
+
+  final Color sidebarBg;
+  final Color sidebarText;
+  final Color sidebarActiveText;
+  final Color sidebarActiveBg;
+  final Color sidebarSection;
+  final Color chatListBg;
+  final Color chatListBorder;
+  final Color mainBg;
+  final Color cardBg;
+  final Color inputBg;
+  final Color inputBorder;
+  final Color textPrimary;
+  final Color textSecondary;
+  final Color textHint;
+  final Color surfaceBg;
+
+  static const light = DeskClawColors(
+    sidebarBg: Color(0xFFF8F9FC),
+    sidebarText: Color(0xFF4A4D5C),
+    sidebarActiveText: Color(0xFF5B6ABF),
+    sidebarActiveBg: Color(0xFFEEF0FA),
+    sidebarSection: Color(0xFF9498A8),
+    chatListBg: Color(0xFFFFFFFF),
+    chatListBorder: Color(0xFFE8EAF0),
+    mainBg: Color(0xFFF5F6FA),
+    cardBg: Color(0xFFFFFFFF),
+    inputBg: Color(0xFFF5F6FA),
+    inputBorder: Color(0xFFE0E3EB),
+    textPrimary: Color(0xFF1A1D2E),
+    textSecondary: Color(0xFF6B7080),
+    textHint: Color(0xFFA0A5B5),
+    surfaceBg: Color(0xFFFFFFFF),
+  );
+
+  static const dark = DeskClawColors(
+    sidebarBg: Color(0xFF1C1C2E),
+    sidebarText: Color(0xFFB0B4C4),
+    sidebarActiveText: Color(0xFF8B9AE8),
+    sidebarActiveBg: Color(0xFF2D2D4A),
+    sidebarSection: Color(0xFF7A7E90),
+    chatListBg: Color(0xFF222234),
+    chatListBorder: Color(0xFF353548),
+    mainBg: Color(0xFF1A1A2C),
+    cardBg: Color(0xFF262638),
+    inputBg: Color(0xFF2A2A3C),
+    inputBorder: Color(0xFF3A3A4E),
+    textPrimary: Color(0xFFE2E4EC),
+    textSecondary: Color(0xFF9498A8),
+    textHint: Color(0xFF707488),
+    surfaceBg: Color(0xFF262638),
+  );
+
+  static DeskClawColors of(BuildContext context) =>
+      Theme.of(context).extension<DeskClawColors>()!;
+
+  @override
+  DeskClawColors copyWith({
+    Color? sidebarBg,
+    Color? sidebarText,
+    Color? sidebarActiveText,
+    Color? sidebarActiveBg,
+    Color? sidebarSection,
+    Color? chatListBg,
+    Color? chatListBorder,
+    Color? mainBg,
+    Color? cardBg,
+    Color? inputBg,
+    Color? inputBorder,
+    Color? textPrimary,
+    Color? textSecondary,
+    Color? textHint,
+    Color? surfaceBg,
+  }) {
+    return DeskClawColors(
+      sidebarBg: sidebarBg ?? this.sidebarBg,
+      sidebarText: sidebarText ?? this.sidebarText,
+      sidebarActiveText: sidebarActiveText ?? this.sidebarActiveText,
+      sidebarActiveBg: sidebarActiveBg ?? this.sidebarActiveBg,
+      sidebarSection: sidebarSection ?? this.sidebarSection,
+      chatListBg: chatListBg ?? this.chatListBg,
+      chatListBorder: chatListBorder ?? this.chatListBorder,
+      mainBg: mainBg ?? this.mainBg,
+      cardBg: cardBg ?? this.cardBg,
+      inputBg: inputBg ?? this.inputBg,
+      inputBorder: inputBorder ?? this.inputBorder,
+      textPrimary: textPrimary ?? this.textPrimary,
+      textSecondary: textSecondary ?? this.textSecondary,
+      textHint: textHint ?? this.textHint,
+      surfaceBg: surfaceBg ?? this.surfaceBg,
+    );
+  }
+
+  @override
+  DeskClawColors lerp(DeskClawColors? other, double t) {
+    if (other is! DeskClawColors) return this;
+    return DeskClawColors(
+      sidebarBg: Color.lerp(sidebarBg, other.sidebarBg, t)!,
+      sidebarText: Color.lerp(sidebarText, other.sidebarText, t)!,
+      sidebarActiveText: Color.lerp(
+        sidebarActiveText,
+        other.sidebarActiveText,
+        t,
+      )!,
+      sidebarActiveBg: Color.lerp(sidebarActiveBg, other.sidebarActiveBg, t)!,
+      sidebarSection: Color.lerp(sidebarSection, other.sidebarSection, t)!,
+      chatListBg: Color.lerp(chatListBg, other.chatListBg, t)!,
+      chatListBorder: Color.lerp(chatListBorder, other.chatListBorder, t)!,
+      mainBg: Color.lerp(mainBg, other.mainBg, t)!,
+      cardBg: Color.lerp(cardBg, other.cardBg, t)!,
+      inputBg: Color.lerp(inputBg, other.inputBg, t)!,
+      inputBorder: Color.lerp(inputBorder, other.inputBorder, t)!,
+      textPrimary: Color.lerp(textPrimary, other.textPrimary, t)!,
+      textSecondary: Color.lerp(textSecondary, other.textSecondary, t)!,
+      textHint: Color.lerp(textHint, other.textHint, t)!,
+      surfaceBg: Color.lerp(surfaceBg, other.surfaceBg, t)!,
+    );
+  }
 }
 
 class AppTheme {
   AppTheme._();
 
-  static ThemeData get light => ThemeData(
-    useMaterial3: true,
-    brightness: Brightness.light,
-    colorSchemeSeed: AppColors.primary,
-    scaffoldBackgroundColor: AppColors.mainBg,
-    fontFamily: 'Inter',
-    appBarTheme: const AppBarTheme(
-      backgroundColor: Colors.white,
-      foregroundColor: AppColors.textPrimary,
-      elevation: 0,
-      surfaceTintColor: Colors.transparent,
-    ),
-    cardTheme: CardThemeData(
-      color: AppColors.cardBg,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: AppColors.chatListBorder, width: 1),
-      ),
-    ),
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: AppColors.inputBg,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppColors.inputBorder),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppColors.inputBorder),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-      ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      hintStyle: const TextStyle(color: AppColors.textHint),
-    ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+  static ThemeData get light {
+    const c = DeskClawColors.light;
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+      colorSchemeSeed: AppColors.primary,
+      scaffoldBackgroundColor: c.mainBg,
+      fontFamily: 'Inter',
+      extensions: const [c],
+      appBarTheme: AppBarTheme(
+        backgroundColor: c.surfaceBg,
+        foregroundColor: c.textPrimary,
         elevation: 0,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        surfaceTintColor: Colors.transparent,
       ),
-    ),
-    dividerTheme: const DividerThemeData(
-      color: AppColors.chatListBorder,
-      thickness: 1,
-    ),
-  );
+      cardTheme: CardThemeData(
+        color: c.cardBg,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: c.chatListBorder, width: 1),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: c.inputBg,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: c.inputBorder),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: c.inputBorder),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
+        hintStyle: TextStyle(color: c.textHint),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      ),
+      dividerTheme: DividerThemeData(color: c.chatListBorder, thickness: 1),
+    );
+  }
 
-  static ThemeData get dark => ThemeData(
-    useMaterial3: true,
-    brightness: Brightness.dark,
-    colorSchemeSeed: AppColors.primary,
-    scaffoldBackgroundColor: AppColors.darkBg,
-    fontFamily: 'Inter',
-    appBarTheme: const AppBarTheme(
-      backgroundColor: AppColors.darkCardBg,
-      foregroundColor: AppColors.darkTextPrimary,
-      elevation: 0,
-      surfaceTintColor: Colors.transparent,
-    ),
-    cardTheme: CardThemeData(
-      color: AppColors.darkCardBg,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+  static ThemeData get dark {
+    const c = DeskClawColors.dark;
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      colorSchemeSeed: AppColors.primary,
+      scaffoldBackgroundColor: c.mainBg,
+      fontFamily: 'Inter',
+      extensions: const [c],
+      appBarTheme: AppBarTheme(
+        backgroundColor: c.surfaceBg,
+        foregroundColor: c.textPrimary,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
       ),
-    ),
-    dividerTheme: DividerThemeData(
-      color: Colors.white.withValues(alpha: 0.1),
-      thickness: 1,
-    ),
-  );
+      cardTheme: CardThemeData(
+        color: c.cardBg,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: c.chatListBorder),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: c.inputBg,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: c.inputBorder),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: c.inputBorder),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppColors.primaryLight, width: 1.5),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
+        hintStyle: TextStyle(color: c.textHint),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      ),
+      dividerTheme: DividerThemeData(color: c.chatListBorder, thickness: 1),
+    );
+  }
 }

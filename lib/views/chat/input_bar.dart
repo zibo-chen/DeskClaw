@@ -17,6 +17,7 @@ class ChatInputBar extends ConsumerStatefulWidget {
 }
 
 class _ChatInputBarState extends ConsumerState<ChatInputBar> {
+  DeskClawColors get c => DeskClawColors.of(context);
   final TextEditingController _controller = TextEditingController();
   final FocusNode _focusNode = FocusNode();
   bool _isExpanded = false;
@@ -38,7 +39,7 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
 
   @override
   Widget build(BuildContext context) {
-    final isProcessing = ref.watch(isProcessingProvider);
+    final isProcessing = ref.watch(isCurrentSessionProcessingProvider);
     final l10n = AppLocalizations.of(context)!;
 
     return Container(
@@ -52,9 +53,9 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
               maxHeight: _isExpanded ? 200 : 120,
             ),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: c.surfaceBg,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.chatListBorder),
+              border: Border.all(color: c.chatListBorder),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.04),
@@ -71,9 +72,11 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
                     focusNode: FocusNode(),
                     onKeyEvent: (event) {
                       // Enter to send, Shift+Enter for newline
+                      // Skip if IME is composing (e.g. pinyin input)
                       if (event is KeyDownEvent &&
                           event.logicalKey == LogicalKeyboardKey.enter &&
-                          !HardwareKeyboard.instance.isShiftPressed) {
+                          !HardwareKeyboard.instance.isShiftPressed &&
+                          !_controller.value.composing.isValid) {
                         _send();
                       }
                     },
@@ -98,14 +101,11 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
                         ),
                         counterText: '',
                         filled: false,
-                        hintStyle: const TextStyle(
-                          color: AppColors.textHint,
-                          fontSize: 14,
-                        ),
+                        hintStyle: TextStyle(color: c.textHint, fontSize: 14),
                       ),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
-                        color: AppColors.textPrimary,
+                        color: c.textPrimary,
                         height: 1.5,
                       ),
                       onChanged: (value) => setState(() {}),
@@ -125,7 +125,7 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
                               : Icons.open_in_full,
                           size: 16,
                         ),
-                        color: AppColors.textHint,
+                        color: c.textHint,
                         onPressed: () {
                           setState(() => _isExpanded = !_isExpanded);
                         },
@@ -140,10 +140,7 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
                       // Character count
                       Text(
                         '${_controller.text.length}/${AppConstants.maxInputLength}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textHint,
-                        ),
+                        style: TextStyle(fontSize: 12, color: c.textHint),
                       ),
                       const SizedBox(width: 12),
                       // Send button
@@ -161,7 +158,7 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
                                 _controller.text.trim().isNotEmpty &&
                                     !isProcessing
                                 ? AppColors.primary
-                                : AppColors.inputBg,
+                                : c.inputBg,
                           ),
                           child: Icon(
                             Icons.arrow_upward,
@@ -170,7 +167,7 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
                                 _controller.text.trim().isNotEmpty &&
                                     !isProcessing
                                 ? Colors.white
-                                : AppColors.textHint,
+                                : c.textHint,
                           ),
                         ),
                       ),
@@ -184,7 +181,7 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
           // Tagline
           Text(
             l10n.appTagline,
-            style: const TextStyle(fontSize: 12, color: AppColors.textHint),
+            style: TextStyle(fontSize: 12, color: c.textHint),
           ),
         ],
       ),

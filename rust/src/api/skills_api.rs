@@ -37,8 +37,8 @@ pub struct SkillsConfigDto {
 
 /// Get skills configuration from zeroclaw config
 pub async fn get_skills_config() -> SkillsConfigDto {
-    let state = super::agent_api::runtime_state().lock().await;
-    if let Some(config) = &state.config {
+    let cs = super::agent_api::config_state().read().await;
+    if let Some(config) = &cs.config {
         let skills_dir = config
             .workspace_dir
             .join("skills")
@@ -89,10 +89,10 @@ pub async fn get_skills_config() -> SkillsConfigDto {
 
 /// List all available skills (local + community if enabled)
 pub async fn list_skills() -> Vec<SkillDto> {
-    let state = super::agent_api::runtime_state().lock().await;
+    let cs = super::agent_api::config_state().read().await;
     let mut skills = Vec::new();
 
-    if let Some(config) = &state.config {
+    if let Some(config) = &cs.config {
         // Load local skills
         let local_dir = config.workspace_dir.join("skills");
         load_skills_from_dir(&local_dir, "local", &mut skills);
@@ -119,36 +119,36 @@ pub async fn list_skills() -> Vec<SkillDto> {
 
 /// Toggle the open skills feature on/off
 pub async fn toggle_open_skills(enabled: bool) -> String {
-    let mut state = super::agent_api::runtime_state().lock().await;
-    let config = match state.config.as_mut() {
-        Some(c) => c,
-        None => return "error: not initialized".into(),
-    };
-
-    config.skills.open_skills_enabled = enabled;
+    {
+        let mut cs = super::agent_api::config_state().write().await;
+        let config = match cs.config.as_mut() {
+            Some(c) => c,
+            None => return "error: not initialized".into(),
+        };
+        config.skills.open_skills_enabled = enabled;
+    }
     // Invalidate agent to pick up change
-    state.agent = None;
+    *super::agent_api::agent_handle().lock().await = None;
 
     // Persist to disk
-    drop(state);
     super::agent_api::save_config_to_disk().await
 }
 
 /// Update prompt injection mode ("full" or "compact")
 pub async fn update_prompt_injection_mode(mode: String) -> String {
-    let mut state = super::agent_api::runtime_state().lock().await;
-    let config = match state.config.as_mut() {
-        Some(c) => c,
-        None => return "error: not initialized".into(),
-    };
+    {
+        let mut cs = super::agent_api::config_state().write().await;
+        let config = match cs.config.as_mut() {
+            Some(c) => c,
+            None => return "error: not initialized".into(),
+        };
+        config.skills.prompt_injection_mode = match mode.as_str() {
+            "compact" => zeroclaw::config::SkillsPromptInjectionMode::Compact,
+            _ => zeroclaw::config::SkillsPromptInjectionMode::Full,
+        };
+    }
+    *super::agent_api::agent_handle().lock().await = None;
 
-    config.skills.prompt_injection_mode = match mode.as_str() {
-        "compact" => zeroclaw::config::SkillsPromptInjectionMode::Compact,
-        _ => zeroclaw::config::SkillsPromptInjectionMode::Full,
-    };
-    state.agent = None;
-
-    drop(state);
     super::agent_api::save_config_to_disk().await
 }
 

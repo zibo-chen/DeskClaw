@@ -13,20 +13,19 @@ class SidebarNav extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentNav = ref.watch(currentNavProvider);
     final l10n = AppLocalizations.of(context)!;
+    final c = DeskClawColors.of(context);
 
     return Container(
       width: AppConstants.sidebarWidth,
-      decoration: const BoxDecoration(
-        color: AppColors.sidebarBg,
-        border: Border(
-          right: BorderSide(color: AppColors.chatListBorder, width: 1),
-        ),
+      decoration: BoxDecoration(
+        color: c.sidebarBg,
+        border: Border(right: BorderSide(color: c.chatListBorder, width: 1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Logo
-          _buildLogo(),
+          _buildLogo(c),
           const SizedBox(height: 8),
 
           // Chat section
@@ -37,11 +36,13 @@ class SidebarNav extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildNavSection(
+                    c,
                     icon: Icons.chat_bubble_outline,
                     title: l10n.navSectionChat,
                     isExpanded: true,
                     children: [
                       _buildNavItem(
+                        c,
                         ref: ref,
                         icon: Icons.circle_outlined,
                         label: l10n.navChat,
@@ -54,11 +55,13 @@ class SidebarNav extends ConsumerWidget {
 
                   // Control section
                   _buildNavSection(
+                    c,
                     icon: Icons.wifi_tethering,
                     title: l10n.navSectionControl,
                     isExpanded: true,
                     children: [
                       _buildNavItem(
+                        c,
                         ref: ref,
                         icon: Icons.wifi,
                         label: l10n.navChannels,
@@ -66,6 +69,7 @@ class SidebarNav extends ConsumerWidget {
                         isActive: currentNav == NavSection.channels,
                       ),
                       _buildNavItem(
+                        c,
                         ref: ref,
                         icon: Icons.people_outline,
                         label: l10n.navSessions,
@@ -73,6 +77,7 @@ class SidebarNav extends ConsumerWidget {
                         isActive: currentNav == NavSection.sessions,
                       ),
                       _buildNavItem(
+                        c,
                         ref: ref,
                         icon: Icons.schedule,
                         label: l10n.navCronJobs,
@@ -85,11 +90,13 @@ class SidebarNav extends ConsumerWidget {
 
                   // Agent section
                   _buildNavSection(
+                    c,
                     icon: Icons.auto_awesome,
                     title: l10n.navSectionAgent,
                     isExpanded: true,
                     children: [
                       _buildNavItem(
+                        c,
                         ref: ref,
                         icon: Icons.business,
                         label: l10n.navWorkspace,
@@ -97,6 +104,7 @@ class SidebarNav extends ConsumerWidget {
                         isActive: currentNav == NavSection.workspace,
                       ),
                       _buildNavItem(
+                        c,
                         ref: ref,
                         icon: Icons.psychology,
                         label: l10n.navSkills,
@@ -104,6 +112,7 @@ class SidebarNav extends ConsumerWidget {
                         isActive: currentNav == NavSection.skills,
                       ),
                       _buildNavItem(
+                        c,
                         ref: ref,
                         icon: Icons.extension,
                         label: l10n.navMcp,
@@ -111,6 +120,7 @@ class SidebarNav extends ConsumerWidget {
                         isActive: currentNav == NavSection.mcp,
                       ),
                       _buildNavItem(
+                        c,
                         ref: ref,
                         icon: Icons.settings,
                         label: l10n.navConfiguration,
@@ -123,11 +133,13 @@ class SidebarNav extends ConsumerWidget {
 
                   // Settings section
                   _buildNavSection(
+                    c,
                     icon: Icons.settings_outlined,
                     title: l10n.navSectionSettings,
                     isExpanded: true,
                     children: [
                       _buildNavItem(
+                        c,
                         ref: ref,
                         icon: Icons.model_training,
                         label: l10n.navModels,
@@ -135,6 +147,7 @@ class SidebarNav extends ConsumerWidget {
                         isActive: currentNav == NavSection.models,
                       ),
                       _buildNavItem(
+                        c,
                         ref: ref,
                         icon: Icons.language,
                         label: l10n.navEnvironments,
@@ -149,13 +162,13 @@ class SidebarNav extends ConsumerWidget {
           ),
 
           // Bottom bar: language toggle + theme toggle
-          _buildBottomBar(ref, l10n),
+          _buildBottomBar(ref, l10n, c),
         ],
       ),
     );
   }
 
-  Widget _buildLogo() {
+  Widget _buildLogo(DeskClawColors c) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
       child: Row(
@@ -174,18 +187,18 @@ class SidebarNav extends ConsumerWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 AppConstants.appName,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: c.textPrimary,
                   letterSpacing: -0.3,
                 ),
               ),
               Text(
                 AppConstants.appVersion,
-                style: TextStyle(fontSize: 11, color: AppColors.textHint),
+                style: TextStyle(fontSize: 11, color: c.textHint),
               ),
             ],
           ),
@@ -194,7 +207,8 @@ class SidebarNav extends ConsumerWidget {
     );
   }
 
-  Widget _buildNavSection({
+  Widget _buildNavSection(
+    DeskClawColors c, {
     required IconData icon,
     required String title,
     required bool isExpanded,
@@ -207,14 +221,14 @@ class SidebarNav extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           child: Row(
             children: [
-              Icon(icon, size: 16, color: AppColors.sidebarSection),
+              Icon(icon, size: 16, color: c.sidebarSection),
               const SizedBox(width: 8),
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.sidebarSection,
+                  color: c.sidebarSection,
                   letterSpacing: 0.3,
                 ),
               ),
@@ -222,7 +236,7 @@ class SidebarNav extends ConsumerWidget {
               Icon(
                 isExpanded ? Icons.expand_less : Icons.expand_more,
                 size: 16,
-                color: AppColors.sidebarSection,
+                color: c.sidebarSection,
               ),
             ],
           ),
@@ -232,7 +246,8 @@ class SidebarNav extends ConsumerWidget {
     );
   }
 
-  Widget _buildNavItem({
+  Widget _buildNavItem(
+    DeskClawColors c, {
     required WidgetRef ref,
     required IconData icon,
     required String label,
@@ -253,16 +268,14 @@ class SidebarNav extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
-              color: isActive ? AppColors.sidebarActiveBg : Colors.transparent,
+              color: isActive ? c.sidebarActiveBg : Colors.transparent,
             ),
             child: Row(
               children: [
                 Icon(
                   icon,
                   size: 18,
-                  color: isActive
-                      ? AppColors.sidebarActiveText
-                      : AppColors.sidebarText,
+                  color: isActive ? c.sidebarActiveText : c.sidebarText,
                 ),
                 const SizedBox(width: 10),
                 Text(
@@ -270,9 +283,7 @@ class SidebarNav extends ConsumerWidget {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                    color: isActive
-                        ? AppColors.sidebarActiveText
-                        : AppColors.sidebarText,
+                    color: isActive ? c.sidebarActiveText : c.sidebarText,
                   ),
                 ),
               ],
@@ -283,15 +294,17 @@ class SidebarNav extends ConsumerWidget {
     );
   }
 
-  Widget _buildBottomBar(WidgetRef ref, AppLocalizations l10n) {
+  Widget _buildBottomBar(
+    WidgetRef ref,
+    AppLocalizations l10n,
+    DeskClawColors c,
+  ) {
     final locale = ref.watch(localeProvider);
     final isZh = locale.languageCode == 'zh';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: const BoxDecoration(
-        border: Border(
-          top: BorderSide(color: AppColors.chatListBorder, width: 1),
-        ),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: c.chatListBorder, width: 1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -299,13 +312,10 @@ class SidebarNav extends ConsumerWidget {
           // Language toggle
           Row(
             children: [
-              const Icon(
-                Icons.language,
-                size: 16,
-                color: AppColors.sidebarText,
-              ),
+              Icon(Icons.language, size: 16, color: c.sidebarText),
               const SizedBox(width: 8),
               _buildLangChip(
+                c,
                 label: 'EN',
                 selected: !isZh,
                 onTap: () {
@@ -314,6 +324,7 @@ class SidebarNav extends ConsumerWidget {
               ),
               const SizedBox(width: 4),
               _buildLangChip(
+                c,
                 label: '中文',
                 selected: isZh,
                 onTap: () {
@@ -324,13 +335,14 @@ class SidebarNav extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           // Theme toggle
-          _buildThemeToggle(ref),
+          _buildThemeToggle(ref, c),
         ],
       ),
     );
   }
 
-  Widget _buildLangChip({
+  Widget _buildLangChip(
+    DeskClawColors c, {
     required String label,
     required bool selected,
     required VoidCallback onTap,
@@ -343,7 +355,7 @@ class SidebarNav extends ConsumerWidget {
           borderRadius: BorderRadius.circular(6),
           color: selected ? AppColors.primary : Colors.transparent,
           border: Border.all(
-            color: selected ? AppColors.primary : AppColors.chatListBorder,
+            color: selected ? AppColors.primary : c.chatListBorder,
           ),
         ),
         child: Text(
@@ -351,14 +363,14 @@ class SidebarNav extends ConsumerWidget {
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w600,
-            color: selected ? Colors.white : AppColors.sidebarText,
+            color: selected ? Colors.white : c.sidebarText,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildThemeToggle(WidgetRef ref) {
+  Widget _buildThemeToggle(WidgetRef ref, DeskClawColors c) {
     final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
     return InkWell(
       borderRadius: BorderRadius.circular(8),
@@ -372,12 +384,12 @@ class SidebarNav extends ConsumerWidget {
           Icon(
             isDark ? Icons.dark_mode : Icons.light_mode,
             size: 18,
-            color: AppColors.sidebarText,
+            color: c.sidebarText,
           ),
           const SizedBox(width: 10),
           Text(
             isDark ? 'Dark Mode' : 'Light Mode',
-            style: const TextStyle(fontSize: 13, color: AppColors.sidebarText),
+            style: TextStyle(fontSize: 13, color: c.sidebarText),
           ),
         ],
       ),

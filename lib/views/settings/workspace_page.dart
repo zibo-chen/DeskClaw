@@ -18,6 +18,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
   MemoryConfigDto? _memoryConfig;
   CostConfigDto? _costConfig;
   bool _loading = true;
+  DeskClawColors get c => DeskClawColors.of(context);
 
   @override
   void initState() {
@@ -59,11 +60,9 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
     return Container(
       height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: AppColors.chatListBorder, width: 1),
-        ),
+      decoration: BoxDecoration(
+        color: c.surfaceBg,
+        border: Border(bottom: BorderSide(color: c.chatListBorder, width: 1)),
       ),
       child: Row(
         children: [
@@ -71,10 +70,10 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
           SizedBox(width: 10),
           Text(
             AppLocalizations.of(context)!.pageWorkspace,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+              color: c.textPrimary,
             ),
           ),
         ],
@@ -204,9 +203,9 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: c.cardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.chatListBorder),
+        border: Border.all(color: c.chatListBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -217,10 +216,10 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
               const SizedBox(width: 8),
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: c.textPrimary,
                 ),
               ),
             ],
@@ -242,9 +241,9 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
             width: 180,
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: AppColors.textSecondary,
+                color: c.textSecondary,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -252,10 +251,7 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
           Expanded(
             child: Text(
               value.isEmpty ? '—' : value,
-              style: const TextStyle(
-                fontSize: 13,
-                color: AppColors.textPrimary,
-              ),
+              style: TextStyle(fontSize: 13, color: c.textPrimary),
             ),
           ),
         ],
@@ -276,9 +272,9 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
             width: 180,
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: AppColors.textSecondary,
+                color: c.textSecondary,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -306,9 +302,9 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
             width: 180,
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: AppColors.textSecondary,
+                color: c.textSecondary,
                 fontWeight: FontWeight.w500,
               ),
             ),

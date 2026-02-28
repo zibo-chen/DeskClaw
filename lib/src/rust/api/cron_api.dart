@@ -6,7 +6,7 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `build_schedule_json`, `compute_next_run`, `db_path`, `decode_schedule_info`, `format_interval`, `open_db`, `parse_rfc3339_to_ts`, `row_to_dto`
+// These functions are ignored because they are not marked as `pub`: `build_schedule_json`, `compute_next_run`, `db_path`, `decode_schedule_info`, `format_interval`, `open_db`, `parse_rfc3339_to_ts`, `row_to_dto`, `run_agent_job`, `run_shell_job`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`
 
 /// Get cron system configuration and stats
@@ -88,6 +88,14 @@ Future<String> updateCronJob({
   prompt: prompt,
   enabled: enabled,
 );
+
+/// Execute a cron job immediately (manual trigger)
+Future<String> runCronJobNow({required String jobId}) =>
+    RustLib.instance.api.crateApiCronApiRunCronJobNow(jobId: jobId);
+
+/// Start a background cron scheduler that polls for due jobs
+Future<String> startCronScheduler() =>
+    RustLib.instance.api.crateApiCronApiStartCronScheduler();
 
 /// Cron system configuration
 class CronConfigDto {

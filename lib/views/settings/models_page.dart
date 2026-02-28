@@ -24,6 +24,7 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
   bool _isLoading = true;
   bool _isSaving = false;
   String? _saveMessage;
+  DeskClawColors get c => DeskClawColors.of(context);
 
   /// Providers that allow custom model name input
   static const _customModelProviders = {'compatible', 'ollama', 'openrouter'};
@@ -117,9 +118,9 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: c.cardBg,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.chatListBorder),
+                border: Border.all(color: c.chatListBorder),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -254,9 +255,9 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
                 child: Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: c.cardBg,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.chatListBorder),
+                    border: Border.all(color: c.chatListBorder),
                   ),
                   child: Column(
                     children: [
@@ -293,10 +294,10 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: c.textPrimary,
           ),
         ),
         const SizedBox(height: 12),
@@ -310,11 +311,11 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
     final suggestions = _currentProvider.models;
     return Row(
       children: [
-        const SizedBox(
+        SizedBox(
           width: 140,
           child: Text(
             'Model',
-            style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+            style: TextStyle(fontSize: 14, color: c.textSecondary),
           ),
         ),
         Expanded(
@@ -434,10 +435,7 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
           width: 140,
           child: Text(
             label,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-            ),
+            style: TextStyle(fontSize: 14, color: c.textSecondary),
           ),
         ),
         Expanded(
@@ -445,18 +443,15 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.inputBorder),
-              color: AppColors.inputBg,
+              border: Border.all(color: c.inputBorder),
+              color: c.inputBg,
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: values.contains(value) ? value : values.first,
                 isExpanded: true,
                 isDense: true,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textPrimary,
-                ),
+                style: TextStyle(fontSize: 14, color: c.textPrimary),
                 items: List.generate(values.length, (i) {
                   return DropdownMenuItem(
                     value: values[i],
@@ -484,10 +479,7 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
           width: 140,
           child: Text(
             label,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-            ),
+            style: TextStyle(fontSize: 14, color: c.textSecondary),
           ),
         ),
         Expanded(
@@ -519,10 +511,7 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
           width: 140,
           child: Text(
             label,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-            ),
+            style: TextStyle(fontSize: 14, color: c.textSecondary),
           ),
         ),
         Expanded(
@@ -542,10 +531,7 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
                 width: 40,
                 child: Text(
                   value.toStringAsFixed(1),
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textPrimary,
-                  ),
+                  style: TextStyle(fontSize: 13, color: c.textPrimary),
                 ),
               ),
             ],
@@ -564,17 +550,14 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
             width: 140,
             child: Text(
               label,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 14, color: c.textSecondary),
             ),
           ),
           Text(
             value,
             style: TextStyle(
               fontSize: 14,
-              color: valueColor ?? AppColors.textPrimary,
+              color: valueColor ?? c.textPrimary,
               fontWeight: valueColor != null
                   ? FontWeight.w600
                   : FontWeight.normal,
@@ -595,26 +578,27 @@ class _SettingsPageScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = DeskClawColors.of(context);
     return Column(
       children: [
         // Top bar
         Container(
           height: 56,
           padding: const EdgeInsets.symmetric(horizontal: 24),
-          decoration: const BoxDecoration(
-            color: Colors.white,
+          decoration: BoxDecoration(
+            color: c.surfaceBg,
             border: Border(
-              bottom: BorderSide(color: AppColors.chatListBorder, width: 1),
+              bottom: BorderSide(color: c.chatListBorder, width: 1),
             ),
           ),
           child: Align(
             alignment: Alignment.centerLeft,
             child: Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: c.textPrimary,
               ),
             ),
           ),

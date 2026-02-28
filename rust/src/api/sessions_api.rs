@@ -112,8 +112,9 @@ pub async fn list_sessions() -> Vec<SessionSummary> {
                 .messages
                 .last()
                 .map(|m| {
-                    if m.content.len() > 80 {
-                        format!("{}...", &m.content[..80])
+                    let truncated: String = m.content.chars().take(80).collect();
+                    if truncated.len() < m.content.len() {
+                        format!("{}...", truncated)
                     } else {
                         m.content.clone()
                     }
@@ -221,7 +222,7 @@ pub async fn rename_session(session_id: String, new_title: String) -> String {
 pub async fn get_session_stats() -> SessionStats {
     let store = session_store().lock().await;
     let total_msgs: u32 = store.sessions.iter().map(|s| s.messages.len() as u32).sum();
-    let active = super::agent_api::runtime_state().lock().await;
+    let active = super::agent_api::config_state().read().await;
     let active_id = active.active_session_id.clone().unwrap_or_default();
 
     SessionStats {

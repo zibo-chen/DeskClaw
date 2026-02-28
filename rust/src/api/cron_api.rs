@@ -545,3 +545,195 @@ fn format_interval(ms: u64) -> String {
         format!("每 {} 秒", ms / 1000)
     }
 }
+
+// ──────────────────── Execution ──────────────────────────────
+
+/// Execute a cron job immediately (manual trigger)
+pub async fn run_cron_job_now(job_id: String) -> String {
+    // 1. Load job from DB
+    let conn = match open_db() {
+        Ok(c) => c,
+        Err(e) => return format!("error: {e}"),
+    };
+
+    let sql = "SELECT id, expression, command, schedule, job_type, prompt, name, \
+               session_target, model, enabled, delivery, delete_after_run, \
+               created_at, next_run, last_run, last_status, last_output \
+               FROM cron_jobs WHERE id = ?1";
+    let job = match conn.query_row(sql, params![job_id], |row| row_to_dto(row)) {
+        Ok(j) => j,
+        Err(e) => return format!("error: job not found: {e}"),
+    };
+    drop(conn);
+
+    let started = chrono::Utc::now();
+    let started_rfc = started.to_rfc3339();
+
+    // 2. Execute based on job type
+    let (status, output) = if job.job_type == "agent" {
+        run_agent_job(&job).await
+    } else {
+        run_shell_job(&job).await
+    };
+
+    let finished = chrono::Utc::now();
+    let duration_ms = (finished - started).num_milliseconds();
+
+    // 3. Record run result
+    let conn = match open_db() {
+        Ok(c) => c,
+        Err(e) => return format!("error: {e}"),
+    };
+
+    let _ = conn.execute(
+        "INSERT INTO cron_runs (job_id, started_at, finished_at, status, output, duration_ms) \
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+        params![
+            job_id,
+            started_rfc,
+            finished.to_rfc3339(),
+            &status,
+            &output,
+            duration_ms,
+        ],
+    );
+
+    // 4. Update job with last run info and compute next run
+    let now = chrono::Utc::now();
+    let (schedule_type, _) = decode_schedule_info(
+        conn.query_row(
+            "SELECT schedule FROM cron_jobs WHERE id = ?1",
+            params![job_id],
+            |row| row.get::<_, Option<String>>(0),
+        )
+        .unwrap_or(None),
+        &job.expression,
+    );
+    let next_run = compute_next_run(&schedule_type, &job.expression, &now);
+
+    let _ = conn.execute(
+        "UPDATE cron_jobs SET last_run=?1, last_status=?2, last_output=?3, next_run=?4 WHERE id=?5",
+        params![started_rfc, &status, &output, next_run.to_rfc3339(), job_id,],
+    );
+
+    // 5. Handle delete_after_run
+    if job.delete_after_run {
+        let _ = conn.execute("DELETE FROM cron_jobs WHERE id = ?1", params![job_id]);
+    }
+
+    if status == "ok" {
+        format!("ok: {output}")
+    } else {
+        format!("error: {output}")
+    }
+}
+
+/// Execute a shell command job
+async fn run_shell_job(job: &CronJobDto) -> (String, String) {
+    use tokio::process::Command;
+
+    let result = Command::new("sh")
+        .arg("-lc")
+        .arg(&job.command)
+        .output()
+        .await;
+
+    match result {
+        Ok(output) => {
+            let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+            let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+            let combined = if stderr.is_empty() {
+                stdout
+            } else if stdout.is_empty() {
+                stderr
+            } else {
+                format!("{stdout}\n{stderr}")
+            };
+            let truncated = if combined.len() > 2000 {
+                format!("{}...(truncated)", &combined[..2000])
+            } else {
+                combined
+            };
+            if output.status.success() {
+                ("ok".into(), truncated)
+            } else {
+                ("error".into(), truncated)
+            }
+        }
+        Err(e) => ("error".into(), format!("failed to execute: {e}")),
+    }
+}
+
+/// Execute an agent job
+async fn run_agent_job(job: &CronJobDto) -> (String, String) {
+    // Use the existing agent infrastructure
+    let config = {
+        let cs = super::agent_api::config_state().read().await;
+        match &cs.config {
+            Some(c) => c.clone(),
+            None => return ("error".into(), "runtime not initialized".into()),
+        }
+    };
+
+    // Create a temporary agent for this job
+    let mut agent = match zeroclaw::agent::Agent::from_config(&config) {
+        Ok(a) => a,
+        Err(e) => return ("error".into(), format!("failed to create agent: {e}")),
+    };
+
+    match agent.turn(&job.prompt).await {
+        Ok(response) => {
+            let truncated = if response.len() > 2000 {
+                format!("{}...(truncated)", &response[..2000])
+            } else {
+                response
+            };
+            ("ok".into(), truncated)
+        }
+        Err(e) => ("error".into(), format!("agent error: {e}")),
+    }
+}
+
+/// Start a background cron scheduler that polls for due jobs
+pub async fn start_cron_scheduler() -> String {
+    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::sync::OnceLock;
+
+    static RUNNING: OnceLock<AtomicBool> = OnceLock::new();
+    let flag = RUNNING.get_or_init(|| AtomicBool::new(false));
+
+    if flag.load(Ordering::SeqCst) {
+        return "already running".into();
+    }
+    flag.store(true, Ordering::SeqCst);
+
+    tokio::spawn(async move {
+        loop {
+            tokio::time::sleep(tokio::time::Duration::from_secs(30)).await;
+            let now = chrono::Utc::now();
+            // Find due jobs
+            let conn = match open_db() {
+                Ok(c) => c,
+                Err(_) => continue,
+            };
+            let sql = "SELECT id FROM cron_jobs WHERE enabled = 1 AND next_run <= ?1";
+            let due_ids: Vec<String> = {
+                let mut stmt = match conn.prepare(sql) {
+                    Ok(s) => s,
+                    Err(_) => continue,
+                };
+                stmt.query_map(params![now.to_rfc3339()], |row| row.get::<_, String>(0))
+                    .ok()
+                    .map(|rows| rows.filter_map(|r| r.ok()).collect())
+                    .unwrap_or_default()
+            };
+            drop(conn);
+
+            for id in due_ids {
+                let _ = run_cron_job_now(id).await;
+            }
+        }
+    });
+
+    "started".into()
+}

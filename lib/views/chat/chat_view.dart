@@ -19,6 +19,7 @@ class ChatView extends ConsumerStatefulWidget {
 
 class _ChatViewState extends ConsumerState<ChatView> {
   final ScrollController _scrollController = ScrollController();
+  DeskClawColors get c => DeskClawColors.of(context);
 
   @override
   void dispose() {
@@ -38,11 +39,15 @@ class _ChatViewState extends ConsumerState<ChatView> {
     });
   }
 
+  /// Only scroll if the given session is the currently active one
+  void _scrollToBottomIfActive(String sessionId) {
+    if (ref.read(activeSessionIdProvider) == sessionId) {
+      _scrollToBottom();
+    }
+  }
+
   void _handleSend(String text) {
     if (text.trim().isEmpty) return;
-
-    final isProcessing = ref.read(isProcessingProvider);
-    if (isProcessing) return;
 
     // Ensure there's an active session
     var sessionId = ref.read(activeSessionIdProvider);
@@ -51,6 +56,10 @@ class _ChatViewState extends ConsumerState<ChatView> {
       ref.read(activeSessionIdProvider.notifier).state = sessionId;
     }
 
+    // Check if THIS session is already processing
+    final processingSessions = ref.read(processingSessionsProvider);
+    if (processingSessions.contains(sessionId)) return;
+
     // Add user message
     final userMsg = ChatMessage(
       id: 'msg_${DateTime.now().millisecondsSinceEpoch}',
@@ -58,7 +67,15 @@ class _ChatViewState extends ConsumerState<ChatView> {
       content: text,
       timestamp: DateTime.now(),
     );
-    ref.read(messagesProvider.notifier).addMessage(userMsg);
+    // Save current messages to cache before adding (ensures cache is in sync)
+    ref.read(messagesProvider.notifier).saveToCache(sessionId);
+    ref
+        .read(messagesProvider.notifier)
+        .addMessageForSession(
+          sessionId,
+          ref.read(activeSessionIdProvider) ?? '',
+          userMsg,
+        );
     ref.read(sessionsProvider.notifier).incrementMessageCount(sessionId);
 
     // Update session title from first user message
@@ -76,9 +93,13 @@ class _ChatViewState extends ConsumerState<ChatView> {
   }
 
   Future<void> _callAgent(String sessionId) async {
-    ref.read(isProcessingProvider.notifier).state = true;
+    // Mark this session as processing
+    ref.read(processingSessionsProvider.notifier).state = {
+      ...ref.read(processingSessionsProvider),
+      sessionId,
+    };
 
-    // Add streaming placeholder
+    // Add streaming placeholder to this session
     final assistantMsg = ChatMessage(
       id: 'msg_${DateTime.now().millisecondsSinceEpoch}_assistant',
       role: 'assistant',
@@ -86,13 +107,23 @@ class _ChatViewState extends ConsumerState<ChatView> {
       timestamp: DateTime.now(),
       isStreaming: true,
     );
-    ref.read(messagesProvider.notifier).addMessage(assistantMsg);
-    _scrollToBottom();
+    ref
+        .read(messagesProvider.notifier)
+        .addMessageForSession(
+          sessionId,
+          ref.read(activeSessionIdProvider) ?? '',
+          assistantMsg,
+        );
+    _scrollToBottomIfActive(sessionId);
 
     try {
-      // Get the last user message
-      final messages = ref.read(messagesProvider);
-      final lastUserMsg = messages.lastWhere((m) => m.isUser);
+      // Get the last user message from this session's cache
+      final messagesNotifier = ref.read(messagesProvider.notifier);
+      final sessionMessages = messagesNotifier.getCachedMessages(sessionId);
+      final lastUserMsg = sessionMessages.lastWhere((m) => m.isUser);
+
+      // Helper to get current active session ID
+      String activeId() => ref.read(activeSessionIdProvider) ?? '';
 
       // Use the streaming API for real-time updates
       final toolCalls = <ToolCallInfo>[];
@@ -104,25 +135,35 @@ class _ChatViewState extends ConsumerState<ChatView> {
       );
 
       await for (final event in stream) {
+        if (!mounted) break;
         event.when(
           thinking: () {
+            if (!mounted) return;
             // Show thinking indicator
             final l10n = AppLocalizations.of(context)!;
             ref
                 .read(messagesProvider.notifier)
-                .updateLastAssistantMessage(l10n.thinking, isStreaming: true);
-            _scrollToBottom();
+                .updateAssistantMessageForSession(
+                  sessionId,
+                  activeId(),
+                  l10n.thinking,
+                  isStreaming: true,
+                );
+            _scrollToBottomIfActive(sessionId);
           },
           textDelta: (text) {
             responseBuffer.write(text);
+            if (!mounted) return;
             ref
                 .read(messagesProvider.notifier)
-                .updateLastAssistantMessage(
+                .updateAssistantMessageForSession(
+                  sessionId,
+                  activeId(),
                   responseBuffer.toString(),
                   isStreaming: true,
                   toolCalls: toolCalls.isNotEmpty ? List.from(toolCalls) : null,
                 );
-            _scrollToBottom();
+            _scrollToBottomIfActive(sessionId);
           },
           toolCallStart: (name, args) {
             toolCalls.add(
@@ -133,14 +174,17 @@ class _ChatViewState extends ConsumerState<ChatView> {
                 status: ToolCallStatus.running,
               ),
             );
+            if (!mounted) return;
             ref
                 .read(messagesProvider.notifier)
-                .updateLastAssistantMessage(
+                .updateAssistantMessageForSession(
+                  sessionId,
+                  activeId(),
                   responseBuffer.toString(),
                   isStreaming: true,
                   toolCalls: List.from(toolCalls),
                 );
-            _scrollToBottom();
+            _scrollToBottomIfActive(sessionId);
           },
           toolCallEnd: (name, result, success) {
             final idx = toolCalls.lastIndexWhere((tc) => tc.name == name);
@@ -153,19 +197,23 @@ class _ChatViewState extends ConsumerState<ChatView> {
                     : ToolCallStatus.failed,
               );
             }
+            if (!mounted) return;
             ref
                 .read(messagesProvider.notifier)
-                .updateLastAssistantMessage(
+                .updateAssistantMessageForSession(
+                  sessionId,
+                  activeId(),
                   responseBuffer.toString(),
                   isStreaming: true,
                   toolCalls: List.from(toolCalls),
                 );
-            _scrollToBottom();
+            _scrollToBottomIfActive(sessionId);
           },
           messageComplete: (inputTokens, outputTokens) {
             // Message is complete
           },
           error: (message) {
+            if (!mounted) return;
             final l10n = AppLocalizations.of(context)!;
             responseBuffer.clear();
             responseBuffer.write(l10n.errorOccurred(message));
@@ -174,25 +222,38 @@ class _ChatViewState extends ConsumerState<ChatView> {
       }
 
       // Mark as complete
-      ref
-          .read(messagesProvider.notifier)
-          .updateLastAssistantMessage(
-            responseBuffer.toString(),
-            isStreaming: false,
-            toolCalls: toolCalls.isNotEmpty ? toolCalls : null,
-          );
-      ref.read(sessionsProvider.notifier).incrementMessageCount(sessionId);
+      if (mounted) {
+        ref
+            .read(messagesProvider.notifier)
+            .updateAssistantMessageForSession(
+              sessionId,
+              activeId(),
+              responseBuffer.toString(),
+              isStreaming: false,
+              toolCalls: toolCalls.isNotEmpty ? toolCalls : null,
+            );
+        ref.read(sessionsProvider.notifier).incrementMessageCount(sessionId);
+      }
     } catch (e) {
-      final l10n = AppLocalizations.of(context)!;
-      ref
-          .read(messagesProvider.notifier)
-          .updateLastAssistantMessage(
-            l10n.errorGeneric(e.toString()),
-            isStreaming: false,
-          );
+      if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        ref
+            .read(messagesProvider.notifier)
+            .updateAssistantMessageForSession(
+              sessionId,
+              ref.read(activeSessionIdProvider) ?? '',
+              l10n.errorGeneric(e.toString()),
+              isStreaming: false,
+            );
+      }
     } finally {
-      ref.read(isProcessingProvider.notifier).state = false;
-      _scrollToBottom();
+      if (mounted) {
+        // Remove this session from the processing set
+        final current = ref.read(processingSessionsProvider);
+        ref.read(processingSessionsProvider.notifier).state = {...current}
+          ..remove(sessionId);
+        _scrollToBottomIfActive(sessionId);
+      }
       _persistCurrentSession(sessionId);
     }
   }
@@ -203,6 +264,7 @@ class _ChatViewState extends ConsumerState<ChatView> {
 
   /// Persist the current session & messages to disk via Rust
   Future<void> _persistCurrentSession(String sessionId) async {
+    if (!mounted) return;
     try {
       final messages = ref.read(messagesProvider);
       final sessions = ref.read(sessionsProvider);
@@ -265,20 +327,18 @@ class _ChatViewState extends ConsumerState<ChatView> {
     return Container(
       height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: AppColors.chatListBorder, width: 1),
-        ),
+      decoration: BoxDecoration(
+        color: c.surfaceBg,
+        border: Border(bottom: BorderSide(color: c.chatListBorder, width: 1)),
       ),
       child: Row(
         children: [
           Text(
             l10n.chatTitle,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+              color: c.textPrimary,
             ),
           ),
         ],
@@ -299,19 +359,16 @@ class _ChatViewState extends ConsumerState<ChatView> {
             // Welcome text
             Text(
               l10n.welcomeTitle,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: c.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               l10n.welcomeSubtitle,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 14, color: c.textSecondary),
             ),
             const SizedBox(height: 32),
 
@@ -343,7 +400,7 @@ class _ChatViewState extends ConsumerState<ChatView> {
           height: 56,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppColors.textPrimary,
+            color: c.textPrimary,
           ),
           child: const Icon(Icons.pets, color: Colors.white, size: 28),
         ),
@@ -373,8 +430,8 @@ class _ChatViewState extends ConsumerState<ChatView> {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.chatListBorder),
-              color: Colors.white,
+              border: Border.all(color: c.chatListBorder),
+              color: c.surfaceBg,
             ),
             child: Row(
               children: [
@@ -383,17 +440,10 @@ class _ChatViewState extends ConsumerState<ChatView> {
                 Expanded(
                   child: Text(
                     suggestion,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textPrimary,
-                    ),
+                    style: TextStyle(fontSize: 14, color: c.textPrimary),
                   ),
                 ),
-                const Icon(
-                  Icons.arrow_forward,
-                  size: 16,
-                  color: AppColors.textHint,
-                ),
+                Icon(Icons.arrow_forward, size: 16, color: c.textHint),
               ],
             ),
           ),

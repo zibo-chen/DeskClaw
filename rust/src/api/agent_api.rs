@@ -1,8 +1,7 @@
 use crate::frb_generated::StreamSink;
 use flutter_rust_bridge::frb;
-use std::collections::HashMap;
-use std::sync::OnceLock;
-use tokio::sync::Mutex as TokioMutex;
+use std::sync::{Arc, OnceLock};
+use tokio::sync::{Mutex as TokioMutex, RwLock};
 
 // ──────────────────────────── DTOs ────────────────────────────
 
@@ -83,22 +82,31 @@ pub struct RuntimeStatus {
 }
 
 // ──────────────────────── Runtime State ───────────────────────
+//
+// Split into two separate locks to reduce contention:
+//   - `ConfigState` (RwLock): config + session id — short reads, rare writes
+//   - `AgentHandle` (Arc<TokioMutex>): the Agent itself — held only during turn()
 
-pub(crate) struct RuntimeState {
+pub(crate) struct ConfigState {
     pub(crate) config: Option<zeroclaw::Config>,
     pub(crate) active_session_id: Option<String>,
-    pub(crate) agent: Option<zeroclaw::agent::Agent>,
 }
 
-pub(crate) fn runtime_state() -> &'static TokioMutex<RuntimeState> {
-    static STATE: OnceLock<TokioMutex<RuntimeState>> = OnceLock::new();
+pub(crate) fn config_state() -> &'static RwLock<ConfigState> {
+    static STATE: OnceLock<RwLock<ConfigState>> = OnceLock::new();
     STATE.get_or_init(|| {
-        TokioMutex::new(RuntimeState {
+        RwLock::new(ConfigState {
             config: None,
             active_session_id: None,
-            agent: None,
         })
     })
+}
+
+/// The Agent is behind its own Arc<Mutex> so that config reads don't block on
+/// an in-flight LLM call, and vice-versa.
+pub(crate) fn agent_handle() -> &'static TokioMutex<Option<zeroclaw::agent::Agent>> {
+    static AGENT: OnceLock<TokioMutex<Option<zeroclaw::agent::Agent>>> = OnceLock::new();
+    AGENT.get_or_init(|| TokioMutex::new(None))
 }
 
 // ──────────────────── Initialization API ──────────────────────
@@ -122,10 +130,13 @@ pub async fn init_runtime() -> String {
                 config.default_model.as_deref().unwrap_or("(none)"),
                 config.api_key.is_some(),
             );
-            let mut state = runtime_state().lock().await;
-            state.config = Some(config);
-            state.agent = None;
-            state.active_session_id = None;
+            {
+                let mut cs = config_state().write().await;
+                cs.config = Some(config);
+                cs.active_session_id = None;
+            }
+            // Invalidate any existing agent
+            *agent_handle().lock().await = None;
             tracing::info!("DeskClaw runtime initialized: {info}");
             info
         }
@@ -138,8 +149,8 @@ pub async fn init_runtime() -> String {
 
 /// Check if the runtime has a loaded config with an API key
 pub async fn get_runtime_status() -> RuntimeStatus {
-    let state = runtime_state().lock().await;
-    match &state.config {
+    let cs = config_state().read().await;
+    match &cs.config {
         Some(config) => RuntimeStatus {
             initialized: true,
             has_api_key: config.api_key.is_some(),
@@ -172,8 +183,8 @@ pub async fn update_config(
     api_base: Option<String>,
     temperature: Option<f64>,
 ) -> String {
-    let mut state = runtime_state().lock().await;
-    let config = match state.config.as_mut() {
+    let mut cs = config_state().write().await;
+    let config = match cs.config.as_mut() {
         Some(c) => c,
         None => return "error: runtime not initialized".into(),
     };
@@ -210,8 +221,9 @@ pub async fn update_config(
     }
 
     // Invalidate agent so it gets recreated with new config
-    state.agent = None;
-    state.active_session_id = None;
+    cs.active_session_id = None;
+    drop(cs);
+    *agent_handle().lock().await = None;
 
     "ok".into()
 }
@@ -219,8 +231,8 @@ pub async fn update_config(
 /// Persist current config to disk (~/.zeroclaw/config.toml).
 /// Reads the existing file, merges relevant fields, and writes back.
 pub async fn save_config_to_disk() -> String {
-    let state = runtime_state().lock().await;
-    let config = match &state.config {
+    let cs = config_state().read().await;
+    let config = match &cs.config {
         Some(c) => c,
         None => return "error: no config loaded".into(),
     };
@@ -270,8 +282,8 @@ pub async fn save_config_to_disk() -> String {
 
 /// Get the current config values as an AppConfig DTO
 pub async fn get_current_config() -> super::config_api::AppConfig {
-    let state = runtime_state().lock().await;
-    if let Some(config) = &state.config {
+    let cs = config_state().read().await;
+    if let Some(config) = &cs.config {
         let raw_provider = config
             .default_provider
             .clone()
@@ -322,83 +334,98 @@ pub fn create_session() -> ChatSessionInfo {
 
 /// Clear the current session (resets agent conversation history)
 pub async fn clear_session() {
-    let mut state = runtime_state().lock().await;
-    if let Some(agent) = state.agent.as_mut() {
-        agent.clear_history();
+    {
+        let mut agent = agent_handle().lock().await;
+        if let Some(a) = agent.as_mut() {
+            a.clear_history();
+        }
     }
-    state.active_session_id = None;
+    config_state().write().await.active_session_id = None;
 }
 
 /// Switch to a different session — clears agent history for the new context
 pub async fn switch_session(session_id: String) {
-    let mut state = runtime_state().lock().await;
-    if state.active_session_id.as_ref() != Some(&session_id) {
-        if let Some(agent) = state.agent.as_mut() {
-            agent.clear_history();
+    let mut cs = config_state().write().await;
+    if cs.active_session_id.as_ref() != Some(&session_id) {
+        // Release config lock before touching agent
+        cs.active_session_id = Some(session_id);
+        drop(cs);
+        let mut agent = agent_handle().lock().await;
+        if let Some(a) = agent.as_mut() {
+            a.clear_history();
         }
-        state.active_session_id = Some(session_id);
     }
 }
 
 // ──────────────────── Message Handling ────────────────────────
 
+/// Helper: ensure agent is created and session is current.
+/// Takes a short config read-lock, then a separate agent lock.
+/// Returns an error string if something goes wrong.
+async fn ensure_agent(session_id: &str) -> Result<(), String> {
+    // 1. Read config (short-lived RwLock read)
+    let config = {
+        let cs = config_state().read().await;
+        match &cs.config {
+            Some(c) => c.clone(),
+            None => return Err("Runtime not initialized. Call init_runtime() first.".into()),
+        }
+    };
+
+    // 2. Check API key
+    let provider_name = config.default_provider.as_deref().unwrap_or("openrouter");
+    let needs_key = !matches!(provider_name, "ollama");
+    if needs_key && config.api_key.is_none() {
+        return Err("No API key configured. Please set your API key in Settings → Models.".into());
+    }
+
+    // 3. Check if we need a new agent (separate locks, no overlap)
+    let need_new = {
+        let cs = config_state().read().await;
+        let agent = agent_handle().lock().await;
+        agent.is_none() || cs.active_session_id.as_deref() != Some(session_id)
+    };
+
+    if need_new {
+        tracing::info!("Creating new agent for session {session_id}");
+        let agent = zeroclaw::agent::Agent::from_config(&config)
+            .map_err(|e| format!("Failed to create agent: {e}"))?;
+        *agent_handle().lock().await = Some(agent);
+        config_state().write().await.active_session_id = Some(session_id.to_string());
+    }
+
+    Ok(())
+}
+
 /// Send a message to the zeroclaw agent and get response events.
 /// This calls the real LLM provider and executes tools as needed.
 pub async fn send_message(session_id: String, message: String) -> Vec<AgentEvent> {
-    let mut state = runtime_state().lock().await;
+    // Ensure agent ready — short config lock, released before turn()
+    if let Err(msg) = ensure_agent(&session_id).await {
+        return vec![AgentEvent::Error { message: msg }];
+    }
 
-    // Ensure config exists
-    let config = match state.config.as_ref() {
-        Some(c) => c.clone(),
+    // Lock agent only for the actual turn — config_state is NOT locked here,
+    // so other APIs (get_runtime_status, get_current_config, etc.) stay responsive.
+    let mut agent_guard = agent_handle().lock().await;
+    let agent = match agent_guard.as_mut() {
+        Some(a) => a,
         None => {
             return vec![AgentEvent::Error {
-                message: "Runtime not initialized. Call init_runtime() first.".into(),
+                message: "Agent not available".into(),
             }];
         }
     };
 
-    // Check API key (required for cloud providers)
-    let provider_name = config.default_provider.as_deref().unwrap_or("openrouter");
-    let needs_key = !matches!(provider_name, "ollama");
-    if needs_key && config.api_key.is_none() {
-        return vec![AgentEvent::Error {
-            message: "No API key configured. Please set your API key in Settings → Models.".into(),
-        }];
-    }
-
-    // Create agent if needed (new session or config changed)
-    let need_new_agent =
-        state.agent.is_none() || state.active_session_id.as_ref() != Some(&session_id);
-
-    if need_new_agent {
-        tracing::info!("Creating new agent for session {session_id}");
-        match zeroclaw::agent::Agent::from_config(&config) {
-            Ok(agent) => {
-                state.agent = Some(agent);
-                state.active_session_id = Some(session_id);
-            }
-            Err(e) => {
-                tracing::error!("Failed to create agent: {e}");
-                return vec![AgentEvent::Error {
-                    message: format!("Failed to create agent: {e}"),
-                }];
-            }
-        }
-    }
-
-    let agent = state.agent.as_mut().unwrap();
-
-    // Track history length before turn (to extract tool call events after)
     let history_before = agent.history().len();
-
-    // Execute the agent turn (calls real LLM + tools)
     let mut events = Vec::new();
 
     match agent.turn(&message).await {
         Ok(response) => {
-            // Extract tool call events from agent's conversation history
+            // Extract tool call events from conversation history
             let history = agent.history();
-            let mut tool_name_map: HashMap<String, String> = HashMap::new();
+            let mut tool_name_map: std::collections::HashMap<String, String> =
+                std::collections::HashMap::new();
 
             for msg in history.iter().skip(history_before) {
                 match msg {
@@ -431,7 +458,6 @@ pub async fn send_message(session_id: String, message: String) -> Vec<AgentEvent
                 }
             }
 
-            // Send the final response text
             events.push(AgentEvent::TextDelta { text: response });
             events.push(AgentEvent::MessageComplete {
                 input_tokens: None,
@@ -449,104 +475,130 @@ pub async fn send_message(session_id: String, message: String) -> Vec<AgentEvent
     events
 }
 
-/// Streaming version: sends agent events one-by-one through a StreamSink.
-/// This allows the Flutter UI to update in real-time as the agent processes.
+/// Streaming version: sends agent events in real-time through a StreamSink.
+///
+/// Uses zeroclaw's `Agent::turn_streaming()` which delegates to the internal
+/// `run_tool_call_loop` with an `on_delta` channel.  Tool-start / tool-end /
+/// thinking events are streamed **as they happen**, not after the full turn
+/// completes.
 pub async fn send_message_stream(
     session_id: String,
     message: String,
     sink: StreamSink<AgentEvent>,
 ) {
-    let mut state = runtime_state().lock().await;
-
-    let config = match state.config.as_ref() {
-        Some(c) => c.clone(),
-        None => {
-            let _ = sink.add(AgentEvent::Error {
-                message: "Runtime not initialized. Call init_runtime() first.".into(),
-            });
-            return;
-        }
-    };
-
-    let provider_name = config.default_provider.as_deref().unwrap_or("openrouter");
-    let needs_key = !matches!(provider_name, "ollama");
-    if needs_key && config.api_key.is_none() {
-        let _ = sink.add(AgentEvent::Error {
-            message: "No API key configured. Please set your API key in Settings → Models.".into(),
-        });
+    // Ensure agent ready — short config lock
+    if let Err(msg) = ensure_agent(&session_id).await {
+        let _ = sink.add(AgentEvent::Error { message: msg });
         return;
     }
 
-    // Emit thinking event
     let _ = sink.add(AgentEvent::Thinking);
 
-    let need_new_agent =
-        state.agent.is_none() || state.active_session_id.as_ref() != Some(&session_id);
+    // Create an mpsc channel for streaming deltas from zeroclaw
+    let (tx, mut rx) = tokio::sync::mpsc::channel::<String>(64);
 
-    if need_new_agent {
-        tracing::info!("Creating new agent for session {session_id}");
-        match zeroclaw::agent::Agent::from_config(&config) {
-            Ok(agent) => {
-                state.agent = Some(agent);
-                state.active_session_id = Some(session_id);
+    // Wrap the sink in an Arc so it can be shared with the relay task
+    let sink = Arc::new(sink);
+    let sink_clone = sink.clone();
+
+    // Spawn a relay task that converts zeroclaw's string-based delta protocol
+    // into typed AgentEvent messages for Flutter.
+    let relay_handle = tokio::spawn(async move {
+        while let Some(delta) = rx.recv().await {
+            let trimmed = delta.trim();
+
+            // Sentinel: clear accumulated progress (final answer coming)
+            if trimmed == "\x00CLEAR\x00" {
+                continue; // Flutter handles this differently
             }
-            Err(e) => {
-                tracing::error!("Failed to create agent: {e}");
+
+            // Structured tool result: \x01TOOL_RESULT\x02name\x02success\x02output\x01
+            // Sent right after ✅/❌ with the actual tool output.
+            if delta.starts_with('\x01') && delta.contains("TOOL_RESULT\x02") {
+                if let Some(rest) = delta
+                    .trim_start_matches('\x01')
+                    .strip_prefix("TOOL_RESULT\x02")
+                {
+                    // rest = "name\x02success\x02output\x01"
+                    let rest = rest.trim_end_matches('\x01');
+                    let parts: Vec<&str> = rest.splitn(3, '\x02').collect();
+                    if parts.len() == 3 {
+                        let name = parts[0].to_string();
+                        let success = parts[1] == "true";
+                        let result = parts[2].to_string();
+                        let _ = sink_clone.add(AgentEvent::ToolCallEnd {
+                            name,
+                            result,
+                            success,
+                        });
+                    }
+                }
+                continue;
+            }
+
+            // Tool start: "⏳ tool_name: args" or "⏳ tool_name"
+            if trimmed.starts_with('⏳') {
+                let rest = trimmed.trim_start_matches('⏳').trim();
+                let (name, args) = if let Some((n, a)) = rest.split_once(':') {
+                    (n.trim().to_string(), a.trim().to_string())
+                } else {
+                    (rest.to_string(), String::new())
+                };
+                let _ = sink_clone.add(AgentEvent::ToolCallStart { name, args });
+                continue;
+            }
+
+            // Tool success: "✅ tool_name (Ns)"
+            // Status-only; the actual result follows in the TOOL_RESULT message.
+            if trimmed.starts_with('✅') {
+                continue;
+            }
+
+            // Tool failure: "❌ tool_name (Ns)"
+            // Status-only; the actual result follows in the TOOL_RESULT message.
+            if trimmed.starts_with('❌') {
+                continue;
+            }
+
+            // Thinking progress: "🤔 Thinking..."
+            if trimmed.starts_with('🤔') {
+                let _ = sink_clone.add(AgentEvent::Thinking);
+                continue;
+            }
+
+            // Tool call count: "💬 Got N tool call(s) ..."
+            if trimmed.starts_with('💬') {
+                // Informational — skip or treat as thinking
+                continue;
+            }
+
+            // Everything else is streamed text content
+            if !delta.is_empty() {
+                let _ = sink_clone.add(AgentEvent::TextDelta { text: delta });
+            }
+        }
+    });
+
+    // Lock only the agent (not config) for the duration of the LLM turn
+    let result = {
+        let mut agent_guard = agent_handle().lock().await;
+        let agent = match agent_guard.as_mut() {
+            Some(a) => a,
+            None => {
                 let _ = sink.add(AgentEvent::Error {
-                    message: format!("Failed to create agent: {e}"),
+                    message: "Agent not available".into(),
                 });
                 return;
             }
-        }
-    }
+        };
+        agent.turn_streaming(&message, tx).await
+    };
 
-    let agent = state.agent.as_mut().unwrap();
-    let history_before = agent.history().len();
+    // Wait for relay task to finish draining
+    let _ = relay_handle.await;
 
-    match agent.turn(&message).await {
-        Ok(response) => {
-            let history = agent.history();
-            let mut tool_name_map: HashMap<String, String> = HashMap::new();
-
-            for msg in history.iter().skip(history_before) {
-                match msg {
-                    zeroclaw::providers::ConversationMessage::AssistantToolCalls {
-                        tool_calls,
-                        ..
-                    } => {
-                        for tc in tool_calls {
-                            tool_name_map.insert(tc.id.clone(), tc.name.clone());
-                            let _ = sink.add(AgentEvent::ToolCallStart {
-                                name: tc.name.clone(),
-                                args: truncate_str(&tc.arguments, 1000),
-                            });
-                        }
-                    }
-                    zeroclaw::providers::ConversationMessage::ToolResults(results) => {
-                        for r in results {
-                            let name = tool_name_map
-                                .get(&r.tool_call_id)
-                                .cloned()
-                                .unwrap_or_else(|| r.tool_call_id.clone());
-                            let _ = sink.add(AgentEvent::ToolCallEnd {
-                                name,
-                                result: truncate_str(&r.content, 500),
-                                success: true,
-                            });
-                        }
-                    }
-                    _ => {}
-                }
-            }
-
-            // Stream text in chunks for real-time feel
-            let chunk_size = 20;
-            let chars: Vec<char> = response.chars().collect();
-            for chunk in chars.chunks(chunk_size) {
-                let text: String = chunk.iter().collect();
-                let _ = sink.add(AgentEvent::TextDelta { text });
-            }
-
+    match result {
+        Ok(_) => {
             let _ = sink.add(AgentEvent::MessageComplete {
                 input_tokens: None,
                 output_tokens: None,
@@ -563,17 +615,36 @@ pub async fn send_message_stream(
 
 // ──────────────────── Tool Listing ────────────────────────────
 
-/// List available tools (static list of zeroclaw's built-in tools)
+/// List available tools dynamically from the agent's registered tool specs.
+/// Falls back to a minimal static list if no agent is currently initialized.
+///
+/// Note: kept as sync (#[frb(sync)]) to match the existing FRB generated binding.
+/// Uses `try_lock` to avoid blocking if agent is mid-turn.
 #[frb(sync)]
 pub fn list_tools() -> Vec<ToolSpecDto> {
+    // Try non-blocking lock — if agent is busy (mid-turn), fall back to static list
+    if let Ok(guard) = agent_handle().try_lock() {
+        if let Some(agent) = guard.as_ref() {
+            return agent
+                .tool_specs()
+                .iter()
+                .map(|spec| ToolSpecDto {
+                    name: spec.name.clone(),
+                    description: spec.description.clone(),
+                })
+                .collect();
+        }
+    }
+
+    // Fallback: no agent yet or agent is busy
     vec![
         ToolSpecDto {
             name: "shell".into(),
-            description: "Execute shell commands in the workspace".into(),
+            description: "Execute shell commands".into(),
         },
         ToolSpecDto {
             name: "file_read".into(),
-            description: "Read file contents with line range support".into(),
+            description: "Read file contents".into(),
         },
         ToolSpecDto {
             name: "file_write".into(),
@@ -581,7 +652,7 @@ pub fn list_tools() -> Vec<ToolSpecDto> {
         },
         ToolSpecDto {
             name: "file_edit".into(),
-            description: "Edit files with search and replace".into(),
+            description: "Edit files with search/replace".into(),
         },
         ToolSpecDto {
             name: "glob_search".into(),
@@ -589,59 +660,7 @@ pub fn list_tools() -> Vec<ToolSpecDto> {
         },
         ToolSpecDto {
             name: "content_search".into(),
-            description: "Search file contents with regex".into(),
-        },
-        ToolSpecDto {
-            name: "web_search".into(),
-            description: "Search the web for information".into(),
-        },
-        ToolSpecDto {
-            name: "web_fetch".into(),
-            description: "Fetch and extract webpage content".into(),
-        },
-        ToolSpecDto {
-            name: "http_request".into(),
-            description: "Make HTTP API requests (GET/POST/PUT/DELETE)".into(),
-        },
-        ToolSpecDto {
-            name: "git_operations".into(),
-            description: "Git version control operations".into(),
-        },
-        ToolSpecDto {
-            name: "memory_store".into(),
-            description: "Store information in long-term memory".into(),
-        },
-        ToolSpecDto {
-            name: "memory_recall".into(),
-            description: "Recall stored information".into(),
-        },
-        ToolSpecDto {
-            name: "memory_forget".into(),
-            description: "Remove information from memory".into(),
-        },
-        ToolSpecDto {
-            name: "screenshot".into(),
-            description: "Take a screenshot of the screen".into(),
-        },
-        ToolSpecDto {
-            name: "pdf_read".into(),
-            description: "Extract text from PDF files".into(),
-        },
-        ToolSpecDto {
-            name: "image_info".into(),
-            description: "Analyze image metadata and content".into(),
-        },
-        ToolSpecDto {
-            name: "schedule".into(),
-            description: "Schedule tasks for later execution".into(),
-        },
-        ToolSpecDto {
-            name: "delegate".into(),
-            description: "Delegate a sub-task to another agent".into(),
-        },
-        ToolSpecDto {
-            name: "browser".into(),
-            description: "Browser automation and web interaction".into(),
+            description: "Search file contents".into(),
         },
     ]
 }

@@ -93,6 +93,14 @@ final messagesProvider =
 class MessagesNotifier extends StateNotifier<List<ChatMessage>> {
   MessagesNotifier() : super([]);
 
+  /// In-memory cache of messages per session
+  final Map<String, List<ChatMessage>> _sessionMessages = {};
+
+  /// Get messages from the cache for a specific session
+  List<ChatMessage> getCachedMessages(String sessionId) {
+    return _sessionMessages[sessionId] ?? state;
+  }
+
   void addMessage(ChatMessage message) {
     state = [...state, message];
   }
@@ -116,13 +124,93 @@ class MessagesNotifier extends StateNotifier<List<ChatMessage>> {
     }
   }
 
+  /// Save current messages to memory cache for a session
+  void saveToCache(String sessionId) {
+    _sessionMessages[sessionId] = List.from(state);
+  }
+
+  /// Load messages from memory cache, or set from persisted data
+  void loadFromCache(String sessionId) {
+    final cached = _sessionMessages[sessionId];
+    if (cached != null) {
+      state = List.from(cached);
+    } else {
+      state = [];
+    }
+  }
+
+  /// Set messages directly (e.g. from persisted session)
+  void setMessages(List<ChatMessage> messages) {
+    state = messages;
+  }
+
+  /// Remove cached messages for a session
+  void removeFromCache(String sessionId) {
+    _sessionMessages.remove(sessionId);
+  }
+
   void clear() {
     state = [];
   }
+
+  /// Update the last assistant message in a specific session's cache.
+  /// If the session is currently active, also update the global state.
+  void updateAssistantMessageForSession(
+    String sessionId,
+    String activeSessionId,
+    String content, {
+    bool? isStreaming,
+    List<ToolCallInfo>? toolCalls,
+  }) {
+    // Always update the cache
+    final cached = _sessionMessages[sessionId];
+    if (cached != null && cached.isNotEmpty) {
+      final last = cached.last;
+      if (last.isAssistant) {
+        cached[cached.length - 1] = last.copyWith(
+          content: content,
+          isStreaming: isStreaming ?? last.isStreaming,
+          toolCalls: toolCalls ?? last.toolCalls,
+        );
+      }
+    }
+    // If this session is the currently visible session, also update the UI state
+    if (sessionId == activeSessionId) {
+      updateLastAssistantMessage(
+        content,
+        isStreaming: isStreaming,
+        toolCalls: toolCalls,
+      );
+    }
+  }
+
+  /// Add a message to a specific session's cache.
+  /// If the session is currently active, also update the global state.
+  void addMessageForSession(
+    String sessionId,
+    String activeSessionId,
+    ChatMessage message,
+  ) {
+    // Always update the cache
+    _sessionMessages.putIfAbsent(sessionId, () => []);
+    _sessionMessages[sessionId]!.add(message);
+    // If this session is the currently visible session, also update the UI state
+    if (sessionId == activeSessionId) {
+      addMessage(message);
+    }
+  }
 }
 
-/// Whether the agent is currently processing
-final isProcessingProvider = StateProvider<bool>((ref) => false);
+/// Set of session IDs that are currently processing
+final processingSessionsProvider = StateProvider<Set<String>>((ref) => {});
+
+/// Convenience: whether the currently active session is processing
+final isCurrentSessionProcessingProvider = Provider<bool>((ref) {
+  final activeId = ref.watch(activeSessionIdProvider);
+  final processing = ref.watch(processingSessionsProvider);
+  if (activeId == null) return false;
+  return processing.contains(activeId);
+});
 
 /// Language / Locale setting
 final localeProvider = StateProvider<Locale>((ref) => const Locale('en'));

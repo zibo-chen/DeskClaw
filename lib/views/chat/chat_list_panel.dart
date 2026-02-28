@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:deskclaw/constants.dart';
 import 'package:deskclaw/l10n/app_localizations.dart';
+import 'package:deskclaw/models/chat_message.dart';
 import 'package:deskclaw/providers/providers.dart';
 import 'package:deskclaw/theme/app_theme.dart';
 import 'package:deskclaw/src/rust/api/agent_api.dart' as agent_api;
+import 'package:deskclaw/src/rust/api/sessions_api.dart' as sessions_api;
 
 /// Chat session list panel (middle panel in reference)
 class ChatListPanel extends ConsumerWidget {
@@ -15,14 +17,13 @@ class ChatListPanel extends ConsumerWidget {
     final sessions = ref.watch(sessionsProvider);
     final activeId = ref.watch(activeSessionIdProvider);
     final l10n = AppLocalizations.of(context)!;
+    final c = DeskClawColors.of(context);
 
     return Container(
       width: AppConstants.chatListWidth,
-      decoration: const BoxDecoration(
-        color: AppColors.chatListBg,
-        border: Border(
-          right: BorderSide(color: AppColors.chatListBorder, width: 1),
-        ),
+      decoration: BoxDecoration(
+        color: c.chatListBg,
+        border: Border(right: BorderSide(color: c.chatListBorder, width: 1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -34,16 +35,16 @@ class ChatListPanel extends ConsumerWidget {
               children: [
                 Text(
                   l10n.workWithDeskClaw,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: c.textPrimary,
                   ),
                 ),
                 const Spacer(),
                 IconButton(
                   icon: const Icon(Icons.copy_all, size: 18),
-                  color: AppColors.textHint,
+                  color: c.textHint,
                   onPressed: () {},
                   tooltip: l10n.tooltipCopy,
                   padding: EdgeInsets.zero,
@@ -63,6 +64,11 @@ class ChatListPanel extends ConsumerWidget {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () {
+                  // Save current session messages to cache
+                  final currentId = ref.read(activeSessionIdProvider);
+                  if (currentId != null) {
+                    ref.read(messagesProvider.notifier).saveToCache(currentId);
+                  }
                   final id = ref
                       .read(sessionsProvider.notifier)
                       .createSession();
@@ -90,7 +96,7 @@ class ChatListPanel extends ConsumerWidget {
           // Session list
           Expanded(
             child: sessions.isEmpty
-                ? _buildEmptyState(l10n)
+                ? _buildEmptyState(l10n, c)
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     itemCount: sessions.length,
@@ -100,16 +106,58 @@ class ChatListPanel extends ConsumerWidget {
                       return _ChatSessionTile(
                         session: session,
                         isActive: isActive,
-                        onTap: () {
+                        onTap: () async {
+                          if (isActive) return; // already active
+                          // Save current session messages to cache
+                          final currentId = ref.read(activeSessionIdProvider);
+                          if (currentId != null) {
+                            ref
+                                .read(messagesProvider.notifier)
+                                .saveToCache(currentId);
+                          }
+                          // Switch active session
                           ref.read(activeSessionIdProvider.notifier).state =
                               session.id;
                           // Switch Rust-side agent session
                           agent_api.switchSession(sessionId: session.id);
+                          // Try loading from memory cache first
+                          ref
+                              .read(messagesProvider.notifier)
+                              .loadFromCache(session.id);
+                          // If cache was empty, try loading from persisted storage
+                          if (ref.read(messagesProvider).isEmpty) {
+                            try {
+                              final detail = await sessions_api
+                                  .getSessionDetail(sessionId: session.id);
+                              if (detail != null &&
+                                  detail.messages.isNotEmpty) {
+                                final messages = detail.messages.map((m) {
+                                  return ChatMessage(
+                                    id: m.id,
+                                    role: m.role,
+                                    content: m.content,
+                                    timestamp:
+                                        DateTime.fromMillisecondsSinceEpoch(
+                                          (m.timestamp * 1000).toInt(),
+                                        ),
+                                  );
+                                }).toList();
+                                ref
+                                    .read(messagesProvider.notifier)
+                                    .setMessages(messages);
+                              }
+                            } catch (_) {
+                              // If loading fails, just show empty
+                            }
+                          }
                         },
                         onDelete: () {
                           ref
                               .read(sessionsProvider.notifier)
                               .deleteSession(session.id);
+                          ref
+                              .read(messagesProvider.notifier)
+                              .removeFromCache(session.id);
                           if (isActive) {
                             ref.read(activeSessionIdProvider.notifier).state =
                                 null;
@@ -127,25 +175,21 @@ class ChatListPanel extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState(AppLocalizations l10n) {
+  Widget _buildEmptyState(AppLocalizations l10n, DeskClawColors c) {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.chat_bubble_outline,
-            size: 40,
-            color: AppColors.textHint,
-          ),
+          Icon(Icons.chat_bubble_outline, size: 40, color: c.textHint),
           const SizedBox(height: 12),
           Text(
             l10n.noConversationsYet,
-            style: const TextStyle(color: AppColors.textHint, fontSize: 13),
+            style: TextStyle(color: c.textHint, fontSize: 13),
           ),
           const SizedBox(height: 4),
           Text(
             l10n.startNewChat,
-            style: const TextStyle(color: AppColors.textHint, fontSize: 12),
+            style: TextStyle(color: c.textHint, fontSize: 12),
           ),
         ],
       ),
@@ -171,6 +215,7 @@ class _ChatSessionTile extends StatefulWidget {
 }
 
 class _ChatSessionTileState extends State<_ChatSessionTile> {
+  DeskClawColors get c => DeskClawColors.of(context);
   bool _hovering = false;
 
   @override
@@ -190,9 +235,7 @@ class _ChatSessionTileState extends State<_ChatSessionTile> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
-                color: widget.isActive
-                    ? AppColors.sidebarActiveBg
-                    : Colors.transparent,
+                color: widget.isActive ? c.sidebarActiveBg : Colors.transparent,
               ),
               child: Row(
                 children: [
@@ -200,8 +243,8 @@ class _ChatSessionTileState extends State<_ChatSessionTile> {
                     Icons.chat_bubble_outline,
                     size: 16,
                     color: widget.isActive
-                        ? AppColors.sidebarActiveText
-                        : AppColors.textSecondary,
+                        ? c.sidebarActiveText
+                        : c.textSecondary,
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -212,8 +255,8 @@ class _ChatSessionTileState extends State<_ChatSessionTile> {
                       style: TextStyle(
                         fontSize: 13,
                         color: widget.isActive
-                            ? AppColors.sidebarActiveText
-                            : AppColors.textPrimary,
+                            ? c.sidebarActiveText
+                            : c.textPrimary,
                         fontWeight: widget.isActive
                             ? FontWeight.w600
                             : FontWeight.w400,
@@ -224,11 +267,7 @@ class _ChatSessionTileState extends State<_ChatSessionTile> {
                     InkWell(
                       onTap: widget.onDelete,
                       borderRadius: BorderRadius.circular(4),
-                      child: const Icon(
-                        Icons.close,
-                        size: 14,
-                        color: AppColors.textHint,
-                      ),
+                      child: Icon(Icons.close, size: 14, color: c.textHint),
                     ),
                 ],
               ),
