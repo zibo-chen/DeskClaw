@@ -1,0 +1,29 @@
+PODS:
+  - FlutterMacOS (1.0.0)
+  - path_provider_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - rust_lib_deskclaw (0.0.1):
+    - FlutterMacOS
+
+DEPENDENCIES:
+  - FlutterMacOS (from `Flutter/ephemeral`)
+  - path_provider_foundation (from `Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin`)
+  - rust_lib_deskclaw (from `Flutter/ephemeral/.symlinks/plugins/rust_lib_deskclaw/macos`)
+
+EXTERNAL SOURCES:
+  FlutterMacOS:
+    :path: Flutter/ephemeral
+  path_provider_foundation:
+    :path: Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin
+  rust_lib_deskclaw:
+    :path: Flutter/ephemeral/.symlinks/plugins/rust_lib_deskclaw/macos
+
+SPEC CHECKSUMS:
+  FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
+  path_provider_foundation: bb55f6dbba17d0dccd6737fe6f7f34fbd0376880
+  rust_lib_deskclaw: 2a276da5a427faa3b4a9dc45399d7ea2db0051da
+
+PODFILE CHECKSUM: 54d867c82ac51cbd61b565781b9fada492027009
+
+COCOAPODS: 1.16.2
