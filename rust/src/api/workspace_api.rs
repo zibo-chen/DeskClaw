@@ -409,3 +409,117 @@ pub async fn list_tools_with_status() -> Vec<ToolInfo> {
         })
         .collect()
 }
+
+/// Toggle a tool's approval status: "auto", "ask", or "default"
+pub async fn set_tool_approval(tool_name: String, approval: String) -> String {
+    let mut state = super::agent_api::runtime_state().lock().await;
+    let config = match state.config.as_mut() {
+        Some(c) => c,
+        None => return "error: not initialized".into(),
+    };
+
+    // Remove from both lists first
+    config.autonomy.auto_approve.retain(|t| t != &tool_name);
+    config.autonomy.always_ask.retain(|t| t != &tool_name);
+
+    // Add to the appropriate list
+    match approval.as_str() {
+        "auto" => config.autonomy.auto_approve.push(tool_name),
+        "ask" => config.autonomy.always_ask.push(tool_name),
+        _ => {} // "default" — removed from both
+    }
+
+    // Invalidate agent
+    state.agent = None;
+
+    // Persist to disk
+    drop(state);
+    super::agent_api::save_config_to_disk().await
+}
+
+/// Batch update tool approvals: set multiple tools at once
+pub async fn batch_set_tool_approvals(
+    auto_approve: Vec<String>,
+    always_ask: Vec<String>,
+) -> String {
+    let mut state = super::agent_api::runtime_state().lock().await;
+    let config = match state.config.as_mut() {
+        Some(c) => c,
+        None => return "error: not initialized".into(),
+    };
+
+    config.autonomy.auto_approve = auto_approve;
+    config.autonomy.always_ask = always_ask;
+    state.agent = None;
+
+    drop(state);
+    super::agent_api::save_config_to_disk().await
+}
+
+/// Get feature toggles for quick configuration
+pub async fn get_feature_toggles() -> FeatureToggles {
+    let state = super::agent_api::runtime_state().lock().await;
+    if let Some(config) = &state.config {
+        FeatureToggles {
+            web_search_enabled: config.web_search.enabled,
+            web_fetch_enabled: config.web_fetch.enabled,
+            browser_enabled: config.browser.enabled,
+            http_request_enabled: config.http_request.enabled,
+            memory_auto_save: config.memory.auto_save,
+            cost_tracking_enabled: config.cost.enabled,
+            skills_open_enabled: config.skills.open_skills_enabled,
+        }
+    } else {
+        FeatureToggles::default()
+    }
+}
+
+/// Update a single feature toggle
+pub async fn update_feature_toggle(feature: String, enabled: bool) -> String {
+    let mut state = super::agent_api::runtime_state().lock().await;
+    let config = match state.config.as_mut() {
+        Some(c) => c,
+        None => return "error: not initialized".into(),
+    };
+
+    match feature.as_str() {
+        "web_search" => config.web_search.enabled = enabled,
+        "web_fetch" => config.web_fetch.enabled = enabled,
+        "browser" => config.browser.enabled = enabled,
+        "http_request" => config.http_request.enabled = enabled,
+        "memory_auto_save" => config.memory.auto_save = enabled,
+        "cost_tracking" => config.cost.enabled = enabled,
+        "skills_open" => config.skills.open_skills_enabled = enabled,
+        _ => return format!("error: unknown feature: {feature}"),
+    }
+
+    state.agent = None;
+    drop(state);
+    super::agent_api::save_config_to_disk().await
+}
+
+/// Feature toggle state for quick configuration
+#[derive(Debug, Clone)]
+pub struct FeatureToggles {
+    pub web_search_enabled: bool,
+    pub web_fetch_enabled: bool,
+    pub browser_enabled: bool,
+    pub http_request_enabled: bool,
+    pub memory_auto_save: bool,
+    pub cost_tracking_enabled: bool,
+    pub skills_open_enabled: bool,
+}
+
+impl Default for FeatureToggles {
+    fn default() -> Self {
+        Self {
+            web_search_enabled: false,
+            web_fetch_enabled: false,
+            browser_enabled: false,
+            http_request_enabled: false,
+            memory_auto_save: true,
+            cost_tracking_enabled: false,
+            skills_open_enabled: false,
+        }
+    }
+}

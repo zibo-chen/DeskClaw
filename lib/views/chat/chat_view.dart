@@ -7,6 +7,7 @@ import 'package:deskclaw/theme/app_theme.dart';
 import 'package:deskclaw/views/chat/message_bubble.dart';
 import 'package:deskclaw/views/chat/input_bar.dart';
 import 'package:deskclaw/src/rust/api/agent_api.dart' as agent_api;
+import 'package:deskclaw/src/rust/api/sessions_api.dart' as sessions_api;
 
 /// Main chat view (right main area in reference)
 class ChatView extends ConsumerStatefulWidget {
@@ -194,11 +195,48 @@ class _ChatViewState extends ConsumerState<ChatView> {
     } finally {
       ref.read(isProcessingProvider.notifier).state = false;
       _scrollToBottom();
+      _persistCurrentSession(sessionId);
     }
   }
 
   void _handleSuggestion(String text) {
     _handleSend(text);
+  }
+
+  /// Persist the current session & messages to disk via Rust
+  Future<void> _persistCurrentSession(String sessionId) async {
+    try {
+      final messages = ref.read(messagesProvider);
+      final sessions = ref.read(sessionsProvider);
+      final session = sessions.firstWhere(
+        (s) => s.id == sessionId,
+        orElse: () => ChatSession(
+          id: sessionId,
+          title: 'Chat',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+      );
+
+      final sessionMessages = messages
+          .map(
+            (m) => sessions_api.SessionMessage(
+              id: m.id,
+              role: m.role,
+              content: m.content,
+              timestamp: m.timestamp.millisecondsSinceEpoch ~/ 1000,
+            ),
+          )
+          .toList();
+
+      await sessions_api.saveSession(
+        sessionId: sessionId,
+        title: session.title,
+        messages: sessionMessages,
+      );
+    } catch (e) {
+      debugPrint('Failed to persist session: $e');
+    }
   }
 
   @override

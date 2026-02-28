@@ -5,7 +5,10 @@
 
 import 'api/agent_api.dart';
 import 'api/config_api.dart';
+import 'api/cron_api.dart';
+import 'api/sessions_api.dart';
 import 'api/simple.dart';
+import 'api/skills_api.dart';
 import 'api/workspace_api.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -55,6 +58,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double dco_decode_box_autoadd_f_64(dynamic raw);
 
   @protected
+  PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw);
+
+  @protected
+  SessionDetail dco_decode_box_autoadd_session_detail(dynamic raw);
+
+  @protected
   int dco_decode_box_autoadd_u_32(dynamic raw);
 
   @protected
@@ -70,7 +79,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CostConfigDto dco_decode_cost_config_dto(dynamic raw);
 
   @protected
+  CronConfigDto dco_decode_cron_config_dto(dynamic raw);
+
+  @protected
+  CronJobDto dco_decode_cron_job_dto(dynamic raw);
+
+  @protected
+  CronRunDto dco_decode_cron_run_dto(dynamic raw);
+
+  @protected
   double dco_decode_f_64(dynamic raw);
+
+  @protected
+  FeatureToggles dco_decode_feature_toggles(dynamic raw);
 
   @protected
   int dco_decode_i_32(dynamic raw);
@@ -88,10 +109,28 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<ChannelSummary> dco_decode_list_channel_summary(dynamic raw);
 
   @protected
+  List<CronJobDto> dco_decode_list_cron_job_dto(dynamic raw);
+
+  @protected
+  List<CronRunDto> dco_decode_list_cron_run_dto(dynamic raw);
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
   List<ProviderInfo> dco_decode_list_provider_info(dynamic raw);
+
+  @protected
+  List<SessionMessage> dco_decode_list_session_message(dynamic raw);
+
+  @protected
+  List<SessionSummary> dco_decode_list_session_summary(dynamic raw);
+
+  @protected
+  List<SkillDto> dco_decode_list_skill_dto(dynamic raw);
+
+  @protected
+  List<SkillToolDto> dco_decode_list_skill_tool_dto(dynamic raw);
 
   @protected
   List<ToolInfo> dco_decode_list_tool_info(dynamic raw);
@@ -112,6 +151,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double? dco_decode_opt_box_autoadd_f_64(dynamic raw);
 
   @protected
+  PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw);
+
+  @protected
+  SessionDetail? dco_decode_opt_box_autoadd_session_detail(dynamic raw);
+
+  @protected
   int? dco_decode_opt_box_autoadd_u_32(dynamic raw);
 
   @protected
@@ -125,6 +170,27 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RuntimeStatus dco_decode_runtime_status(dynamic raw);
+
+  @protected
+  SessionDetail dco_decode_session_detail(dynamic raw);
+
+  @protected
+  SessionMessage dco_decode_session_message(dynamic raw);
+
+  @protected
+  SessionStats dco_decode_session_stats(dynamic raw);
+
+  @protected
+  SessionSummary dco_decode_session_summary(dynamic raw);
+
+  @protected
+  SkillDto dco_decode_skill_dto(dynamic raw);
+
+  @protected
+  SkillToolDto dco_decode_skill_tool_dto(dynamic raw);
+
+  @protected
+  SkillsConfigDto dco_decode_skills_config_dto(dynamic raw);
 
   @protected
   ToolInfo dco_decode_tool_info(dynamic raw);
@@ -183,6 +249,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double sse_decode_box_autoadd_f_64(SseDeserializer deserializer);
 
   @protected
+  PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer);
+
+  @protected
+  SessionDetail sse_decode_box_autoadd_session_detail(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   int sse_decode_box_autoadd_u_32(SseDeserializer deserializer);
 
   @protected
@@ -198,7 +272,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CostConfigDto sse_decode_cost_config_dto(SseDeserializer deserializer);
 
   @protected
+  CronConfigDto sse_decode_cron_config_dto(SseDeserializer deserializer);
+
+  @protected
+  CronJobDto sse_decode_cron_job_dto(SseDeserializer deserializer);
+
+  @protected
+  CronRunDto sse_decode_cron_run_dto(SseDeserializer deserializer);
+
+  @protected
   double sse_decode_f_64(SseDeserializer deserializer);
+
+  @protected
+  FeatureToggles sse_decode_feature_toggles(SseDeserializer deserializer);
 
   @protected
   int sse_decode_i_32(SseDeserializer deserializer);
@@ -218,10 +304,34 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<CronJobDto> sse_decode_list_cron_job_dto(SseDeserializer deserializer);
+
+  @protected
+  List<CronRunDto> sse_decode_list_cron_run_dto(SseDeserializer deserializer);
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
   List<ProviderInfo> sse_decode_list_provider_info(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<SessionMessage> sse_decode_list_session_message(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<SessionSummary> sse_decode_list_session_summary(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<SkillDto> sse_decode_list_skill_dto(SseDeserializer deserializer);
+
+  @protected
+  List<SkillToolDto> sse_decode_list_skill_tool_dto(
     SseDeserializer deserializer,
   );
 
@@ -244,6 +354,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double? sse_decode_opt_box_autoadd_f_64(SseDeserializer deserializer);
 
   @protected
+  PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer);
+
+  @protected
+  SessionDetail? sse_decode_opt_box_autoadd_session_detail(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer);
 
   @protected
@@ -257,6 +375,27 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RuntimeStatus sse_decode_runtime_status(SseDeserializer deserializer);
+
+  @protected
+  SessionDetail sse_decode_session_detail(SseDeserializer deserializer);
+
+  @protected
+  SessionMessage sse_decode_session_message(SseDeserializer deserializer);
+
+  @protected
+  SessionStats sse_decode_session_stats(SseDeserializer deserializer);
+
+  @protected
+  SessionSummary sse_decode_session_summary(SseDeserializer deserializer);
+
+  @protected
+  SkillDto sse_decode_skill_dto(SseDeserializer deserializer);
+
+  @protected
+  SkillToolDto sse_decode_skill_tool_dto(SseDeserializer deserializer);
+
+  @protected
+  SkillsConfigDto sse_decode_skills_config_dto(SseDeserializer deserializer);
 
   @protected
   ToolInfo sse_decode_tool_info(SseDeserializer deserializer);
@@ -328,6 +467,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_f_64(double self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_i_64(
+    PlatformInt64 self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_session_detail(
+    SessionDetail self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer);
 
   @protected
@@ -349,7 +500,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_cost_config_dto(CostConfigDto self, SseSerializer serializer);
 
   @protected
+  void sse_encode_cron_config_dto(CronConfigDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_cron_job_dto(CronJobDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_cron_run_dto(CronRunDto self, SseSerializer serializer);
+
+  @protected
   void sse_encode_f_64(double self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_feature_toggles(
+    FeatureToggles self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
@@ -373,6 +539,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_cron_job_dto(
+    List<CronJobDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_cron_run_dto(
+    List<CronRunDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_prim_u_8_strict(
     Uint8List self,
     SseSerializer serializer,
@@ -381,6 +559,27 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_provider_info(
     List<ProviderInfo> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_session_message(
+    List<SessionMessage> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_session_summary(
+    List<SessionSummary> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_skill_dto(List<SkillDto> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_skill_tool_dto(
+    List<SkillToolDto> self,
     SseSerializer serializer,
   );
 
@@ -409,6 +608,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_opt_box_autoadd_f_64(double? self, SseSerializer serializer);
 
   @protected
+  void sse_encode_opt_box_autoadd_i_64(
+    PlatformInt64? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_session_detail(
+    SessionDetail? self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer);
 
   @protected
@@ -422,6 +633,36 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_runtime_status(RuntimeStatus self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_session_detail(SessionDetail self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_session_message(
+    SessionMessage self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_session_stats(SessionStats self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_session_summary(
+    SessionSummary self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_skill_dto(SkillDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_skill_tool_dto(SkillToolDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_skills_config_dto(
+    SkillsConfigDto self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_tool_info(ToolInfo self, SseSerializer serializer);

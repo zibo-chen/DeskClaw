@@ -6,21 +6,33 @@
 <h1 align="center">DeskClaw 🦀</h1>
 
 <p align="center">
-  <strong>A cross-platform Flutter desktop GUI for the <a href="https://github.com/zeroclaw-labs/zeroclaw">ZeroClaw</a> AI agent runtime.</strong>
+  <strong>The native desktop GUI for <a href="https://github.com/zeroclaw-labs/zeroclaw">ZeroClaw</a> — fast, small, and fully autonomous AI assistant infrastructure.</strong>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white" alt="Flutter" />
   <img src="https://img.shields.io/badge/Rust-1.x-CE422B?logo=rust&logoColor=white" alt="Rust" />
-  <img src="https://img.shields.io/badge/Platform-macOS%20%7C%20Linux%20%7C%20Windows%20%7C%20iOS%20%7C%20Android-lightgrey" alt="Platforms" />
-  <img src="https://img.shields.io/badge/license-MIT%20OR%20Apache%202.0-blue" alt="License" />
+  <img src="https://img.shields.io/badge/Platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey" alt="Platforms" />
+  <img src="https://img.shields.io/badge/license-AGPL--3.0-blue" alt="License" />
+</p>
+
+<p align="center">
+  🌐 <a href="README.md"><b>English</b></a> · <a href="README.zh-CN.md">简体中文</a>
+</p>
+
+<p align="center">
+  <a href="#getting-started">Getting Started</a> · <a href="#features">Features</a> · <a href="#architecture">Architecture</a>
 </p>
 
 ---
 
 ## Overview
 
-DeskClaw is a native desktop and mobile application built with Flutter that provides a graphical interface for the [ZeroClaw](https://github.com/zeroclaw-labs/zeroclaw) AI agent runtime. It embeds the ZeroClaw Rust library directly via [flutter_rust_bridge](https://github.com/fzyzcjy/flutter_rust_bridge), delivering a fast, low-overhead AI chat experience with full agent configuration — no separate server process required.
+[ZeroClaw](https://github.com/zeroclaw-labs/zeroclaw) is a lean, fully autonomous AI agent runtime written in Rust — zero overhead, provider-agnostic, and deployable anywhere from a $10 microboard to a cloud VM. It ships as a single binary with <5 MB RAM footprint, supporting swappable providers, channels, tools, memory backends, and tunnels.
+
+**DeskClaw** wraps the ZeroClaw runtime in a polished, cross-platform desktop application built with Flutter. The ZeroClaw Rust library is embedded **in-process** via [flutter_rust_bridge](https://github.com/fzyzcjy/flutter_rust_bridge) (FFI) — there is no HTTP server, no subprocess, no daemon to manage. You get the full power of the ZeroClaw agent engine with a native, responsive UI.
+
+> Deploy anywhere. Swap anything. — now with a face.
 
 <!-- Screenshot placeholder — replace the comment below with your actual screenshot -->
 <!-- ![DeskClaw main interface](docs/screenshots/main.png) -->
@@ -201,6 +213,6 @@ Contributions are welcome! Please open an issue or pull request.
 
 ## License
 
-This project is licensed under **MIT OR Apache-2.0** — see [LICENSE](LICENSE) for details.
+This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)** — see [LICENSE](LICENSE) for details.
 
-The bundled [ZeroClaw](zeroclaw/) runtime is also dual-licensed MIT / Apache-2.0.
+The bundled [ZeroClaw](zeroclaw/) runtime is dual-licensed MIT / Apache-2.0.

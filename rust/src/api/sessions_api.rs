@@ -1,0 +1,260 @@
+use flutter_rust_bridge::frb;
+use std::sync::OnceLock;
+use tokio::sync::Mutex as TokioMutex;
+
+// ──────────────────────── DTOs ────────────────────────────
+
+/// A persisted chat session with messages
+#[derive(Debug, Clone)]
+pub struct SessionDetail {
+    pub id: String,
+    pub title: String,
+    pub created_at: i64,
+    pub updated_at: i64,
+    pub message_count: u32,
+    pub messages: Vec<SessionMessage>,
+}
+
+/// A message within a session
+#[derive(Debug, Clone)]
+pub struct SessionMessage {
+    pub id: String,
+    pub role: String,
+    pub content: String,
+    pub timestamp: i64,
+}
+
+/// Session list item (without messages)
+#[derive(Debug, Clone)]
+pub struct SessionSummary {
+    pub id: String,
+    pub title: String,
+    pub created_at: i64,
+    pub updated_at: i64,
+    pub message_count: u32,
+    pub last_message_preview: String,
+}
+
+/// Session statistics
+#[derive(Debug, Clone)]
+pub struct SessionStats {
+    pub total_sessions: u32,
+    pub total_messages: u32,
+    pub active_session_id: String,
+}
+
+// ──────────────────── Persistence State ──────────────────────
+
+#[frb(ignore)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+struct PersistedSession {
+    id: String,
+    title: String,
+    created_at: i64,
+    updated_at: i64,
+    messages: Vec<PersistedMessage>,
+}
+
+#[frb(ignore)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+struct PersistedMessage {
+    id: String,
+    role: String,
+    content: String,
+    timestamp: i64,
+}
+
+#[frb(ignore)]
+#[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
+struct SessionStore {
+    sessions: Vec<PersistedSession>,
+}
+
+fn session_store() -> &'static TokioMutex<SessionStore> {
+    static STORE: OnceLock<TokioMutex<SessionStore>> = OnceLock::new();
+    STORE.get_or_init(|| TokioMutex::new(SessionStore::default()))
+}
+
+fn sessions_file_path() -> std::path::PathBuf {
+    dirs::home_dir()
+        .unwrap_or_default()
+        .join(".zeroclaw")
+        .join("deskclaw_sessions.json")
+}
+
+// ──────────────────── API Functions ──────────────────────────
+
+/// Initialize session store — load from disk
+pub async fn init_session_store() -> String {
+    let path = sessions_file_path();
+    let store = if path.exists() {
+        match tokio::fs::read_to_string(&path).await {
+            Ok(content) => serde_json::from_str::<SessionStore>(&content).unwrap_or_default(),
+            Err(_) => SessionStore::default(),
+        }
+    } else {
+        SessionStore::default()
+    };
+
+    let count = store.sessions.len();
+    *session_store().lock().await = store;
+    format!("loaded {} sessions", count)
+}
+
+/// List all sessions (without full messages)
+pub async fn list_sessions() -> Vec<SessionSummary> {
+    let store = session_store().lock().await;
+    store
+        .sessions
+        .iter()
+        .map(|s| {
+            let preview = s
+                .messages
+                .last()
+                .map(|m| {
+                    if m.content.len() > 80 {
+                        format!("{}...", &m.content[..80])
+                    } else {
+                        m.content.clone()
+                    }
+                })
+                .unwrap_or_default();
+            SessionSummary {
+                id: s.id.clone(),
+                title: s.title.clone(),
+                created_at: s.created_at,
+                updated_at: s.updated_at,
+                message_count: s.messages.len() as u32,
+                last_message_preview: preview,
+            }
+        })
+        .collect()
+}
+
+/// Get full session detail including messages
+pub async fn get_session_detail(session_id: String) -> Option<SessionDetail> {
+    let store = session_store().lock().await;
+    store
+        .sessions
+        .iter()
+        .find(|s| s.id == session_id)
+        .map(|s| SessionDetail {
+            id: s.id.clone(),
+            title: s.title.clone(),
+            created_at: s.created_at,
+            updated_at: s.updated_at,
+            message_count: s.messages.len() as u32,
+            messages: s
+                .messages
+                .iter()
+                .map(|m| SessionMessage {
+                    id: m.id.clone(),
+                    role: m.role.clone(),
+                    content: m.content.clone(),
+                    timestamp: m.timestamp,
+                })
+                .collect(),
+        })
+}
+
+/// Save/update a session with its messages
+pub async fn save_session(
+    session_id: String,
+    title: String,
+    messages: Vec<SessionMessage>,
+) -> String {
+    let mut store = session_store().lock().await;
+    let now = chrono::Utc::now().timestamp();
+
+    let persisted_msgs: Vec<PersistedMessage> = messages
+        .iter()
+        .map(|m| PersistedMessage {
+            id: m.id.clone(),
+            role: m.role.clone(),
+            content: m.content.clone(),
+            timestamp: m.timestamp,
+        })
+        .collect();
+
+    if let Some(session) = store.sessions.iter_mut().find(|s| s.id == session_id) {
+        session.title = title;
+        session.updated_at = now;
+        session.messages = persisted_msgs;
+    } else {
+        store.sessions.insert(
+            0,
+            PersistedSession {
+                id: session_id,
+                title,
+                created_at: now,
+                updated_at: now,
+                messages: persisted_msgs,
+            },
+        );
+    }
+
+    // Persist to disk
+    drop(store);
+    persist_to_disk().await
+}
+
+/// Delete a session
+pub async fn delete_session(session_id: String) -> String {
+    let mut store = session_store().lock().await;
+    store.sessions.retain(|s| s.id != session_id);
+    drop(store);
+    persist_to_disk().await
+}
+
+/// Rename a session
+pub async fn rename_session(session_id: String, new_title: String) -> String {
+    let mut store = session_store().lock().await;
+    if let Some(session) = store.sessions.iter_mut().find(|s| s.id == session_id) {
+        session.title = new_title;
+        session.updated_at = chrono::Utc::now().timestamp();
+    }
+    drop(store);
+    persist_to_disk().await
+}
+
+/// Get session statistics
+pub async fn get_session_stats() -> SessionStats {
+    let store = session_store().lock().await;
+    let total_msgs: u32 = store.sessions.iter().map(|s| s.messages.len() as u32).sum();
+    let active = super::agent_api::runtime_state().lock().await;
+    let active_id = active.active_session_id.clone().unwrap_or_default();
+
+    SessionStats {
+        total_sessions: store.sessions.len() as u32,
+        total_messages: total_msgs,
+        active_session_id: active_id,
+    }
+}
+
+/// Clear all sessions
+pub async fn clear_all_sessions() -> String {
+    let mut store = session_store().lock().await;
+    store.sessions.clear();
+    drop(store);
+    persist_to_disk().await
+}
+
+// ──────────────────── Helpers ─────────────────────────────────
+
+async fn persist_to_disk() -> String {
+    let store = session_store().lock().await;
+    let path = sessions_file_path();
+
+    // Ensure directory exists
+    if let Some(parent) = path.parent() {
+        let _ = tokio::fs::create_dir_all(parent).await;
+    }
+
+    match serde_json::to_string_pretty(&*store) {
+        Ok(json) => match tokio::fs::write(&path, json).await {
+            Ok(()) => "ok".into(),
+            Err(e) => format!("error: write failed: {e}"),
+        },
+        Err(e) => format!("error: serialize failed: {e}"),
+    }
+}

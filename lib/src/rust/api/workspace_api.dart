@@ -6,7 +6,7 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 /// Get workspace configuration
 Future<WorkspaceConfig> getWorkspaceConfig() =>
@@ -52,6 +52,37 @@ Future<List<ChannelSummary>> listChannels() =>
 /// List tools with their approval status based on autonomy config
 Future<List<ToolInfo>> listToolsWithStatus() =>
     RustLib.instance.api.crateApiWorkspaceApiListToolsWithStatus();
+
+/// Toggle a tool's approval status: "auto", "ask", or "default"
+Future<String> setToolApproval({
+  required String toolName,
+  required String approval,
+}) => RustLib.instance.api.crateApiWorkspaceApiSetToolApproval(
+  toolName: toolName,
+  approval: approval,
+);
+
+/// Batch update tool approvals: set multiple tools at once
+Future<String> batchSetToolApprovals({
+  required List<String> autoApprove,
+  required List<String> alwaysAsk,
+}) => RustLib.instance.api.crateApiWorkspaceApiBatchSetToolApprovals(
+  autoApprove: autoApprove,
+  alwaysAsk: alwaysAsk,
+);
+
+/// Get feature toggles for quick configuration
+Future<FeatureToggles> getFeatureToggles() =>
+    RustLib.instance.api.crateApiWorkspaceApiGetFeatureToggles();
+
+/// Update a single feature toggle
+Future<String> updateFeatureToggle({
+  required String feature,
+  required bool enabled,
+}) => RustLib.instance.api.crateApiWorkspaceApiUpdateFeatureToggle(
+  feature: feature,
+  enabled: enabled,
+);
 
 /// Agent config DTO
 class AgentConfigDto {
@@ -211,6 +242,53 @@ class CostConfigDto {
           dailyLimitUsd == other.dailyLimitUsd &&
           monthlyLimitUsd == other.monthlyLimitUsd &&
           warnAtPercent == other.warnAtPercent;
+}
+
+/// Feature toggle state for quick configuration
+class FeatureToggles {
+  final bool webSearchEnabled;
+  final bool webFetchEnabled;
+  final bool browserEnabled;
+  final bool httpRequestEnabled;
+  final bool memoryAutoSave;
+  final bool costTrackingEnabled;
+  final bool skillsOpenEnabled;
+
+  const FeatureToggles({
+    required this.webSearchEnabled,
+    required this.webFetchEnabled,
+    required this.browserEnabled,
+    required this.httpRequestEnabled,
+    required this.memoryAutoSave,
+    required this.costTrackingEnabled,
+    required this.skillsOpenEnabled,
+  });
+
+  static Future<FeatureToggles> default_() =>
+      RustLib.instance.api.crateApiWorkspaceApiFeatureTogglesDefault();
+
+  @override
+  int get hashCode =>
+      webSearchEnabled.hashCode ^
+      webFetchEnabled.hashCode ^
+      browserEnabled.hashCode ^
+      httpRequestEnabled.hashCode ^
+      memoryAutoSave.hashCode ^
+      costTrackingEnabled.hashCode ^
+      skillsOpenEnabled.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FeatureToggles &&
+          runtimeType == other.runtimeType &&
+          webSearchEnabled == other.webSearchEnabled &&
+          webFetchEnabled == other.webFetchEnabled &&
+          browserEnabled == other.browserEnabled &&
+          httpRequestEnabled == other.httpRequestEnabled &&
+          memoryAutoSave == other.memoryAutoSave &&
+          costTrackingEnabled == other.costTrackingEnabled &&
+          skillsOpenEnabled == other.skillsOpenEnabled;
 }
 
 /// Memory config DTO
