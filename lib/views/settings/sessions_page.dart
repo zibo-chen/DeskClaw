@@ -56,24 +56,24 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('删除会话'),
-        content: const Text('确定删除此会话？此操作不可撤销。'),
+        title: Text(AppLocalizations.of(context)!.deleteSessionTitle),
+        content: Text(AppLocalizations.of(context)!.deleteSessionConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('删除'),
+            child: Text(AppLocalizations.of(context)!.delete),
           ),
         ],
       ),
     );
     if (confirm == true) {
       await sessions_api.deleteSession(sessionId: id);
-      _showMessage('已删除会话');
+      _showMessage(AppLocalizations.of(context)!.sessionDeleted);
       if (_selectedDetail?.id == id) {
         setState(() => _selectedDetail = null);
       }
@@ -86,28 +86,30 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
     final newTitle = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('重命名会话'),
+        title: Text(AppLocalizations.of(context)!.renameSessionTitle),
         content: TextField(
           controller: controller,
           autofocus: true,
-          decoration: const InputDecoration(labelText: '会话标题'),
+          decoration: InputDecoration(
+            labelText: AppLocalizations.of(context)!.sessionTitleLabel,
+          ),
           onSubmitted: (v) => Navigator.pop(ctx, v),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('取消'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, controller.text),
-            child: const Text('确认'),
+            child: Text(AppLocalizations.of(context)!.confirm),
           ),
         ],
       ),
     );
     if (newTitle != null && newTitle.isNotEmpty && newTitle != currentTitle) {
       await sessions_api.renameSession(sessionId: id, newTitle: newTitle);
-      _showMessage('已重命名');
+      _showMessage(AppLocalizations.of(context)!.sessionRenamed);
       _loadAll();
       if (_selectedDetail?.id == id) {
         _selectSession(id);
@@ -119,24 +121,24 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('清空所有会话'),
-        content: const Text('确定删除所有已保存的会话？此操作不可撤销。'),
+        title: Text(AppLocalizations.of(context)!.clearAllSessionsTitle),
+        content: Text(AppLocalizations.of(context)!.clearAllSessionsConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('全部删除'),
+            child: Text(AppLocalizations.of(context)!.deleteAll),
           ),
         ],
       ),
     );
     if (confirm == true) {
       await sessions_api.clearAllSessions();
-      _showMessage('已清空所有会话');
+      _showMessage(AppLocalizations.of(context)!.allSessionsCleared);
       setState(() => _selectedDetail = null);
       _loadAll();
     }
@@ -194,9 +196,15 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
           ),
           const SizedBox(width: 16),
           if (_stats != null) ...[
-            _statBadge('${_stats!.totalSessions}', '会话'),
+            _statBadge(
+              '${_stats!.totalSessions}',
+              AppLocalizations.of(context)!.sessionCount,
+            ),
             const SizedBox(width: 8),
-            _statBadge('${_stats!.totalMessages}', '消息'),
+            _statBadge(
+              '${_stats!.totalMessages}',
+              AppLocalizations.of(context)!.messageCount,
+            ),
           ],
           const Spacer(),
           if (_message != null)
@@ -214,13 +222,13 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
           const SizedBox(width: 12),
           IconButton(
             icon: const Icon(Icons.refresh, size: 20),
-            tooltip: '刷新',
+            tooltip: AppLocalizations.of(context)!.refresh,
             onPressed: _loadAll,
           ),
           if (_sessions.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.delete_sweep, size: 20),
-              tooltip: '清空所有会话',
+              tooltip: AppLocalizations.of(context)!.clearAllSessions,
               color: AppColors.error,
               onPressed: _clearAll,
             ),
@@ -274,7 +282,7 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
           ),
           const SizedBox(height: 16),
           Text(
-            '暂无已保存的会话',
+            AppLocalizations.of(context)!.noSavedSessions,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w500,
@@ -283,7 +291,7 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            '在聊天中发送消息后，会话将自动保存到此处',
+            AppLocalizations.of(context)!.sessionsAutoSaveHint,
             style: TextStyle(fontSize: 14, color: c.textHint),
           ),
         ],
@@ -300,7 +308,7 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
           padding: const EdgeInsets.all(12),
           child: TextField(
             decoration: InputDecoration(
-              hintText: '搜索会话...',
+              hintText: AppLocalizations.of(context)!.searchSessions,
               prefixIcon: Icon(Icons.search, size: 20, color: c.textHint),
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(
@@ -384,7 +392,9 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      '${session.messageCount} 条',
+                      AppLocalizations.of(
+                        context,
+                      )!.messageCountWithUnit(session.messageCount),
                       style: const TextStyle(
                         fontSize: 10,
                         color: AppColors.primary,
@@ -406,23 +416,30 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
             }
           },
           itemBuilder: (ctx) => [
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'rename',
               child: Row(
                 children: [
-                  Icon(Icons.edit, size: 16),
-                  SizedBox(width: 8),
-                  Text('重命名'),
+                  const Icon(Icons.edit, size: 16),
+                  const SizedBox(width: 8),
+                  Text(AppLocalizations.of(context)!.rename),
                 ],
               ),
             ),
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'delete',
               child: Row(
                 children: [
-                  Icon(Icons.delete_outline, size: 16, color: AppColors.error),
-                  SizedBox(width: 8),
-                  Text('删除', style: TextStyle(color: AppColors.error)),
+                  const Icon(
+                    Icons.delete_outline,
+                    size: 16,
+                    color: AppColors.error,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    AppLocalizations.of(context)!.delete,
+                    style: const TextStyle(color: AppColors.error),
+                  ),
                 ],
               ),
             ),
@@ -445,7 +462,7 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              '选择一个会话查看详情',
+              AppLocalizations.of(context)!.selectSessionToView,
               style: TextStyle(color: c.textHint, fontSize: 14),
             ),
           ],
@@ -481,7 +498,7 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${detail.messageCount} 条消息 · 创建于 ${_formatDate(DateTime.fromMillisecondsSinceEpoch(detail.createdAt * 1000))}',
+                      '${AppLocalizations.of(context)!.messagesCreatedAt(detail.messageCount)} ${_formatDate(DateTime.fromMillisecondsSinceEpoch(detail.createdAt * 1000))}',
                       style: TextStyle(fontSize: 12, color: c.textHint),
                     ),
                   ],
@@ -489,12 +506,12 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
               ),
               IconButton(
                 icon: const Icon(Icons.edit, size: 18),
-                tooltip: '重命名',
+                tooltip: AppLocalizations.of(context)!.rename,
                 onPressed: () => _renameSession(detail.id, detail.title),
               ),
               IconButton(
                 icon: const Icon(Icons.delete_outline, size: 18),
-                tooltip: '删除',
+                tooltip: AppLocalizations.of(context)!.delete,
                 color: AppColors.error,
                 onPressed: () => _deleteSession(detail.id),
               ),
@@ -549,7 +566,9 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
                 Row(
                   children: [
                     Text(
-                      isUser ? '你' : 'AI',
+                      isUser
+                          ? AppLocalizations.of(context)!.roleYou
+                          : AppLocalizations.of(context)!.roleAI,
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -595,10 +614,13 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final diff = now.difference(date);
-    if (diff.inMinutes < 1) return '刚刚';
-    if (diff.inHours < 1) return '${diff.inMinutes} 分钟前';
-    if (diff.inDays < 1) return '${diff.inHours} 小时前';
-    if (diff.inDays < 7) return '${diff.inDays} 天前';
+    if (diff.inMinutes < 1) return AppLocalizations.of(context)!.justNow;
+    if (diff.inHours < 1)
+      return AppLocalizations.of(context)!.minutesAgo(diff.inMinutes);
+    if (diff.inDays < 1)
+      return AppLocalizations.of(context)!.hoursAgo(diff.inHours);
+    if (diff.inDays < 7)
+      return AppLocalizations.of(context)!.daysAgo(diff.inDays);
     return '${date.month}/${date.day}';
   }
 }

@@ -162,7 +162,7 @@ class SidebarNav extends ConsumerWidget {
           ),
 
           // Bottom bar: language toggle + theme toggle
-          _buildBottomBar(ref, l10n, c),
+          _buildBottomBar(context, ref, l10n, c),
         ],
       ),
     );
@@ -295,6 +295,7 @@ class SidebarNav extends ConsumerWidget {
   }
 
   Widget _buildBottomBar(
+    BuildContext context,
     WidgetRef ref,
     AppLocalizations l10n,
     DeskClawColors c,
@@ -335,7 +336,7 @@ class SidebarNav extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           // Theme toggle
-          _buildThemeToggle(ref, c),
+          _buildThemeToggle(context, ref, c),
         ],
       ),
     );
@@ -370,7 +371,11 @@ class SidebarNav extends ConsumerWidget {
     );
   }
 
-  Widget _buildThemeToggle(WidgetRef ref, DeskClawColors c) {
+  Widget _buildThemeToggle(
+    BuildContext context,
+    WidgetRef ref,
+    DeskClawColors c,
+  ) {
     final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
     return InkWell(
       borderRadius: BorderRadius.circular(8),
@@ -388,7 +393,9 @@ class SidebarNav extends ConsumerWidget {
           ),
           const SizedBox(width: 10),
           Text(
-            isDark ? 'Dark Mode' : 'Light Mode',
+            isDark
+                ? AppLocalizations.of(context)!.darkMode
+                : AppLocalizations.of(context)!.lightMode,
             style: TextStyle(fontSize: 13, color: c.sidebarText),
           ),
         ],

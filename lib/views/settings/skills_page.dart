@@ -41,20 +41,26 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
   Future<void> _toggleOpenSkills(bool enabled) async {
     final result = await skills_api.toggleOpenSkills(enabled: enabled);
     if (result == 'ok') {
-      _showMessage('社区技能已${enabled ? '启用' : '停用'}');
+      _showMessage(
+        AppLocalizations.of(context)!.communitySkillsToggled(
+          enabled
+              ? AppLocalizations.of(context)!.enabled
+              : AppLocalizations.of(context)!.disabled,
+        ),
+      );
       _loadAll();
     } else {
-      _showMessage('操作失败: $result');
+      _showMessage('${AppLocalizations.of(context)!.operationFailed}: $result');
     }
   }
 
   Future<void> _updateInjectionMode(String mode) async {
     final result = await skills_api.updatePromptInjectionMode(mode: mode);
     if (result == 'ok') {
-      _showMessage('注入模式已更新为 $mode');
+      _showMessage(AppLocalizations.of(context)!.injectionModeUpdated(mode));
       _loadAll();
     } else {
-      _showMessage('操作失败: $result');
+      _showMessage('${AppLocalizations.of(context)!.operationFailed}: $result');
     }
   }
 
@@ -158,7 +164,7 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
               Icon(Icons.tune, size: 18, color: AppColors.primary),
               SizedBox(width: 8),
               Text(
-                '技能配置',
+                AppLocalizations.of(context)!.skillsConfig,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -173,14 +179,14 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
           Row(
             children: [
               _buildStatChip(
-                '本地技能',
+                AppLocalizations.of(context)!.localSkills,
                 '${config.localSkillsCount}',
                 Icons.folder_outlined,
                 AppColors.primary,
               ),
               const SizedBox(width: 12),
               _buildStatChip(
-                '社区技能',
+                AppLocalizations.of(context)!.communitySkills,
                 '${config.communitySkillsCount}',
                 Icons.public,
                 config.openSkillsEnabled ? AppColors.success : c.textHint,
@@ -191,8 +197,8 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
 
           // Open Skills toggle
           _buildToggleRow(
-            '社区开源技能',
-            '启用后将自动从 GitHub 同步社区技能',
+            AppLocalizations.of(context)!.openSourceSkills,
+            AppLocalizations.of(context)!.openSourceSkillsDesc,
             config.openSkillsEnabled,
             _toggleOpenSkills,
           ),
@@ -200,7 +206,7 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
 
           // Injection mode
           Text(
-            '提示词注入模式',
+            AppLocalizations.of(context)!.promptInjectionMode,
             style: TextStyle(
               fontSize: 13,
               color: c.textSecondary,
@@ -212,15 +218,15 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
             children: [
               _buildModeChip(
                 'full',
-                '完整模式',
-                '将技能的完整指令和工具信息注入系统提示词',
+                AppLocalizations.of(context)!.fullMode,
+                AppLocalizations.of(context)!.fullModeDesc,
                 config.promptInjectionMode,
               ),
               const SizedBox(width: 8),
               _buildModeChip(
                 'compact',
-                '精简模式',
-                '仅注入技能摘要，按需加载详情',
+                AppLocalizations.of(context)!.compactMode,
+                AppLocalizations.of(context)!.compactModeDesc,
                 config.promptInjectionMode,
               ),
             ],
@@ -266,13 +272,21 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (localSkills.isNotEmpty) ...[
-          _buildSkillGroupHeader('本地技能', localSkills.length, Icons.folder),
+          _buildSkillGroupHeader(
+            AppLocalizations.of(context)!.localSkills,
+            localSkills.length,
+            Icons.folder,
+          ),
           const SizedBox(height: 12),
           ...localSkills.map(_buildSkillCard),
         ],
         if (communitySkills.isNotEmpty) ...[
           const SizedBox(height: 24),
-          _buildSkillGroupHeader('社区技能', communitySkills.length, Icons.public),
+          _buildSkillGroupHeader(
+            AppLocalizations.of(context)!.communitySkills,
+            communitySkills.length,
+            Icons.public,
+          ),
           const SizedBox(height: 12),
           ...communitySkills.map(_buildSkillCard),
         ],
@@ -298,7 +312,7 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
           ),
           const SizedBox(height: 16),
           Text(
-            '暂无可用技能',
+            AppLocalizations.of(context)!.noSkillsAvailable,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
@@ -307,7 +321,7 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            '在工作区的 skills/ 目录下创建 SKILL.toml 或 SKILL.md 文件来添加自定义技能，\n或启用社区开源技能来获取更多能力。',
+            AppLocalizations.of(context)!.noSkillsHint,
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 13, color: c.textHint),
           ),
@@ -322,7 +336,7 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '快速开始：创建 SKILL.toml',
+                  AppLocalizations.of(context)!.quickStartSkill,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -459,7 +473,9 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    skill.source == 'local' ? '本地' : '社区',
+                    skill.source == 'local'
+                        ? AppLocalizations.of(context)!.sourceLocal
+                        : AppLocalizations.of(context)!.sourceCommunity,
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
@@ -527,7 +543,7 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
             if (skill.tools.isNotEmpty) ...[
               const SizedBox(height: 12),
               Text(
-                '自带工具',
+                AppLocalizations.of(context)!.includedTools,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -570,7 +586,9 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
               const SizedBox(height: 12),
               ExpansionTile(
                 title: Text(
-                  '指令 (${skill.prompts.length})',
+                  AppLocalizations.of(
+                    context,
+                  )!.promptsWithCount(skill.prompts.length),
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,

@@ -86,7 +86,9 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
 
     setState(() {
       _isSaving = false;
-      _saveMessage = success ? 'Configuration saved!' : 'Failed to save config';
+      _saveMessage = success
+          ? AppLocalizations.of(context)!.configSaved
+          : AppLocalizations.of(context)!.configSaveFailed;
     });
 
     // Clear message after 3 seconds
@@ -114,7 +116,7 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildSection(
-            title: 'Provider Configuration',
+            title: AppLocalizations.of(context)!.providerConfiguration,
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -127,7 +129,7 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
                 children: [
                   // Provider dropdown
                   _buildDropdownRow(
-                    'Provider',
+                    AppLocalizations.of(context)!.providerLabel,
                     _selectedProviderId,
                     _providers.map((p) => p.id).toList(),
                     _providers.map((p) => p.name).toList(),
@@ -150,7 +152,7 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
                     _buildEditableModelRow()
                   else
                     _buildDropdownRow(
-                      'Model',
+                      AppLocalizations.of(context)!.modelLabel,
                       _currentProvider.models.contains(_selectedModel)
                           ? _selectedModel
                           : _currentProvider.models.first,
@@ -168,8 +170,8 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
                   // API Key
                   if (_currentProvider.requiresApiKey) ...[
                     _buildTextFieldRow(
-                      'API Key',
-                      'Enter your API key...',
+                      AppLocalizations.of(context)!.apiKeyLabel,
+                      AppLocalizations.of(context)!.apiKeyHint,
                       _apiKeyController,
                       obscure: true,
                     ),
@@ -179,7 +181,7 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
                   // API Base URL
                   if (_currentProvider.requiresApiBase) ...[
                     _buildTextFieldRow(
-                      'API Base URL',
+                      AppLocalizations.of(context)!.apiBaseUrlLabel,
                       _selectedProviderId == 'ollama'
                           ? 'http://localhost:11434'
                           : 'https://api.example.com/v1',
@@ -189,9 +191,13 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
                   ],
 
                   // Temperature
-                  _buildSliderRow('Temperature', _temperature, (value) {
-                    setState(() => _temperature = value);
-                  }),
+                  _buildSliderRow(
+                    AppLocalizations.of(context)!.temperatureLabel,
+                    _temperature,
+                    (value) {
+                      setState(() => _temperature = value);
+                    },
+                  ),
 
                   const SizedBox(height: 24),
 
@@ -210,7 +216,11 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
                                 ),
                               )
                             : const Icon(Icons.save, size: 18),
-                        label: Text(_isSaving ? 'Saving...' : 'Save'),
+                        label: Text(
+                          _isSaving
+                              ? AppLocalizations.of(context)!.saving
+                              : AppLocalizations.of(context)!.save,
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
@@ -229,7 +239,9 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
                           _saveMessage!,
                           style: TextStyle(
                             fontSize: 13,
-                            color: _saveMessage!.contains('Failed')
+                            color:
+                                _saveMessage!.contains('Failed') ||
+                                    _saveMessage!.contains('失败')
                                 ? AppColors.error
                                 : AppColors.success,
                           ),
@@ -251,7 +263,7 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
               if (!snapshot.hasData) return const SizedBox.shrink();
               final status = snapshot.data!;
               return _buildSection(
-                title: 'Runtime Status',
+                title: AppLocalizations.of(context)!.runtimeStatus,
                 child: Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -262,21 +274,33 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
                   child: Column(
                     children: [
                       _buildStatusRow(
-                        'Initialized',
-                        status.initialized ? 'Yes' : 'No',
+                        AppLocalizations.of(context)!.initialized,
+                        status.initialized
+                            ? AppLocalizations.of(context)!.yes
+                            : AppLocalizations.of(context)!.no,
                         status.initialized
                             ? AppColors.success
                             : AppColors.error,
                       ),
                       _buildStatusRow(
-                        'API Key',
-                        status.hasApiKey ? 'Configured' : 'Missing',
+                        AppLocalizations.of(context)!.apiKeyLabel,
+                        status.hasApiKey
+                            ? AppLocalizations.of(context)!.configured
+                            : AppLocalizations.of(context)!.missing,
                         status.hasApiKey
                             ? AppColors.success
                             : AppColors.warning,
                       ),
-                      _buildStatusRow('Active Provider', status.provider, null),
-                      _buildStatusRow('Active Model', status.model, null),
+                      _buildStatusRow(
+                        AppLocalizations.of(context)!.activeProvider,
+                        status.provider,
+                        null,
+                      ),
+                      _buildStatusRow(
+                        AppLocalizations.of(context)!.activeModel,
+                        status.model,
+                        null,
+                      ),
                     ],
                   ),
                 ),
@@ -314,7 +338,7 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
         SizedBox(
           width: 140,
           child: Text(
-            'Model',
+            AppLocalizations.of(context)!.modelLabel,
             style: TextStyle(fontSize: 14, color: c.textSecondary),
           ),
         ),
@@ -355,7 +379,7 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
                       _selectedModel = value;
                     },
                     decoration: InputDecoration(
-                      hintText: 'Enter model name or select from list...',
+                      hintText: AppLocalizations.of(context)!.modelNameHint,
                       isDense: true,
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 12,
@@ -364,7 +388,7 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
                       suffixIcon: PopupMenuButton<String>(
                         icon: const Icon(Icons.arrow_drop_down, size: 20),
                         padding: EdgeInsets.zero,
-                        tooltip: 'Show suggestions',
+                        tooltip: AppLocalizations.of(context)!.showSuggestions,
                         onSelected: (value) {
                           fieldController.text = value;
                           _modelController.text = value;

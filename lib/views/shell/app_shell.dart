@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:deskclaw/l10n/app_localizations.dart';
 import 'package:deskclaw/providers/providers.dart';
 import 'package:deskclaw/views/sidebar/sidebar_nav.dart';
 import 'package:deskclaw/views/chat/chat_list_panel.dart';
@@ -33,13 +34,13 @@ class AppShell extends ConsumerWidget {
           if (showChatList) const ChatListPanel(),
 
           // Main content area
-          Expanded(child: _buildMainContent(currentNav)),
+          Expanded(child: _buildMainContent(context, currentNav)),
         ],
       ),
     );
   }
 
-  Widget _buildMainContent(NavSection section) {
+  Widget _buildMainContent(BuildContext context, NavSection section) {
     return switch (section) {
       NavSection.chat => const ChatView(),
       NavSection.models => const ModelsPage(),
@@ -50,10 +51,10 @@ class AppShell extends ConsumerWidget {
       NavSection.cronJobs => const CronJobsPage(),
       NavSection.skills => const SkillsPage(),
       NavSection.mcp => const ToolsPage(),
-      NavSection.environments => const PlaceholderPage(
-        title: 'Environments',
+      NavSection.environments => PlaceholderPage(
+        title: AppLocalizations.of(context)!.pageEnvironments,
         icon: Icons.language,
-        description: 'Manage environment variables and deployment profiles.',
+        description: AppLocalizations.of(context)!.environmentsDescription,
       ),
     };
   }

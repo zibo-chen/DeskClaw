@@ -144,5 +144,728 @@
   "@tooltipCopy": { "description": "Copy tooltip" },
 
   "tooltipRefresh": "Refresh",
-  "@tooltipRefresh": { "description": "Refresh tooltip" }
+  "@tooltipRefresh": { "description": "Refresh tooltip" },
+
+  "darkMode": "Dark Mode",
+  "@darkMode": { "description": "Dark mode toggle label" },
+
+  "lightMode": "Light Mode",
+  "@lightMode": { "description": "Light mode toggle label" },
+
+  "toolCallSuccess": "Success",
+  "@toolCallSuccess": { "description": "Tool call success status" },
+
+  "toolCallFailed": "Failed",
+  "@toolCallFailed": { "description": "Tool call failed status" },
+
+  "comingSoon": "Coming Soon",
+  "@comingSoon": { "description": "Coming soon badge" },
+
+  "featureComingSoon": "This feature is coming soon.",
+  "@featureComingSoon": { "description": "Feature coming soon description" },
+
+  "environmentsDescription": "Manage environment variables and deployment profiles.",
+  "@environmentsDescription": { "description": "Environments page description" },
+
+  "providerConfiguration": "Provider Configuration",
+  "@providerConfiguration": { "description": "Provider config section title" },
+
+  "providerLabel": "Provider",
+  "@providerLabel": { "description": "Provider dropdown label" },
+
+  "modelLabel": "Model",
+  "@modelLabel": { "description": "Model dropdown label" },
+
+  "apiKeyLabel": "API Key",
+  "@apiKeyLabel": { "description": "API key field label" },
+
+  "apiKeyHint": "Enter your API key...",
+  "@apiKeyHint": { "description": "API key field hint" },
+
+  "apiBaseUrlLabel": "API Base URL",
+  "@apiBaseUrlLabel": { "description": "API base URL field label" },
+
+  "temperatureLabel": "Temperature",
+  "@temperatureLabel": { "description": "Temperature slider label" },
+
+  "saving": "Saving...",
+  "@saving": { "description": "Save button label when saving" },
+
+  "save": "Save",
+  "@save": { "description": "Save button label" },
+
+  "configSaved": "Configuration saved!",
+  "@configSaved": { "description": "Config saved success message" },
+
+  "configSaveFailed": "Failed to save config",
+  "@configSaveFailed": { "description": "Config save failed message" },
+
+  "runtimeStatus": "Runtime Status",
+  "@runtimeStatus": { "description": "Runtime status section title" },
+
+  "initialized": "Initialized",
+  "@initialized": { "description": "Initialized status label" },
+
+  "yes": "Yes",
+  "@yes": { "description": "Yes label" },
+
+  "no": "No",
+  "@no": { "description": "No label" },
+
+  "configured": "Configured",
+  "@configured": { "description": "Configured status" },
+
+  "missing": "Missing",
+  "@missing": { "description": "Missing status" },
+
+  "activeProvider": "Active Provider",
+  "@activeProvider": { "description": "Active provider label" },
+
+  "activeModel": "Active Model",
+  "@activeModel": { "description": "Active model label" },
+
+  "modelNameHint": "Enter model name or select from list...",
+  "@modelNameHint": { "description": "Model name input hint" },
+
+  "showSuggestions": "Show suggestions",
+  "@showSuggestions": { "description": "Show suggestions tooltip" },
+
+  "workspaceInfo": "Workspace Info",
+  "@workspaceInfo": { "description": "Workspace info section title" },
+
+  "workspaceDirectory": "Workspace Directory",
+  "@workspaceDirectory": { "description": "Workspace directory label" },
+
+  "configFile": "Config File",
+  "@configFile": { "description": "Config file label" },
+
+  "agentSettings": "Agent Settings",
+  "@agentSettings": { "description": "Agent settings section title" },
+
+  "maxToolIterations": "Max Tool Iterations",
+  "@maxToolIterations": { "description": "Max tool iterations label" },
+
+  "maxHistoryMessages": "Max History Messages",
+  "@maxHistoryMessages": { "description": "Max history messages label" },
+
+  "parallelToolExecution": "Parallel Tool Execution",
+  "@parallelToolExecution": { "description": "Parallel tool execution label" },
+
+  "compactContext": "Compact Context",
+  "@compactContext": { "description": "Compact context label" },
+
+  "toolDispatcher": "Tool Dispatcher",
+  "@toolDispatcher": { "description": "Tool dispatcher label" },
+
+  "memorySection": "Memory",
+  "@memorySection": { "description": "Memory section title" },
+
+  "backend": "Backend",
+  "@backend": { "description": "Backend label" },
+
+  "autoSave": "Auto Save",
+  "@autoSave": { "description": "Auto save label" },
+
+  "enabled": "Enabled",
+  "@enabled": { "description": "Enabled status" },
+
+  "disabled": "Disabled",
+  "@disabled": { "description": "Disabled status" },
+
+  "hygiene": "Hygiene",
+  "@hygiene": { "description": "Hygiene label" },
+
+  "archiveAfter": "Archive After",
+  "@archiveAfter": { "description": "Archive after label" },
+
+  "days": "days",
+  "@days": { "description": "Days unit" },
+
+  "purgeAfter": "Purge After",
+  "@purgeAfter": { "description": "Purge after label" },
+
+  "embeddingProvider": "Embedding Provider",
+  "@embeddingProvider": { "description": "Embedding provider label" },
+
+  "embeddingModel": "Embedding Model",
+  "@embeddingModel": { "description": "Embedding model label" },
+
+  "costTracking": "Cost Tracking",
+  "@costTracking": { "description": "Cost tracking section title" },
+
+  "dailyLimit": "Daily Limit",
+  "@dailyLimit": { "description": "Daily limit label" },
+
+  "monthlyLimit": "Monthly Limit",
+  "@monthlyLimit": { "description": "Monthly limit label" },
+
+  "warnAt": "Warn At",
+  "@warnAt": { "description": "Warn at label" },
+
+  "autonomySecurity": "Autonomy & Security",
+  "@autonomySecurity": { "description": "Autonomy & security section title" },
+
+  "autonomyLevel": "Autonomy Level",
+  "@autonomyLevel": { "description": "Autonomy level label" },
+
+  "readOnly": "Read Only",
+  "@readOnly": { "description": "Read only autonomy level" },
+
+  "supervised": "Supervised",
+  "@supervised": { "description": "Supervised autonomy level" },
+
+  "fullAutonomy": "Full",
+  "@fullAutonomy": { "description": "Full autonomy level" },
+
+  "workspaceOnly": "Workspace Only",
+  "@workspaceOnly": { "description": "Workspace only setting" },
+
+  "requireApprovalMediumRisk": "Require Approval (Medium Risk)",
+  "@requireApprovalMediumRisk": { "description": "Require approval for medium risk" },
+
+  "blockHighRisk": "Block High Risk",
+  "@blockHighRisk": { "description": "Block high risk commands" },
+
+  "maxActionsPerHour": "Max Actions/Hour",
+  "@maxActionsPerHour": { "description": "Max actions per hour" },
+
+  "maxCostPerDay": "Max Cost/Day",
+  "@maxCostPerDay": { "description": "Max cost per day" },
+
+  "allowedCommands": "Allowed Commands",
+  "@allowedCommands": { "description": "Allowed commands label" },
+
+  "autoApprovedTools": "Auto-Approved Tools",
+  "@autoApprovedTools": { "description": "Auto-approved tools label" },
+
+  "toolsSection": "Tools",
+  "@toolsSection": { "description": "Tools section title" },
+
+  "toolCountLabel": "{count} tools",
+  "@toolCountLabel": {
+    "description": "Tool count label",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "categoryCoreTools": "Core Tools",
+  "@categoryCoreTools": { "description": "Core tools category" },
+
+  "categoryVersionControl": "Version Control",
+  "@categoryVersionControl": { "description": "Version control category" },
+
+  "categoryWebNetwork": "Web & Network",
+  "@categoryWebNetwork": { "description": "Web & network category" },
+
+  "categoryMemory": "Memory",
+  "@categoryMemory": { "description": "Memory category" },
+
+  "categorySystem": "System",
+  "@categorySystem": { "description": "System category" },
+
+  "categoryFileProcessing": "File Processing",
+  "@categoryFileProcessing": { "description": "File processing category" },
+
+  "categoryAgent": "Agent",
+  "@categoryAgent": { "description": "Agent category" },
+
+  "categoryScheduling": "Scheduling",
+  "@categoryScheduling": { "description": "Scheduling category" },
+
+  "approvalAuto": "Auto",
+  "@approvalAuto": { "description": "Auto approval label" },
+
+  "approvalAsk": "Ask",
+  "@approvalAsk": { "description": "Ask approval label" },
+
+  "deleteSessionTitle": "Delete Session",
+  "@deleteSessionTitle": { "description": "Delete session dialog title" },
+
+  "deleteSessionConfirm": "Are you sure you want to delete this session? This action cannot be undone.",
+  "@deleteSessionConfirm": { "description": "Delete session confirmation" },
+
+  "cancel": "Cancel",
+  "@cancel": { "description": "Cancel button" },
+
+  "delete": "Delete",
+  "@delete": { "description": "Delete button" },
+
+  "sessionDeleted": "Session deleted",
+  "@sessionDeleted": { "description": "Session deleted message" },
+
+  "renameSessionTitle": "Rename Session",
+  "@renameSessionTitle": { "description": "Rename session dialog title" },
+
+  "sessionTitleLabel": "Session Title",
+  "@sessionTitleLabel": { "description": "Session title field label" },
+
+  "confirm": "Confirm",
+  "@confirm": { "description": "Confirm button" },
+
+  "sessionRenamed": "Renamed",
+  "@sessionRenamed": { "description": "Session renamed message" },
+
+  "clearAllSessionsTitle": "Clear All Sessions",
+  "@clearAllSessionsTitle": { "description": "Clear all sessions dialog title" },
+
+  "clearAllSessionsConfirm": "Are you sure you want to delete all saved sessions? This action cannot be undone.",
+  "@clearAllSessionsConfirm": { "description": "Clear all sessions confirmation" },
+
+  "deleteAll": "Delete All",
+  "@deleteAll": { "description": "Delete all button" },
+
+  "allSessionsCleared": "All sessions cleared",
+  "@allSessionsCleared": { "description": "All sessions cleared message" },
+
+  "sessionCount": "Sessions",
+  "@sessionCount": { "description": "Session count label" },
+
+  "messageCount": "Messages",
+  "@messageCount": { "description": "Message count label" },
+
+  "refresh": "Refresh",
+  "@refresh": { "description": "Refresh button" },
+
+  "clearAllSessions": "Clear All Sessions",
+  "@clearAllSessions": { "description": "Clear all sessions button" },
+
+  "noSavedSessions": "No saved sessions",
+  "@noSavedSessions": { "description": "No saved sessions empty state" },
+
+  "sessionsAutoSaveHint": "Sessions will be automatically saved here after you send messages in chat",
+  "@sessionsAutoSaveHint": { "description": "Sessions auto save hint" },
+
+  "searchSessions": "Search sessions...",
+  "@searchSessions": { "description": "Search sessions placeholder" },
+
+  "messageCountWithUnit": "{count} messages",
+  "@messageCountWithUnit": {
+    "description": "Message count with unit",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "rename": "Rename",
+  "@rename": { "description": "Rename button" },
+
+  "selectSessionToView": "Select a session to view details",
+  "@selectSessionToView": { "description": "Select session hint" },
+
+  "messagesCreatedAt": "{count} messages · Created at",
+  "@messagesCreatedAt": {
+    "description": "Messages count and created at label",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "roleYou": "You",
+  "@roleYou": { "description": "You role label" },
+
+  "roleAI": "AI",
+  "@roleAI": { "description": "AI role label" },
+
+  "justNow": "just now",
+  "@justNow": { "description": "Just now time label" },
+
+  "minutesAgo": "{count} min ago",
+  "@minutesAgo": {
+    "description": "Minutes ago time label",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "hoursAgo": "{count} hr ago",
+  "@hoursAgo": {
+    "description": "Hours ago time label",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "daysAgo": "{count} days ago",
+  "@daysAgo": {
+    "description": "Days ago time label",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "featureToggles": "Feature Toggles",
+  "@featureToggles": { "description": "Feature toggles section title" },
+
+  "featureTogglesDesc": "Quickly enable or disable Agent feature modules, select to use directly",
+  "@featureTogglesDesc": { "description": "Feature toggles description" },
+
+  "featureWebSearch": "Web Search",
+  "@featureWebSearch": { "description": "Web search feature name" },
+
+  "featureWebSearchDesc": "Search the internet for latest information",
+  "@featureWebSearchDesc": { "description": "Web search feature description" },
+
+  "featureWebFetch": "Web Fetch",
+  "@featureWebFetch": { "description": "Web fetch feature name" },
+
+  "featureWebFetchDesc": "Fetch web page content and extract text",
+  "@featureWebFetchDesc": { "description": "Web fetch feature description" },
+
+  "featureBrowser": "Browser Automation",
+  "@featureBrowser": { "description": "Browser automation feature name" },
+
+  "featureBrowserDesc": "Automate browser operations and interactions",
+  "@featureBrowserDesc": { "description": "Browser automation feature description" },
+
+  "featureHttpRequest": "HTTP Request",
+  "@featureHttpRequest": { "description": "HTTP request feature name" },
+
+  "featureHttpRequestDesc": "Send API requests (GET/POST/PUT/DELETE)",
+  "@featureHttpRequestDesc": { "description": "HTTP request feature description" },
+
+  "featureMemory": "Auto Memory",
+  "@featureMemory": { "description": "Auto memory feature name" },
+
+  "featureMemoryDesc": "Automatically save important information from conversations",
+  "@featureMemoryDesc": { "description": "Auto memory feature description" },
+
+  "featureCostTracking": "Cost Tracking",
+  "@featureCostTracking": { "description": "Cost tracking feature name" },
+
+  "featureCostTrackingDesc": "Track API call costs and set limits",
+  "@featureCostTrackingDesc": { "description": "Cost tracking feature description" },
+
+  "featureSkillsOpen": "Community Skills",
+  "@featureSkillsOpen": { "description": "Community skills feature name" },
+
+  "featureSkillsOpenDesc": "Enable open-source community skill extensions",
+  "@featureSkillsOpenDesc": { "description": "Community skills feature description" },
+
+  "featureEnabled": "Enabled",
+  "@featureEnabled": { "description": "Feature enabled status" },
+
+  "featureDisabled": "Disabled",
+  "@featureDisabled": { "description": "Feature disabled status" },
+
+  "operationFailed": "Operation failed",
+  "@operationFailed": { "description": "Operation failed message" },
+
+  "builtInTools": "Built-in Tools",
+  "@builtInTools": { "description": "Built-in tools section title" },
+
+  "toolApprovalHint": "Click approval status label to quickly toggle tool permission",
+  "@toolApprovalHint": { "description": "Tool approval hint" },
+
+  "autoApproval": "Auto Approval",
+  "@autoApproval": { "description": "Auto approval label" },
+
+  "requireConfirmation": "Require Confirmation",
+  "@requireConfirmation": { "description": "Require confirmation label" },
+
+  "defaultApproval": "Default",
+  "@defaultApproval": { "description": "Default approval label" },
+
+  "categoryCore": "Core Tools",
+  "@categoryCore": { "description": "Core category" },
+
+  "categoryVcs": "Version Control",
+  "@categoryVcs": { "description": "VCS category" },
+
+  "categoryWeb": "Web & Network",
+  "@categoryWeb": { "description": "Web category" },
+
+  "categoryMemoryTools": "Memory & Storage",
+  "@categoryMemoryTools": { "description": "Memory & Storage category" },
+
+  "categoryCron": "Scheduling",
+  "@categoryCron": { "description": "Cron category" },
+
+  "categoryFile": "File Processing",
+  "@categoryFile": { "description": "File category" },
+
+  "categoryAgentTools": "Agent Delegation",
+  "@categoryAgentTools": { "description": "Agent delegation category" },
+
+  "channelConfigSaved": "{name} configuration saved",
+  "@channelConfigSaved": {
+    "description": "Channel config saved message",
+    "placeholders": { "name": { "type": "String" } }
+  },
+
+  "saveFailedWithError": "Save failed: {error}",
+  "@saveFailedWithError": {
+    "description": "Save failed message",
+    "placeholders": { "error": { "type": "String" } }
+  },
+
+  "disableChannelTitle": "Disable {name}",
+  "@disableChannelTitle": {
+    "description": "Disable channel dialog title",
+    "placeholders": { "name": { "type": "String" } }
+  },
+
+  "disableChannelConfirm": "Are you sure you want to disable this channel? Configuration will be cleared.",
+  "@disableChannelConfirm": { "description": "Disable channel confirmation" },
+
+  "disable": "Disable",
+  "@disable": { "description": "Disable button" },
+
+  "channelDisabled": "{name} disabled",
+  "@channelDisabled": {
+    "description": "Channel disabled message",
+    "placeholders": { "name": { "type": "String" } }
+  },
+
+  "operationFailedWithError": "Operation failed: {error}",
+  "@operationFailedWithError": {
+    "description": "Operation failed with error message",
+    "placeholders": { "error": { "type": "String" } }
+  },
+
+  "activeCount": "{count} active",
+  "@activeCount": {
+    "description": "Active count label",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "noChannelsAvailable": "No channels available",
+  "@noChannelsAvailable": { "description": "No channels available message" },
+
+  "activeChannels": "Active Channels",
+  "@activeChannels": { "description": "Active channels section" },
+
+  "availableChannels": "Available Channels",
+  "@availableChannels": { "description": "Available channels section" },
+
+  "statusActive": "Active",
+  "@statusActive": { "description": "Active status" },
+
+  "statusInactive": "Inactive",
+  "@statusInactive": { "description": "Inactive status" },
+
+  "configureChannel": "Configure {name}",
+  "@configureChannel": {
+    "description": "Configure channel tooltip",
+    "placeholders": { "name": { "type": "String" } }
+  },
+
+  "disableChannel": "Disable {name}",
+  "@disableChannel": {
+    "description": "Disable channel tooltip",
+    "placeholders": { "name": { "type": "String" } }
+  },
+
+  "skillsConfig": "Skills Configuration",
+  "@skillsConfig": { "description": "Skills config section title" },
+
+  "localSkills": "Local Skills",
+  "@localSkills": { "description": "Local skills label" },
+
+  "communitySkills": "Community Skills",
+  "@communitySkills": { "description": "Community skills label" },
+
+  "openSourceSkills": "Community Open-Source Skills",
+  "@openSourceSkills": { "description": "Open source skills title" },
+
+  "openSourceSkillsDesc": "Auto-sync community skills from GitHub when enabled",
+  "@openSourceSkillsDesc": { "description": "Open source skills description" },
+
+  "promptInjectionMode": "Prompt Injection Mode",
+  "@promptInjectionMode": { "description": "Prompt injection mode label" },
+
+  "fullMode": "Full Mode",
+  "@fullMode": { "description": "Full injection mode" },
+
+  "fullModeDesc": "Inject complete skill instructions and tool info into system prompt",
+  "@fullModeDesc": { "description": "Full mode description" },
+
+  "compactMode": "Compact Mode",
+  "@compactMode": { "description": "Compact injection mode" },
+
+  "compactModeDesc": "Inject skill summary only, load details on demand",
+  "@compactModeDesc": { "description": "Compact mode description" },
+
+  "noSkillsAvailable": "No skills available",
+  "@noSkillsAvailable": { "description": "No skills available message" },
+
+  "noSkillsHint": "Create SKILL.toml or SKILL.md files in the workspace's skills/ directory to add custom skills, or enable community open-source skills for more capabilities.",
+  "@noSkillsHint": { "description": "No skills hint" },
+
+  "quickStartSkill": "Quick Start: Create SKILL.toml",
+  "@quickStartSkill": { "description": "Quick start skill button" },
+
+  "sourceLocal": "Local",
+  "@sourceLocal": { "description": "Local source label" },
+
+  "sourceCommunity": "Community",
+  "@sourceCommunity": { "description": "Community source label" },
+
+  "includedTools": "Included Tools",
+  "@includedTools": { "description": "Included tools label" },
+
+  "prompts": "Prompts",
+  "@prompts": { "description": "Prompts label" },
+
+  "promptsWithCount": "Prompts ({count})",
+  "@promptsWithCount": {
+    "description": "Prompts with count",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "communitySkillsToggled": "Community skills {status}",
+  "@communitySkillsToggled": {
+    "description": "Community skills toggled message",
+    "placeholders": { "status": { "type": "String" } }
+  },
+
+  "injectionModeUpdated": "Injection mode updated to {mode}",
+  "@injectionModeUpdated": {
+    "description": "Injection mode updated message",
+    "placeholders": { "mode": { "type": "String" } }
+  },
+
+  "deleteCronJobTitle": "Delete Cron Job",
+  "@deleteCronJobTitle": { "description": "Delete cron job dialog title" },
+
+  "deleteCronJobConfirm": "Are you sure you want to delete this cron job? This action cannot be undone.",
+  "@deleteCronJobConfirm": { "description": "Delete cron job confirmation" },
+
+  "deleted": "Deleted",
+  "@deleted": { "description": "Deleted message" },
+
+  "deleteFailedWithError": "Delete failed: {error}",
+  "@deleteFailedWithError": {
+    "description": "Delete failed message",
+    "placeholders": { "error": { "type": "String" } }
+  },
+
+  "cronJobEnabled": "Enabled",
+  "@cronJobEnabled": { "description": "Cron job enabled message" },
+
+  "cronJobPaused": "Paused",
+  "@cronJobPaused": { "description": "Cron job paused message" },
+
+  "executionSuccess": "Execution succeeded",
+  "@executionSuccess": { "description": "Execution success message" },
+
+  "executionFailedWithError": "Execution failed: {error}",
+  "@executionFailedWithError": {
+    "description": "Execution failed message",
+    "placeholders": { "error": { "type": "String" } }
+  },
+
+  "executionErrorWithError": "Execution error: {error}",
+  "@executionErrorWithError": {
+    "description": "Execution error message",
+    "placeholders": { "error": { "type": "String" } }
+  },
+
+  "totalCount": "Total",
+  "@totalCount": { "description": "Total count label" },
+
+  "running": "Running",
+  "@running": { "description": "Running status" },
+
+  "paused": "Paused",
+  "@paused": { "description": "Paused status" },
+
+  "newTask": "New Task",
+  "@newTask": { "description": "New task button" },
+
+  "noCronJobs": "No cron jobs",
+  "@noCronJobs": { "description": "No cron jobs message" },
+
+  "noCronJobsHint": "Click \"New Task\" above to create Shell or AI Agent scheduled tasks",
+  "@noCronJobsHint": { "description": "No cron jobs hint" },
+
+  "mainSession": "Main Session",
+  "@mainSession": { "description": "Main session label" },
+
+  "runNow": "Run Now",
+  "@runNow": { "description": "Run now button" },
+
+  "collapseHistory": "Collapse History",
+  "@collapseHistory": { "description": "Collapse history button" },
+
+  "runHistory": "Run History",
+  "@runHistory": { "description": "Run history button" },
+
+  "nextExecution": "Next execution:",
+  "@nextExecution": { "description": "Next execution label" },
+
+  "lastRun": "Last:",
+  "@lastRun": { "description": "Last run label" },
+
+  "oneTime": "One-time",
+  "@oneTime": { "description": "One-time schedule label" },
+
+  "noRunHistory": "No run history",
+  "@noRunHistory": { "description": "No run history message" },
+
+  "runHistoryRecent": "Run History (recent {count})",
+  "@runHistoryRecent": {
+    "description": "Run history recent count",
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "newCronJob": "New Cron Job",
+  "@newCronJob": { "description": "New cron job dialog title" },
+
+  "taskNameOptional": "Task Name (optional)",
+  "@taskNameOptional": { "description": "Task name field label" },
+
+  "taskType": "Task Type",
+  "@taskType": { "description": "Task type label" },
+
+  "shellCommand": "Shell Command",
+  "@shellCommand": { "description": "Shell command option" },
+
+  "aiAgent": "AI Agent",
+  "@aiAgent": { "description": "AI Agent option" },
+
+  "scheduleType": "Schedule Type",
+  "@scheduleType": { "description": "Schedule type label" },
+
+  "interval": "Interval",
+  "@interval": { "description": "Interval option" },
+
+  "scheduled": "Scheduled",
+  "@scheduled": { "description": "Scheduled option" },
+
+  "cronExpression": "Cron Expression",
+  "@cronExpression": { "description": "Cron expression label" },
+
+  "intervalMs": "Interval (milliseconds)",
+  "@intervalMs": { "description": "Interval in milliseconds label" },
+
+  "executionTime": "Execution Time (RFC3339)",
+  "@executionTime": { "description": "Execution time label" },
+
+  "shellCommandLabel": "Shell Command",
+  "@shellCommandLabel": { "description": "Shell command input label" },
+
+  "aiPromptLabel": "AI Prompt",
+  "@aiPromptLabel": { "description": "AI prompt input label" },
+
+  "modelOptional": "Model (optional)",
+  "@modelOptional": { "description": "Model optional field label" },
+
+  "useDefaultModel": "Leave empty to use default model",
+  "@useDefaultModel": { "description": "Use default model hint" },
+
+  "sessionTarget": "Session Target",
+  "@sessionTarget": { "description": "Session target label" },
+
+  "isolated": "Isolated",
+  "@isolated": { "description": "Isolated session option" },
+
+  "deleteAfterRun": "Delete After Run",
+  "@deleteAfterRun": { "description": "Delete after run option" },
+
+  "deleteAfterRunDesc": "Automatically delete task after one execution",
+  "@deleteAfterRunDesc": { "description": "Delete after run description" },
+
+  "create": "Create",
+  "@create": { "description": "Create button" },
+
+  "cronJobCreated": "Cron job created",
+  "@cronJobCreated": { "description": "Cron job created message" },
+
+  "createFailedWithError": "Create failed: {error}",
+  "@createFailedWithError": {
+    "description": "Create failed message",
+    "placeholders": { "error": { "type": "String" } }
+  },
+
+  "pageEnvironments": "Environments",
+  "@pageEnvironments": { "description": "Environments page title" }
 }

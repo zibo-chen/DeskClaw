@@ -147,4 +147,724 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tooltipRefresh => 'Refresh';
+
+  @override
+  String get darkMode => 'Dark Mode';
+
+  @override
+  String get lightMode => 'Light Mode';
+
+  @override
+  String get toolCallSuccess => 'Success';
+
+  @override
+  String get toolCallFailed => 'Failed';
+
+  @override
+  String get comingSoon => 'Coming Soon';
+
+  @override
+  String get featureComingSoon => 'This feature is coming soon.';
+
+  @override
+  String get environmentsDescription =>
+      'Manage environment variables and deployment profiles.';
+
+  @override
+  String get providerConfiguration => 'Provider Configuration';
+
+  @override
+  String get providerLabel => 'Provider';
+
+  @override
+  String get modelLabel => 'Model';
+
+  @override
+  String get apiKeyLabel => 'API Key';
+
+  @override
+  String get apiKeyHint => 'Enter your API key...';
+
+  @override
+  String get apiBaseUrlLabel => 'API Base URL';
+
+  @override
+  String get temperatureLabel => 'Temperature';
+
+  @override
+  String get saving => 'Saving...';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get configSaved => 'Configuration saved!';
+
+  @override
+  String get configSaveFailed => 'Failed to save config';
+
+  @override
+  String get runtimeStatus => 'Runtime Status';
+
+  @override
+  String get initialized => 'Initialized';
+
+  @override
+  String get yes => 'Yes';
+
+  @override
+  String get no => 'No';
+
+  @override
+  String get configured => 'Configured';
+
+  @override
+  String get missing => 'Missing';
+
+  @override
+  String get activeProvider => 'Active Provider';
+
+  @override
+  String get activeModel => 'Active Model';
+
+  @override
+  String get modelNameHint => 'Enter model name or select from list...';
+
+  @override
+  String get showSuggestions => 'Show suggestions';
+
+  @override
+  String get workspaceInfo => 'Workspace Info';
+
+  @override
+  String get workspaceDirectory => 'Workspace Directory';
+
+  @override
+  String get configFile => 'Config File';
+
+  @override
+  String get agentSettings => 'Agent Settings';
+
+  @override
+  String get maxToolIterations => 'Max Tool Iterations';
+
+  @override
+  String get maxHistoryMessages => 'Max History Messages';
+
+  @override
+  String get parallelToolExecution => 'Parallel Tool Execution';
+
+  @override
+  String get compactContext => 'Compact Context';
+
+  @override
+  String get toolDispatcher => 'Tool Dispatcher';
+
+  @override
+  String get memorySection => 'Memory';
+
+  @override
+  String get backend => 'Backend';
+
+  @override
+  String get autoSave => 'Auto Save';
+
+  @override
+  String get enabled => 'Enabled';
+
+  @override
+  String get disabled => 'Disabled';
+
+  @override
+  String get hygiene => 'Hygiene';
+
+  @override
+  String get archiveAfter => 'Archive After';
+
+  @override
+  String get days => 'days';
+
+  @override
+  String get purgeAfter => 'Purge After';
+
+  @override
+  String get embeddingProvider => 'Embedding Provider';
+
+  @override
+  String get embeddingModel => 'Embedding Model';
+
+  @override
+  String get costTracking => 'Cost Tracking';
+
+  @override
+  String get dailyLimit => 'Daily Limit';
+
+  @override
+  String get monthlyLimit => 'Monthly Limit';
+
+  @override
+  String get warnAt => 'Warn At';
+
+  @override
+  String get autonomySecurity => 'Autonomy & Security';
+
+  @override
+  String get autonomyLevel => 'Autonomy Level';
+
+  @override
+  String get readOnly => 'Read Only';
+
+  @override
+  String get supervised => 'Supervised';
+
+  @override
+  String get fullAutonomy => 'Full';
+
+  @override
+  String get workspaceOnly => 'Workspace Only';
+
+  @override
+  String get requireApprovalMediumRisk => 'Require Approval (Medium Risk)';
+
+  @override
+  String get blockHighRisk => 'Block High Risk';
+
+  @override
+  String get maxActionsPerHour => 'Max Actions/Hour';
+
+  @override
+  String get maxCostPerDay => 'Max Cost/Day';
+
+  @override
+  String get allowedCommands => 'Allowed Commands';
+
+  @override
+  String get autoApprovedTools => 'Auto-Approved Tools';
+
+  @override
+  String get toolsSection => 'Tools';
+
+  @override
+  String toolCountLabel(int count) {
+    return '$count tools';
+  }
+
+  @override
+  String get categoryCoreTools => 'Core Tools';
+
+  @override
+  String get categoryVersionControl => 'Version Control';
+
+  @override
+  String get categoryWebNetwork => 'Web & Network';
+
+  @override
+  String get categoryMemory => 'Memory';
+
+  @override
+  String get categorySystem => 'System';
+
+  @override
+  String get categoryFileProcessing => 'File Processing';
+
+  @override
+  String get categoryAgent => 'Agent';
+
+  @override
+  String get categoryScheduling => 'Scheduling';
+
+  @override
+  String get approvalAuto => 'Auto';
+
+  @override
+  String get approvalAsk => 'Ask';
+
+  @override
+  String get deleteSessionTitle => 'Delete Session';
+
+  @override
+  String get deleteSessionConfirm =>
+      'Are you sure you want to delete this session? This action cannot be undone.';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get sessionDeleted => 'Session deleted';
+
+  @override
+  String get renameSessionTitle => 'Rename Session';
+
+  @override
+  String get sessionTitleLabel => 'Session Title';
+
+  @override
+  String get confirm => 'Confirm';
+
+  @override
+  String get sessionRenamed => 'Renamed';
+
+  @override
+  String get clearAllSessionsTitle => 'Clear All Sessions';
+
+  @override
+  String get clearAllSessionsConfirm =>
+      'Are you sure you want to delete all saved sessions? This action cannot be undone.';
+
+  @override
+  String get deleteAll => 'Delete All';
+
+  @override
+  String get allSessionsCleared => 'All sessions cleared';
+
+  @override
+  String get sessionCount => 'Sessions';
+
+  @override
+  String get messageCount => 'Messages';
+
+  @override
+  String get refresh => 'Refresh';
+
+  @override
+  String get clearAllSessions => 'Clear All Sessions';
+
+  @override
+  String get noSavedSessions => 'No saved sessions';
+
+  @override
+  String get sessionsAutoSaveHint =>
+      'Sessions will be automatically saved here after you send messages in chat';
+
+  @override
+  String get searchSessions => 'Search sessions...';
+
+  @override
+  String messageCountWithUnit(int count) {
+    return '$count messages';
+  }
+
+  @override
+  String get rename => 'Rename';
+
+  @override
+  String get selectSessionToView => 'Select a session to view details';
+
+  @override
+  String messagesCreatedAt(int count) {
+    return '$count messages · Created at';
+  }
+
+  @override
+  String get roleYou => 'You';
+
+  @override
+  String get roleAI => 'AI';
+
+  @override
+  String get justNow => 'just now';
+
+  @override
+  String minutesAgo(int count) {
+    return '$count min ago';
+  }
+
+  @override
+  String hoursAgo(int count) {
+    return '$count hr ago';
+  }
+
+  @override
+  String daysAgo(int count) {
+    return '$count days ago';
+  }
+
+  @override
+  String get featureToggles => 'Feature Toggles';
+
+  @override
+  String get featureTogglesDesc =>
+      'Quickly enable or disable Agent feature modules, select to use directly';
+
+  @override
+  String get featureWebSearch => 'Web Search';
+
+  @override
+  String get featureWebSearchDesc =>
+      'Search the internet for latest information';
+
+  @override
+  String get featureWebFetch => 'Web Fetch';
+
+  @override
+  String get featureWebFetchDesc => 'Fetch web page content and extract text';
+
+  @override
+  String get featureBrowser => 'Browser Automation';
+
+  @override
+  String get featureBrowserDesc =>
+      'Automate browser operations and interactions';
+
+  @override
+  String get featureHttpRequest => 'HTTP Request';
+
+  @override
+  String get featureHttpRequestDesc =>
+      'Send API requests (GET/POST/PUT/DELETE)';
+
+  @override
+  String get featureMemory => 'Auto Memory';
+
+  @override
+  String get featureMemoryDesc =>
+      'Automatically save important information from conversations';
+
+  @override
+  String get featureCostTracking => 'Cost Tracking';
+
+  @override
+  String get featureCostTrackingDesc => 'Track API call costs and set limits';
+
+  @override
+  String get featureSkillsOpen => 'Community Skills';
+
+  @override
+  String get featureSkillsOpenDesc =>
+      'Enable open-source community skill extensions';
+
+  @override
+  String get featureEnabled => 'Enabled';
+
+  @override
+  String get featureDisabled => 'Disabled';
+
+  @override
+  String get operationFailed => 'Operation failed';
+
+  @override
+  String get builtInTools => 'Built-in Tools';
+
+  @override
+  String get toolApprovalHint =>
+      'Click approval status label to quickly toggle tool permission';
+
+  @override
+  String get autoApproval => 'Auto Approval';
+
+  @override
+  String get requireConfirmation => 'Require Confirmation';
+
+  @override
+  String get defaultApproval => 'Default';
+
+  @override
+  String get categoryCore => 'Core Tools';
+
+  @override
+  String get categoryVcs => 'Version Control';
+
+  @override
+  String get categoryWeb => 'Web & Network';
+
+  @override
+  String get categoryMemoryTools => 'Memory & Storage';
+
+  @override
+  String get categoryCron => 'Scheduling';
+
+  @override
+  String get categoryFile => 'File Processing';
+
+  @override
+  String get categoryAgentTools => 'Agent Delegation';
+
+  @override
+  String channelConfigSaved(String name) {
+    return '$name configuration saved';
+  }
+
+  @override
+  String saveFailedWithError(String error) {
+    return 'Save failed: $error';
+  }
+
+  @override
+  String disableChannelTitle(String name) {
+    return 'Disable $name';
+  }
+
+  @override
+  String get disableChannelConfirm =>
+      'Are you sure you want to disable this channel? Configuration will be cleared.';
+
+  @override
+  String get disable => 'Disable';
+
+  @override
+  String channelDisabled(String name) {
+    return '$name disabled';
+  }
+
+  @override
+  String operationFailedWithError(String error) {
+    return 'Operation failed: $error';
+  }
+
+  @override
+  String activeCount(int count) {
+    return '$count active';
+  }
+
+  @override
+  String get noChannelsAvailable => 'No channels available';
+
+  @override
+  String get activeChannels => 'Active Channels';
+
+  @override
+  String get availableChannels => 'Available Channels';
+
+  @override
+  String get statusActive => 'Active';
+
+  @override
+  String get statusInactive => 'Inactive';
+
+  @override
+  String configureChannel(String name) {
+    return 'Configure $name';
+  }
+
+  @override
+  String disableChannel(String name) {
+    return 'Disable $name';
+  }
+
+  @override
+  String get skillsConfig => 'Skills Configuration';
+
+  @override
+  String get localSkills => 'Local Skills';
+
+  @override
+  String get communitySkills => 'Community Skills';
+
+  @override
+  String get openSourceSkills => 'Community Open-Source Skills';
+
+  @override
+  String get openSourceSkillsDesc =>
+      'Auto-sync community skills from GitHub when enabled';
+
+  @override
+  String get promptInjectionMode => 'Prompt Injection Mode';
+
+  @override
+  String get fullMode => 'Full Mode';
+
+  @override
+  String get fullModeDesc =>
+      'Inject complete skill instructions and tool info into system prompt';
+
+  @override
+  String get compactMode => 'Compact Mode';
+
+  @override
+  String get compactModeDesc =>
+      'Inject skill summary only, load details on demand';
+
+  @override
+  String get noSkillsAvailable => 'No skills available';
+
+  @override
+  String get noSkillsHint =>
+      'Create SKILL.toml or SKILL.md files in the workspace\'s skills/ directory to add custom skills, or enable community open-source skills for more capabilities.';
+
+  @override
+  String get quickStartSkill => 'Quick Start: Create SKILL.toml';
+
+  @override
+  String get sourceLocal => 'Local';
+
+  @override
+  String get sourceCommunity => 'Community';
+
+  @override
+  String get includedTools => 'Included Tools';
+
+  @override
+  String get prompts => 'Prompts';
+
+  @override
+  String promptsWithCount(int count) {
+    return 'Prompts ($count)';
+  }
+
+  @override
+  String communitySkillsToggled(String status) {
+    return 'Community skills $status';
+  }
+
+  @override
+  String injectionModeUpdated(String mode) {
+    return 'Injection mode updated to $mode';
+  }
+
+  @override
+  String get deleteCronJobTitle => 'Delete Cron Job';
+
+  @override
+  String get deleteCronJobConfirm =>
+      'Are you sure you want to delete this cron job? This action cannot be undone.';
+
+  @override
+  String get deleted => 'Deleted';
+
+  @override
+  String deleteFailedWithError(String error) {
+    return 'Delete failed: $error';
+  }
+
+  @override
+  String get cronJobEnabled => 'Enabled';
+
+  @override
+  String get cronJobPaused => 'Paused';
+
+  @override
+  String get executionSuccess => 'Execution succeeded';
+
+  @override
+  String executionFailedWithError(String error) {
+    return 'Execution failed: $error';
+  }
+
+  @override
+  String executionErrorWithError(String error) {
+    return 'Execution error: $error';
+  }
+
+  @override
+  String get totalCount => 'Total';
+
+  @override
+  String get running => 'Running';
+
+  @override
+  String get paused => 'Paused';
+
+  @override
+  String get newTask => 'New Task';
+
+  @override
+  String get noCronJobs => 'No cron jobs';
+
+  @override
+  String get noCronJobsHint =>
+      'Click \"New Task\" above to create Shell or AI Agent scheduled tasks';
+
+  @override
+  String get mainSession => 'Main Session';
+
+  @override
+  String get runNow => 'Run Now';
+
+  @override
+  String get collapseHistory => 'Collapse History';
+
+  @override
+  String get runHistory => 'Run History';
+
+  @override
+  String get nextExecution => 'Next execution:';
+
+  @override
+  String get lastRun => 'Last:';
+
+  @override
+  String get oneTime => 'One-time';
+
+  @override
+  String get noRunHistory => 'No run history';
+
+  @override
+  String runHistoryRecent(int count) {
+    return 'Run History (recent $count)';
+  }
+
+  @override
+  String get newCronJob => 'New Cron Job';
+
+  @override
+  String get taskNameOptional => 'Task Name (optional)';
+
+  @override
+  String get taskType => 'Task Type';
+
+  @override
+  String get shellCommand => 'Shell Command';
+
+  @override
+  String get aiAgent => 'AI Agent';
+
+  @override
+  String get scheduleType => 'Schedule Type';
+
+  @override
+  String get interval => 'Interval';
+
+  @override
+  String get scheduled => 'Scheduled';
+
+  @override
+  String get cronExpression => 'Cron Expression';
+
+  @override
+  String get intervalMs => 'Interval (milliseconds)';
+
+  @override
+  String get executionTime => 'Execution Time (RFC3339)';
+
+  @override
+  String get shellCommandLabel => 'Shell Command';
+
+  @override
+  String get aiPromptLabel => 'AI Prompt';
+
+  @override
+  String get modelOptional => 'Model (optional)';
+
+  @override
+  String get useDefaultModel => 'Leave empty to use default model';
+
+  @override
+  String get sessionTarget => 'Session Target';
+
+  @override
+  String get isolated => 'Isolated';
+
+  @override
+  String get deleteAfterRun => 'Delete After Run';
+
+  @override
+  String get deleteAfterRunDesc =>
+      'Automatically delete task after one execution';
+
+  @override
+  String get create => 'Create';
+
+  @override
+  String get cronJobCreated => 'Cron job created';
+
+  @override
+  String createFailedWithError(String error) {
+    return 'Create failed: $error';
+  }
+
+  @override
+  String get pageEnvironments => 'Environments';
 }

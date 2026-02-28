@@ -64,10 +64,15 @@ class _ChannelsPageState extends ConsumerState<ChannelsPage> {
         configJson: jsonEncode(result),
       );
       if (saveResult == 'ok') {
-        _showMessage('${channel.name} 配置已保存');
+        _showMessage(
+          AppLocalizations.of(context)!.channelConfigSaved(channel.name),
+        );
         _loadChannels();
       } else {
-        _showMessage('保存失败: $saveResult', isError: true);
+        _showMessage(
+          AppLocalizations.of(context)!.saveFailedWithError(saveResult),
+          isError: true,
+        );
       }
     }
   }
@@ -76,17 +81,19 @@ class _ChannelsPageState extends ConsumerState<ChannelsPage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('禁用 ${channel.name}'),
-        content: const Text('确定要禁用此频道？配置将被清除。'),
+        title: Text(
+          AppLocalizations.of(context)!.disableChannelTitle(channel.name),
+        ),
+        content: Text(AppLocalizations.of(context)!.disableChannelConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('禁用'),
+            child: Text(AppLocalizations.of(context)!.disable),
           ),
         ],
       ),
@@ -97,10 +104,15 @@ class _ChannelsPageState extends ConsumerState<ChannelsPage> {
         enabled: false,
       );
       if (result == 'ok') {
-        _showMessage('${channel.name} 已禁用');
+        _showMessage(
+          AppLocalizations.of(context)!.channelDisabled(channel.name),
+        );
         _loadChannels();
       } else {
-        _showMessage('操作失败: $result', isError: true);
+        _showMessage(
+          AppLocalizations.of(context)!.operationFailedWithError(result),
+          isError: true,
+        );
       }
     }
   }
@@ -155,7 +167,9 @@ class _ChannelsPageState extends ConsumerState<ChannelsPage> {
           const SizedBox(width: 12),
           if (_channels != null)
             Text(
-              '${_channels!.where((c) => c.enabled).length} active',
+              AppLocalizations.of(
+                context,
+              )!.activeCount(_channels!.where((c) => c.enabled).length),
               style: TextStyle(fontSize: 13, color: c.textHint),
             ),
         ],
@@ -168,7 +182,7 @@ class _ChannelsPageState extends ConsumerState<ChannelsPage> {
     if (channels == null || channels.isEmpty) {
       return Center(
         child: Text(
-          '暂无可用频道',
+          AppLocalizations.of(context)!.noChannelsAvailable,
           textAlign: TextAlign.center,
           style: TextStyle(color: c.textSecondary),
         ),
@@ -181,10 +195,16 @@ class _ChannelsPageState extends ConsumerState<ChannelsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Enabled channels
-          _buildSection('已激活频道', channels.where((c) => c.enabled).toList()),
+          _buildSection(
+            AppLocalizations.of(context)!.activeChannels,
+            channels.where((c) => c.enabled).toList(),
+          ),
           const SizedBox(height: 24),
           // Available channels
-          _buildSection('可用频道', channels.where((c) => !c.enabled).toList()),
+          _buildSection(
+            AppLocalizations.of(context)!.availableChannels,
+            channels.where((c) => !c.enabled).toList(),
+          ),
         ],
       ),
     );
@@ -270,7 +290,9 @@ class _ChannelsPageState extends ConsumerState<ChannelsPage> {
                   : c.inputBg,
             ),
             child: Text(
-              channel.enabled ? 'Active' : 'Inactive',
+              channel.enabled
+                  ? AppLocalizations.of(context)!.statusActive
+                  : AppLocalizations.of(context)!.statusInactive,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -283,7 +305,9 @@ class _ChannelsPageState extends ConsumerState<ChannelsPage> {
           IconButton(
             icon: const Icon(Icons.settings, size: 20),
             color: AppColors.primary,
-            tooltip: '配置 ${channel.name}',
+            tooltip: AppLocalizations.of(
+              context,
+            )!.configureChannel(channel.name),
             onPressed: () => _configureChannel(channel),
           ),
           // Disable button (only for active channels, excluding CLI)
@@ -291,7 +315,9 @@ class _ChannelsPageState extends ConsumerState<ChannelsPage> {
             IconButton(
               icon: const Icon(Icons.power_settings_new, size: 20),
               color: AppColors.error,
-              tooltip: '禁用 ${channel.name}',
+              tooltip: AppLocalizations.of(
+                context,
+              )!.disableChannel(channel.name),
               onPressed: () => _disableChannel(channel),
             ),
         ],
@@ -375,7 +401,9 @@ class _ChannelConfigDialogState extends State<_ChannelConfigDialog> {
         children: [
           const Icon(Icons.settings, size: 20, color: AppColors.primary),
           const SizedBox(width: 8),
-          Text('配置 ${widget.channel.name}'),
+          Text(
+            AppLocalizations.of(context)!.configureChannel(widget.channel.name),
+          ),
         ],
       ),
       content: SizedBox(
@@ -391,9 +419,12 @@ class _ChannelConfigDialogState extends State<_ChannelConfigDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('取消'),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
-        ElevatedButton(onPressed: _submit, child: const Text('保存')),
+        ElevatedButton(
+          onPressed: _submit,
+          child: Text(AppLocalizations.of(context)!.save),
+        ),
       ],
     );
   }

@@ -1,0 +1,214 @@
+name: Build Desktop Apps
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: "3.35.7"
+  RUST_VERSION: "1.92.0"
+  ZEROCLAW_REPO: "zibo-chen/zeroclaw"
+  ZEROCLAW_REF: "main-deskclaw"
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # macOS (universal: x86_64 + arm64)
+  # ---------------------------------------------------------------------------
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Clone zeroclaw dependency
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.ZEROCLAW_REPO }}
+          ref: ${{ env.ZEROCLAW_REF }}
+          path: zeroclaw
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: macos-cargo-${{ hashFiles('rust/Cargo.lock', 'zeroclaw/Cargo.lock') }}
+          restore-keys: macos-cargo-
+
+      - name: Install Flutter dependencies
+        run: flutter pub get
+
+      - name: Build macOS app
+        run: flutter build macos --release
+
+      - name: Package macOS app
+        run: |
+          cd build/macos/Build/Products/Release
+          ditto -c -k --sequesterRsrc --keepParent deskclaw.app deskclaw-macos.zip
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deskclaw-macos
+          path: build/macos/Build/Products/Release/deskclaw-macos.zip
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------------
+  # Linux (x86_64)
+  # ---------------------------------------------------------------------------
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Clone zeroclaw dependency
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.ZEROCLAW_REPO }}
+          ref: ${{ env.ZEROCLAW_REF }}
+          path: zeroclaw
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            clang cmake git ninja-build pkg-config \
+            libgtk-3-dev liblzma-dev libstdc++-12-dev
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust/target
+          key: linux-cargo-${{ hashFiles('rust/Cargo.lock', 'zeroclaw/Cargo.lock') }}
+          restore-keys: linux-cargo-
+
+      - name: Install Flutter dependencies
+        run: flutter pub get
+
+      - name: Build Linux app
+        run: flutter build linux --release
+
+      - name: Package Linux app
+        run: |
+          cd build/linux/x64/release
+          tar -czf deskclaw-linux-x64.tar.gz bundle
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deskclaw-linux-x64
+          path: build/linux/x64/release/deskclaw-linux-x64.tar.gz
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------------
+  # Windows (x64)
+  # ---------------------------------------------------------------------------
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Clone zeroclaw dependency
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.ZEROCLAW_REPO }}
+          ref: ${{ env.ZEROCLAW_REF }}
+          path: zeroclaw
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~\.cargo\registry
+            ~\.cargo\git
+            rust\target
+          key: windows-cargo-${{ hashFiles('rust/Cargo.lock', 'zeroclaw/Cargo.lock') }}
+          restore-keys: windows-cargo-
+
+      - name: Install Flutter dependencies
+        run: flutter pub get
+
+      - name: Build Windows app
+        run: flutter build windows --release
+
+      - name: Package Windows app
+        run: Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath build\deskclaw-windows-x64.zip
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deskclaw-windows-x64
+          path: build/deskclaw-windows-x64.zip
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------------
+  # Create GitHub Release (only on tags)
+  # ---------------------------------------------------------------------------
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build-macos, build-linux, build-windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          generate_release_notes: true
+          files: |
+            artifacts/deskclaw-macos/deskclaw-macos.zip
+            artifacts/deskclaw-linux-x64/deskclaw-linux-x64.tar.gz
+            artifacts/deskclaw-windows-x64/deskclaw-windows-x64.zip

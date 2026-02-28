@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:deskclaw/l10n/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:deskclaw/models/models.dart';
 import 'package:deskclaw/theme/app_theme.dart';
@@ -253,7 +254,9 @@ class _ToolCallCardState extends State<_ToolCallCard> {
                     Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: Text(
-                        toolCall.success == true ? 'Success' : 'Failed',
+                        toolCall.success == true
+                            ? AppLocalizations.of(context)!.toolCallSuccess
+                            : AppLocalizations.of(context)!.toolCallFailed,
                         style: TextStyle(fontSize: 12, color: statusColor),
                       ),
                     ),

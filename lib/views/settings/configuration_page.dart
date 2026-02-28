@@ -109,7 +109,7 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage> {
               Icon(Icons.shield_outlined, size: 18, color: AppColors.primary),
               SizedBox(width: 8),
               Text(
-                'Autonomy & Security',
+                AppLocalizations.of(context)!.autonomySecurity,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -122,7 +122,7 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage> {
 
           // Autonomy level selector
           Text(
-            'Autonomy Level',
+            AppLocalizations.of(context)!.autonomyLevel,
             style: TextStyle(
               fontSize: 13,
               color: c.textSecondary,
@@ -134,40 +134,60 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage> {
             children: [
               _buildLevelChip(
                 'read_only',
-                'Read Only',
+                AppLocalizations.of(context)!.readOnly,
                 Icons.visibility,
                 a.level,
               ),
               const SizedBox(width: 8),
               _buildLevelChip(
                 'supervised',
-                'Supervised',
+                AppLocalizations.of(context)!.supervised,
                 Icons.supervisor_account,
                 a.level,
               ),
               const SizedBox(width: 8),
-              _buildLevelChip('full', 'Full', Icons.bolt, a.level),
+              _buildLevelChip(
+                'full',
+                AppLocalizations.of(context)!.fullAutonomy,
+                Icons.bolt,
+                a.level,
+              ),
             ],
           ),
           const SizedBox(height: 16),
 
           // Settings
-          _buildInfoRow('Workspace Only', a.workspaceOnly ? 'Yes' : 'No'),
           _buildInfoRow(
-            'Require Approval (Medium Risk)',
-            a.requireApprovalForMediumRisk ? 'Yes' : 'No',
+            AppLocalizations.of(context)!.workspaceOnly,
+            a.workspaceOnly
+                ? AppLocalizations.of(context)!.yes
+                : AppLocalizations.of(context)!.no,
           ),
           _buildInfoRow(
-            'Block High Risk',
-            a.blockHighRiskCommands ? 'Yes' : 'No',
+            AppLocalizations.of(context)!.requireApprovalMediumRisk,
+            a.requireApprovalForMediumRisk
+                ? AppLocalizations.of(context)!.yes
+                : AppLocalizations.of(context)!.no,
           ),
-          _buildInfoRow('Max Actions/Hour', '${a.maxActionsPerHour}'),
-          _buildInfoRow('Max Cost/Day', '${a.maxCostPerDayCents}¢'),
+          _buildInfoRow(
+            AppLocalizations.of(context)!.blockHighRisk,
+            a.blockHighRiskCommands
+                ? AppLocalizations.of(context)!.yes
+                : AppLocalizations.of(context)!.no,
+          ),
+          _buildInfoRow(
+            AppLocalizations.of(context)!.maxActionsPerHour,
+            '${a.maxActionsPerHour}',
+          ),
+          _buildInfoRow(
+            AppLocalizations.of(context)!.maxCostPerDay,
+            '${a.maxCostPerDayCents}¢',
+          ),
 
           if (a.allowedCommands.isNotEmpty) ...[
             const SizedBox(height: 12),
             Text(
-              'Allowed Commands',
+              AppLocalizations.of(context)!.allowedCommands,
               style: TextStyle(
                 fontSize: 13,
                 color: c.textSecondary,
@@ -193,7 +213,7 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage> {
           if (a.autoApprove.isNotEmpty) ...[
             const SizedBox(height: 12),
             Text(
-              'Auto-Approved Tools',
+              AppLocalizations.of(context)!.autoApprovedTools,
               style: TextStyle(
                 fontSize: 13,
                 color: c.textSecondary,
@@ -299,7 +319,7 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage> {
               ),
               const SizedBox(width: 8),
               Text(
-                'Tools',
+                AppLocalizations.of(context)!.toolsSection,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -308,7 +328,7 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage> {
               ),
               const Spacer(),
               Text(
-                '${tools.length} tools',
+                AppLocalizations.of(context)!.toolCountLabel(tools.length),
                 style: TextStyle(fontSize: 12, color: c.textHint),
               ),
             ],
@@ -324,14 +344,14 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage> {
 
   Widget _buildToolCategory(String category, List<ws_api.ToolInfo> tools) {
     final categoryLabels = {
-      'core': 'Core Tools',
-      'vcs': 'Version Control',
-      'web': 'Web & Network',
-      'memory': 'Memory',
-      'system': 'System',
-      'file': 'File Processing',
-      'agent': 'Agent',
-      'cron': 'Scheduling',
+      'core': AppLocalizations.of(context)!.categoryCoreTools,
+      'vcs': AppLocalizations.of(context)!.categoryVersionControl,
+      'web': AppLocalizations.of(context)!.categoryWebNetwork,
+      'memory': AppLocalizations.of(context)!.categoryMemory,
+      'system': AppLocalizations.of(context)!.categorySystem,
+      'file': AppLocalizations.of(context)!.categoryFileProcessing,
+      'agent': AppLocalizations.of(context)!.categoryAgent,
+      'cron': AppLocalizations.of(context)!.categoryScheduling,
     };
 
     return Padding(
@@ -387,9 +407,9 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage> {
                 color: Colors.green.shade50,
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: const Text(
-                'Auto',
-                style: TextStyle(
+              child: Text(
+                AppLocalizations.of(context)!.approvalAuto,
+                style: const TextStyle(
                   fontSize: 10,
                   color: Colors.green,
                   fontWeight: FontWeight.w600,
@@ -403,9 +423,9 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage> {
                 color: Colors.orange.shade50,
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: const Text(
-                'Ask',
-                style: TextStyle(
+              child: Text(
+                AppLocalizations.of(context)!.approvalAsk,
+                style: const TextStyle(
                   fontSize: 10,
                   color: Colors.orange,
                   fontWeight: FontWeight.w600,

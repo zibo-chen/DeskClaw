@@ -101,14 +101,17 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
   Widget _buildWorkspaceSection() {
     return _buildCard(
-      title: 'Workspace Info',
+      title: AppLocalizations.of(context)!.workspaceInfo,
       icon: Icons.folder_outlined,
       children: [
         _buildReadOnlyField(
-          'Workspace Directory',
+          AppLocalizations.of(context)!.workspaceDirectory,
           _workspace?.workspaceDir ?? '',
         ),
-        _buildReadOnlyField('Config File', _workspace?.configPath ?? ''),
+        _buildReadOnlyField(
+          AppLocalizations.of(context)!.configFile,
+          _workspace?.configPath ?? '',
+        ),
       ],
     );
   }
@@ -118,32 +121,45 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
     if (agent == null) return const SizedBox.shrink();
 
     return _buildCard(
-      title: 'Agent Settings',
+      title: AppLocalizations.of(context)!.agentSettings,
       icon: Icons.auto_awesome,
       children: [
-        _buildNumberField('Max Tool Iterations', agent.maxToolIterations, (
-          v,
-        ) async {
-          await ws_api.updateAgentConfig(maxToolIterations: v);
-          _loadAll();
-        }),
-        _buildNumberField('Max History Messages', agent.maxHistoryMessages, (
-          v,
-        ) async {
-          await ws_api.updateAgentConfig(maxHistoryMessages: v);
-          _loadAll();
-        }),
-        _buildSwitchField('Parallel Tool Execution', agent.parallelTools, (
-          v,
-        ) async {
-          await ws_api.updateAgentConfig(parallelTools: v);
-          _loadAll();
-        }),
-        _buildSwitchField('Compact Context', agent.compactContext, (v) async {
-          await ws_api.updateAgentConfig(compactContext: v);
-          _loadAll();
-        }),
-        _buildReadOnlyField('Tool Dispatcher', agent.toolDispatcher),
+        _buildNumberField(
+          AppLocalizations.of(context)!.maxToolIterations,
+          agent.maxToolIterations,
+          (v) async {
+            await ws_api.updateAgentConfig(maxToolIterations: v);
+            _loadAll();
+          },
+        ),
+        _buildNumberField(
+          AppLocalizations.of(context)!.maxHistoryMessages,
+          agent.maxHistoryMessages,
+          (v) async {
+            await ws_api.updateAgentConfig(maxHistoryMessages: v);
+            _loadAll();
+          },
+        ),
+        _buildSwitchField(
+          AppLocalizations.of(context)!.parallelToolExecution,
+          agent.parallelTools,
+          (v) async {
+            await ws_api.updateAgentConfig(parallelTools: v);
+            _loadAll();
+          },
+        ),
+        _buildSwitchField(
+          AppLocalizations.of(context)!.compactContext,
+          agent.compactContext,
+          (v) async {
+            await ws_api.updateAgentConfig(compactContext: v);
+            _loadAll();
+          },
+        ),
+        _buildReadOnlyField(
+          AppLocalizations.of(context)!.toolDispatcher,
+          agent.toolDispatcher,
+        ),
       ],
     );
   }
@@ -153,19 +169,38 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
     if (mem == null) return const SizedBox.shrink();
 
     return _buildCard(
-      title: 'Memory',
+      title: AppLocalizations.of(context)!.memorySection,
       icon: Icons.memory,
       children: [
-        _buildReadOnlyField('Backend', mem.backend),
-        _buildReadOnlyField('Auto Save', mem.autoSave ? 'Yes' : 'No'),
+        _buildReadOnlyField(AppLocalizations.of(context)!.backend, mem.backend),
         _buildReadOnlyField(
-          'Hygiene',
-          mem.hygieneEnabled ? 'Enabled' : 'Disabled',
+          AppLocalizations.of(context)!.autoSave,
+          mem.autoSave
+              ? AppLocalizations.of(context)!.yes
+              : AppLocalizations.of(context)!.no,
         ),
-        _buildReadOnlyField('Archive After', '${mem.archiveAfterDays} days'),
-        _buildReadOnlyField('Purge After', '${mem.purgeAfterDays} days'),
-        _buildReadOnlyField('Embedding Provider', mem.embeddingProvider),
-        _buildReadOnlyField('Embedding Model', mem.embeddingModel),
+        _buildReadOnlyField(
+          AppLocalizations.of(context)!.hygiene,
+          mem.hygieneEnabled
+              ? AppLocalizations.of(context)!.enabled
+              : AppLocalizations.of(context)!.disabled,
+        ),
+        _buildReadOnlyField(
+          AppLocalizations.of(context)!.archiveAfter,
+          '${mem.archiveAfterDays} ${AppLocalizations.of(context)!.days}',
+        ),
+        _buildReadOnlyField(
+          AppLocalizations.of(context)!.purgeAfter,
+          '${mem.purgeAfterDays} ${AppLocalizations.of(context)!.days}',
+        ),
+        _buildReadOnlyField(
+          AppLocalizations.of(context)!.embeddingProvider,
+          mem.embeddingProvider,
+        ),
+        _buildReadOnlyField(
+          AppLocalizations.of(context)!.embeddingModel,
+          mem.embeddingModel,
+        ),
       ],
     );
   }
@@ -175,19 +210,27 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
     if (cost == null) return const SizedBox.shrink();
 
     return _buildCard(
-      title: 'Cost Tracking',
+      title: AppLocalizations.of(context)!.costTracking,
       icon: Icons.attach_money,
       children: [
-        _buildReadOnlyField('Enabled', cost.enabled ? 'Yes' : 'No'),
         _buildReadOnlyField(
-          'Daily Limit',
+          AppLocalizations.of(context)!.enabled,
+          cost.enabled
+              ? AppLocalizations.of(context)!.yes
+              : AppLocalizations.of(context)!.no,
+        ),
+        _buildReadOnlyField(
+          AppLocalizations.of(context)!.dailyLimit,
           '\$${cost.dailyLimitUsd.toStringAsFixed(2)}',
         ),
         _buildReadOnlyField(
-          'Monthly Limit',
+          AppLocalizations.of(context)!.monthlyLimit,
           '\$${cost.monthlyLimitUsd.toStringAsFixed(2)}',
         ),
-        _buildReadOnlyField('Warn At', '${cost.warnAtPercent}%'),
+        _buildReadOnlyField(
+          AppLocalizations.of(context)!.warnAt,
+          '${cost.warnAtPercent}%',
+        ),
       ],
     );
   }

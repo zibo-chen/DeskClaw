@@ -60,17 +60,17 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('删除定时任务'),
-        content: const Text('确定删除此定时任务？此操作不可撤销。'),
+        title: Text(AppLocalizations.of(context)!.deleteCronJobTitle),
+        content: Text(AppLocalizations.of(context)!.deleteCronJobConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('删除'),
+            child: Text(AppLocalizations.of(context)!.delete),
           ),
         ],
       ),
@@ -78,10 +78,12 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
     if (confirm == true) {
       final result = await cron_api.removeCronJob(jobId: jobId);
       if (result == 'ok') {
-        _showMessage('已删除');
+        _showMessage(AppLocalizations.of(context)!.deleted);
         _loadAll();
       } else {
-        _showMessage('删除失败: $result');
+        _showMessage(
+          AppLocalizations.of(context)!.deleteFailedWithError(result),
+        );
       }
     }
   }
@@ -91,10 +93,14 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
         ? await cron_api.resumeCronJob(jobId: jobId)
         : await cron_api.pauseCronJob(jobId: jobId);
     if (result == 'ok') {
-      _showMessage(enabled ? '已启用' : '已暂停');
+      _showMessage(
+        enabled
+            ? AppLocalizations.of(context)!.cronJobEnabled
+            : AppLocalizations.of(context)!.cronJobPaused,
+      );
       _loadAll();
     } else {
-      _showMessage('操作失败: $result');
+      _showMessage('${AppLocalizations.of(context)!.operationFailed}: $result');
     }
   }
 
@@ -103,13 +109,17 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
     try {
       final result = await cron_api.runCronJobNow(jobId: jobId);
       if (result.startsWith('ok')) {
-        _showMessage('执行成功');
+        _showMessage(AppLocalizations.of(context)!.executionSuccess);
       } else {
-        _showMessage('执行失败: $result');
+        _showMessage(
+          AppLocalizations.of(context)!.executionFailedWithError(result),
+        );
       }
       _loadAll();
     } catch (e) {
-      _showMessage('执行出错: $e');
+      _showMessage(
+        AppLocalizations.of(context)!.executionErrorWithError(e.toString()),
+      );
     } finally {
       if (mounted) setState(() => _runningJobId = null);
     }
@@ -143,10 +153,12 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
     }
 
     if (!apiResult.startsWith('error')) {
-      _showMessage('已创建定时任务');
+      _showMessage(AppLocalizations.of(context)!.cronJobCreated);
       _loadAll();
     } else {
-      _showMessage('创建失败: $apiResult');
+      _showMessage(
+        AppLocalizations.of(context)!.createFailedWithError(apiResult),
+      );
     }
   }
 
@@ -193,18 +205,21 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
           ),
           const SizedBox(width: 16),
           if (_config != null) ...[
-            _statBadge('${_config!.totalJobs}', '总数'),
+            _statBadge(
+              '${_config!.totalJobs}',
+              AppLocalizations.of(context)!.totalCount,
+            ),
             const SizedBox(width: 8),
             _statBadge(
               '${_config!.activeJobs}',
-              '运行中',
+              AppLocalizations.of(context)!.running,
               color: AppColors.success,
             ),
             const SizedBox(width: 8),
             if (_config!.pausedJobs > 0)
               _statBadge(
                 '${_config!.pausedJobs}',
-                '已暂停',
+                AppLocalizations.of(context)!.paused,
                 color: AppColors.warning,
               ),
           ],
@@ -224,14 +239,14 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
           const SizedBox(width: 12),
           IconButton(
             icon: const Icon(Icons.refresh, size: 20),
-            tooltip: '刷新',
+            tooltip: AppLocalizations.of(context)!.refresh,
             onPressed: _loadAll,
           ),
           const SizedBox(width: 4),
           ElevatedButton.icon(
             onPressed: _showAddDialog,
             icon: const Icon(Icons.add, size: 18),
-            label: const Text('新建任务'),
+            label: Text(AppLocalizations.of(context)!.newTask),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             ),
@@ -279,7 +294,7 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
           ),
           const SizedBox(height: 16),
           Text(
-            '暂无定时任务',
+            AppLocalizations.of(context)!.noCronJobs,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w500,
@@ -288,14 +303,14 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            '点击上方「新建任务」来创建 Shell 或 AI Agent 定时任务',
+            AppLocalizations.of(context)!.noCronJobsHint,
             style: TextStyle(fontSize: 14, color: c.textHint),
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: _showAddDialog,
             icon: const Icon(Icons.add),
-            label: const Text('新建任务'),
+            label: Text(AppLocalizations.of(context)!.newTask),
           ),
         ],
       ),
@@ -365,7 +380,10 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
                               ),
                               if (isAgent && job.sessionTarget == 'main') ...[
                                 const SizedBox(width: 6),
-                                _chipLabel('主会话', color: AppColors.success),
+                                _chipLabel(
+                                  AppLocalizations.of(context)!.mainSession,
+                                  color: AppColors.success,
+                                ),
                               ],
                             ],
                           ),
@@ -390,7 +408,7 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
                           )
                         : IconButton(
                             icon: const Icon(Icons.play_arrow, size: 22),
-                            tooltip: '立即执行',
+                            tooltip: AppLocalizations.of(context)!.runNow,
                             color: AppColors.success,
                             onPressed: () => _runJobNow(job.id),
                           ),
@@ -402,17 +420,17 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
                         if (action == 'delete') _deleteJob(job.id);
                       },
                       itemBuilder: (ctx) => [
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'run',
                           child: Row(
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.play_arrow,
                                 size: 16,
                                 color: AppColors.success,
                               ),
-                              SizedBox(width: 8),
-                              Text('立即执行'),
+                              const SizedBox(width: 8),
+                              Text(AppLocalizations.of(context)!.runNow),
                             ],
                           ),
                         ),
@@ -427,23 +445,29 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
                                 size: 16,
                               ),
                               const SizedBox(width: 8),
-                              Text(isExpanded ? '收起历史' : '运行历史'),
+                              Text(
+                                isExpanded
+                                    ? AppLocalizations.of(
+                                        context,
+                                      )!.collapseHistory
+                                    : AppLocalizations.of(context)!.runHistory,
+                              ),
                             ],
                           ),
                         ),
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'delete',
                           child: Row(
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.delete_outline,
                                 size: 16,
                                 color: AppColors.error,
                               ),
-                              SizedBox(width: 8),
+                              const SizedBox(width: 8),
                               Text(
-                                '删除',
-                                style: TextStyle(color: AppColors.error),
+                                AppLocalizations.of(context)!.delete,
+                                style: const TextStyle(color: AppColors.error),
                               ),
                             ],
                           ),
@@ -482,7 +506,7 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
                     Icon(Icons.access_time, size: 14, color: c.textHint),
                     const SizedBox(width: 4),
                     Text(
-                      '下次执行: $nextRunStr',
+                      '${AppLocalizations.of(context)!.nextExecution}: $nextRunStr',
                       style: TextStyle(fontSize: 12, color: c.textHint),
                     ),
                     if (job.lastStatus.isNotEmpty) ...[
@@ -498,7 +522,7 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '上次: ${job.lastStatus}',
+                        '${AppLocalizations.of(context)!.lastRun}: ${job.lastStatus}',
                         style: TextStyle(
                           fontSize: 12,
                           color: job.lastStatus == 'ok'
@@ -518,7 +542,10 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
                     ],
                     if (job.deleteAfterRun) ...[
                       const SizedBox(width: 16),
-                      _chipLabel('一次性', color: AppColors.warning),
+                      _chipLabel(
+                        AppLocalizations.of(context)!.oneTime,
+                        color: AppColors.warning,
+                      ),
                     ],
                   ],
                 ),
@@ -559,7 +586,7 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
         ),
         child: Center(
           child: Text(
-            '暂无运行记录',
+            AppLocalizations.of(context)!.noRunHistory,
             style: TextStyle(fontSize: 13, color: c.textHint),
           ),
         ),
@@ -576,7 +603,7 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: Text(
-              '运行历史 (最近 ${_runs.length} 条)',
+              AppLocalizations.of(context)!.runHistoryRecent(_runs.length),
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -699,7 +726,7 @@ class _AddJobDialogState extends State<_AddJobDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('新建定时任务'),
+      title: Text(AppLocalizations.of(context)!.newCronJob),
       content: SizedBox(
         width: 480,
         child: SingleChildScrollView(
@@ -710,29 +737,29 @@ class _AddJobDialogState extends State<_AddJobDialog> {
               // Name
               TextField(
                 controller: _nameCtl,
-                decoration: const InputDecoration(
-                  labelText: '任务名称（可选）',
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)!.taskNameOptional,
                   hintText: 'my-backup-task',
                 ),
               ),
               const SizedBox(height: 16),
               // Job type
-              const Text(
-                '任务类型',
+              Text(
+                AppLocalizations.of(context)!.taskType,
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 8),
               SegmentedButton<String>(
-                segments: const [
+                segments: [
                   ButtonSegment(
                     value: 'shell',
-                    label: Text('Shell 命令'),
-                    icon: Icon(Icons.terminal, size: 18),
+                    label: Text(AppLocalizations.of(context)!.shellCommand),
+                    icon: const Icon(Icons.terminal, size: 18),
                   ),
                   ButtonSegment(
                     value: 'agent',
-                    label: Text('AI Agent'),
-                    icon: Icon(Icons.smart_toy, size: 18),
+                    label: Text(AppLocalizations.of(context)!.aiAgent),
+                    icon: const Icon(Icons.smart_toy, size: 18),
                   ),
                 ],
                 selected: {_jobType},
@@ -740,16 +767,22 @@ class _AddJobDialogState extends State<_AddJobDialog> {
               ),
               const SizedBox(height: 16),
               // Schedule type
-              const Text(
-                '调度方式',
+              Text(
+                AppLocalizations.of(context)!.scheduleType,
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 8),
               SegmentedButton<String>(
-                segments: const [
-                  ButtonSegment(value: 'cron', label: Text('Cron')),
-                  ButtonSegment(value: 'every', label: Text('间隔')),
-                  ButtonSegment(value: 'at', label: Text('定时')),
+                segments: [
+                  const ButtonSegment(value: 'cron', label: Text('Cron')),
+                  ButtonSegment(
+                    value: 'every',
+                    label: Text(AppLocalizations.of(context)!.interval),
+                  ),
+                  ButtonSegment(
+                    value: 'at',
+                    label: Text(AppLocalizations.of(context)!.scheduled),
+                  ),
                 ],
                 selected: {_scheduleType},
                 onSelectionChanged: (v) {
@@ -771,10 +804,10 @@ class _AddJobDialogState extends State<_AddJobDialog> {
                 controller: _exprCtl,
                 decoration: InputDecoration(
                   labelText: _scheduleType == 'cron'
-                      ? 'Cron 表达式'
+                      ? AppLocalizations.of(context)!.cronExpression
                       : _scheduleType == 'every'
-                      ? '间隔（毫秒）'
-                      : '执行时间 (RFC3339)',
+                      ? AppLocalizations.of(context)!.intervalMs
+                      : AppLocalizations.of(context)!.executionTime,
                   hintText: _scheduleType == 'cron'
                       ? '*/5 * * * *'
                       : _scheduleType == 'every'
@@ -788,8 +821,8 @@ class _AddJobDialogState extends State<_AddJobDialog> {
                 TextField(
                   controller: _commandCtl,
                   maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'Shell 命令',
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)!.shellCommandLabel,
                     hintText: 'echo "hello world"',
                   ),
                 ),
@@ -798,28 +831,39 @@ class _AddJobDialogState extends State<_AddJobDialog> {
                 TextField(
                   controller: _promptCtl,
                   maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'AI Prompt',
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)!.aiPromptLabel,
                     hintText: '检查系统日志并总结异常...',
                   ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: _modelCtl,
-                  decoration: const InputDecoration(
-                    labelText: '模型（可选）',
-                    hintText: '留空使用默认模型',
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)!.modelOptional,
+                    hintText: AppLocalizations.of(context)!.useDefaultModel,
                   ),
                 ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    const Text('会话目标', style: TextStyle(fontSize: 13)),
+                    Text(
+                      AppLocalizations.of(context)!.sessionTarget,
+                      style: const TextStyle(fontSize: 13),
+                    ),
                     const Spacer(),
                     SegmentedButton<String>(
-                      segments: const [
-                        ButtonSegment(value: 'isolated', label: Text('隔离')),
-                        ButtonSegment(value: 'main', label: Text('主会话')),
+                      segments: [
+                        ButtonSegment(
+                          value: 'isolated',
+                          label: Text(AppLocalizations.of(context)!.isolated),
+                        ),
+                        ButtonSegment(
+                          value: 'main',
+                          label: Text(
+                            AppLocalizations.of(context)!.mainSession,
+                          ),
+                        ),
                       ],
                       selected: {_sessionTarget},
                       onSelectionChanged: (v) =>
@@ -829,9 +873,12 @@ class _AddJobDialogState extends State<_AddJobDialog> {
                 ),
                 const SizedBox(height: 8),
                 SwitchListTile(
-                  title: const Text('执行后删除', style: TextStyle(fontSize: 13)),
-                  subtitle: const Text(
-                    '仅执行一次后自动删除任务',
+                  title: Text(
+                    AppLocalizations.of(context)!.deleteAfterRun,
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                  subtitle: Text(
+                    AppLocalizations.of(context)!.deleteAfterRunDesc,
                     style: TextStyle(fontSize: 12),
                   ),
                   value: _deleteAfterRun,
@@ -847,11 +894,11 @@ class _AddJobDialogState extends State<_AddJobDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('取消'),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
         ElevatedButton(
           onPressed: _canSubmit() ? _submit : null,
-          child: const Text('创建'),
+          child: Text(AppLocalizations.of(context)!.create),
         ),
       ],
     );

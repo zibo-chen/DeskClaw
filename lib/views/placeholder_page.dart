@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:deskclaw/l10n/app_localizations.dart';
 import 'package:deskclaw/theme/app_theme.dart';
 
 /// Generic placeholder page for sections not yet implemented
@@ -11,7 +12,7 @@ class PlaceholderPage extends StatelessWidget {
     super.key,
     required this.title,
     required this.icon,
-    this.description = 'This feature is coming soon.',
+    this.description = '',
   });
 
   @override
@@ -80,8 +81,8 @@ class PlaceholderPage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                     color: c.sidebarActiveBg,
                   ),
-                  child: const Text(
-                    'Coming Soon',
+                  child: Text(
+                    AppLocalizations.of(context)!.comingSoon,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,

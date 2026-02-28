@@ -44,10 +44,14 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
       enabled: enabled,
     );
     if (result == 'ok') {
-      _showMessage('已${enabled ? "启用" : "停用"}');
+      _showMessage(
+        enabled
+            ? AppLocalizations.of(context)!.featureEnabled
+            : AppLocalizations.of(context)!.featureDisabled,
+      );
       _loadAll();
     } else {
-      _showMessage('操作失败');
+      _showMessage(AppLocalizations.of(context)!.operationFailed);
     }
   }
 
@@ -59,7 +63,7 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
     if (result == 'ok') {
       _loadAll();
     } else {
-      _showMessage('操作失败');
+      _showMessage(AppLocalizations.of(context)!.operationFailed);
     }
   }
 
@@ -160,7 +164,7 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
               ),
               SizedBox(width: 8),
               Text(
-                '功能开关',
+                AppLocalizations.of(context)!.featureToggles,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -171,7 +175,7 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
           ),
           const SizedBox(height: 6),
           Text(
-            '快速启用或停用 Agent 功能模块，选中即可直接使用',
+            AppLocalizations.of(context)!.featureTogglesDesc,
             style: TextStyle(fontSize: 12, color: c.textHint),
           ),
           const SizedBox(height: 16),
@@ -183,50 +187,50 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
             children: [
               _buildFeatureCard(
                 'web_search',
-                '网页搜索',
-                '搜索互联网获取最新信息',
+                AppLocalizations.of(context)!.featureWebSearch,
+                AppLocalizations.of(context)!.featureWebSearchDesc,
                 Icons.search,
                 f.webSearchEnabled,
               ),
               _buildFeatureCard(
                 'web_fetch',
-                '网页抓取',
-                '抓取网页内容和提取文本',
+                AppLocalizations.of(context)!.featureWebFetch,
+                AppLocalizations.of(context)!.featureWebFetchDesc,
                 Icons.download,
                 f.webFetchEnabled,
               ),
               _buildFeatureCard(
                 'browser',
-                '浏览器自动化',
-                '自动化浏览器操作和交互',
+                AppLocalizations.of(context)!.featureBrowser,
+                AppLocalizations.of(context)!.featureBrowserDesc,
                 Icons.open_in_browser,
                 f.browserEnabled,
               ),
               _buildFeatureCard(
                 'http_request',
-                'HTTP 请求',
-                '发送 API 请求 (GET/POST/PUT/DELETE)',
+                AppLocalizations.of(context)!.featureHttpRequest,
+                AppLocalizations.of(context)!.featureHttpRequestDesc,
                 Icons.http,
                 f.httpRequestEnabled,
               ),
               _buildFeatureCard(
                 'memory_auto_save',
-                '自动记忆',
-                '自动保存对话中的重要信息',
+                AppLocalizations.of(context)!.featureMemory,
+                AppLocalizations.of(context)!.featureMemoryDesc,
                 Icons.memory,
                 f.memoryAutoSave,
               ),
               _buildFeatureCard(
                 'cost_tracking',
-                '费用追踪',
-                '追踪 API 调用费用并设置限额',
+                AppLocalizations.of(context)!.featureCostTracking,
+                AppLocalizations.of(context)!.featureCostTrackingDesc,
                 Icons.attach_money,
                 f.costTrackingEnabled,
               ),
               _buildFeatureCard(
                 'skills_open',
-                '社区技能',
-                '启用开源社区技能扩展',
+                AppLocalizations.of(context)!.featureSkillsOpen,
+                AppLocalizations.of(context)!.featureSkillsOpenDesc,
                 Icons.public,
                 f.skillsOpenEnabled,
               ),
@@ -343,7 +347,7 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
               ),
               const SizedBox(width: 8),
               Text(
-                '内置工具',
+                AppLocalizations.of(context)!.builtInTools,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -352,14 +356,14 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
               ),
               const Spacer(),
               Text(
-                '${_tools.length} 个工具',
+                '${_tools.length} ${AppLocalizations.of(context)!.builtInTools}',
                 style: TextStyle(fontSize: 12, color: c.textHint),
               ),
             ],
           ),
           const SizedBox(height: 6),
           Text(
-            '点击审批状态标签快速切换工具权限',
+            AppLocalizations.of(context)!.toolApprovalHint,
             style: TextStyle(fontSize: 12, color: c.textHint),
           ),
           const SizedBox(height: 16),
@@ -378,18 +382,22 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
     return Row(
       children: [
         _buildLegendItem(
-          '自动审批',
+          AppLocalizations.of(context)!.autoApproval,
           AppColors.success.withValues(alpha: 0.1),
           Colors.green,
         ),
         const SizedBox(width: 12),
         _buildLegendItem(
-          '需要确认',
+          AppLocalizations.of(context)!.requireConfirmation,
           AppColors.warning.withValues(alpha: 0.1),
           Colors.orange,
         ),
         const SizedBox(width: 12),
-        _buildLegendItem('默认', c.inputBg, c.textHint),
+        _buildLegendItem(
+          AppLocalizations.of(context)!.defaultApproval,
+          c.inputBg,
+          c.textHint,
+        ),
       ],
     );
   }
@@ -414,15 +422,16 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
   }
 
   Widget _buildToolCategory(String category, List<ws_api.ToolInfo> tools) {
+    final l10n = AppLocalizations.of(context)!;
     final categoryLabels = {
-      'core': '核心工具',
-      'vcs': '版本控制',
-      'web': '网络 & Web',
-      'memory': '记忆 & 存储',
-      'system': '系统',
-      'file': '文件处理',
-      'agent': 'Agent 委派',
-      'cron': '定时任务',
+      'core': l10n.categoryCore,
+      'vcs': l10n.categoryVcs,
+      'web': l10n.categoryWeb,
+      'memory': l10n.categoryMemoryTools,
+      'system': l10n.categorySystem,
+      'file': l10n.categoryFile,
+      'agent': l10n.categoryAgentTools,
+      'cron': l10n.categoryCron,
     };
 
     return Padding(
@@ -485,9 +494,19 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
           ),
           const SizedBox(width: 8),
           // Approval toggle chips
-          _buildApprovalChip(tool, 'auto', '自动', Colors.green),
+          _buildApprovalChip(
+            tool,
+            'auto',
+            AppLocalizations.of(context)!.approvalAuto,
+            Colors.green,
+          ),
           const SizedBox(width: 4),
-          _buildApprovalChip(tool, 'ask', '确认', Colors.orange),
+          _buildApprovalChip(
+            tool,
+            'ask',
+            AppLocalizations.of(context)!.approvalAsk,
+            Colors.orange,
+          ),
         ],
       ),
     );
