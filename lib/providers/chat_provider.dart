@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:deskclaw/models/models.dart';
+import 'package:deskclaw/services/settings_service.dart';
 import 'package:deskclaw/src/rust/api/agent_api.dart' as agent_api;
 import 'package:deskclaw/src/rust/api/config_api.dart' as config_api;
 import 'package:deskclaw/src/rust/api/sessions_api.dart' as sessions_api;
@@ -241,8 +242,16 @@ final isCurrentSessionProcessingProvider = Provider<bool>((ref) {
   return processing.contains(activeId);
 });
 
-/// Language / Locale setting
-final localeProvider = StateProvider<Locale>((ref) => const Locale('en'));
+/// Language / Locale setting — initialised from persisted preference
+final localeProvider = StateProvider<Locale>(
+  (ref) => Locale(SettingsService.locale),
+);
 
-/// Theme mode
-final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.light);
+/// Theme mode — initialised from persisted preference
+final themeModeProvider = StateProvider<ThemeMode>(
+  (ref) =>
+      SettingsService.themeMode == 'dark' ? ThemeMode.dark : ThemeMode.light,
+);
+
+/// Whether the chat list panel is collapsed
+final chatListCollapsedProvider = StateProvider<bool>((ref) => false);

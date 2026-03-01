@@ -37,7 +37,9 @@ class _AppShellState extends ConsumerState<AppShell> {
   @override
   Widget build(BuildContext context) {
     final currentNav = ref.watch(currentNavProvider);
-    final showChatList = currentNav == NavSection.chat;
+    final isChatSection = currentNav == NavSection.chat;
+    final isCollapsed = ref.watch(chatListCollapsedProvider);
+    final showChatList = isChatSection && !isCollapsed;
 
     return Scaffold(
       body: Row(
@@ -45,7 +47,7 @@ class _AppShellState extends ConsumerState<AppShell> {
           // Left sidebar navigation
           const SidebarNav(),
 
-          // Chat list panel (only visible in Chat section)
+          // Chat list panel (only visible in Chat section & not collapsed)
           if (showChatList) const ChatListPanel(),
 
           // Main content area

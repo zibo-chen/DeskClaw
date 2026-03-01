@@ -735,6 +735,57 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get installSkill => 'Install Skill';
+
+  @override
+  String get installSkillHint => 'Enter Git URL or local path';
+
+  @override
+  String get installSkillPlaceholder =>
+      'https://github.com/user/skill-repo or /path/to/skill';
+
+  @override
+  String get installing => 'Installing...';
+
+  @override
+  String skillInstalled(String name) {
+    return 'Skill \'$name\' installed successfully';
+  }
+
+  @override
+  String installFailed(String error) {
+    return 'Install failed: $error';
+  }
+
+  @override
+  String get removeSkill => 'Remove';
+
+  @override
+  String get removeSkillTitle => 'Remove Skill';
+
+  @override
+  String removeSkillConfirm(String name) {
+    return 'Are you sure you want to remove skill \'$name\'? This cannot be undone.';
+  }
+
+  @override
+  String skillRemoved(String name) {
+    return 'Skill \'$name\' removed';
+  }
+
+  @override
+  String removeFailed(String error) {
+    return 'Remove failed: $error';
+  }
+
+  @override
+  String get gitUrlExample => 'e.g. https://github.com/user/my-skill';
+
+  @override
+  String get supportedSources =>
+      'Supports Git URL (https/ssh) or local directory path';
+
+  @override
   String get deleteCronJobTitle => 'Delete Cron Job';
 
   @override
@@ -794,7 +845,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get runNow => 'Run Now';
 
   @override
-  String get collapseHistory => 'Collapse History';
+  String get collapseHistory => 'Collapse history';
 
   @override
   String get runHistory => 'Run History';
@@ -961,4 +1012,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get knowledgeCategoryConversation => 'Conversation';
+
+  @override
+  String get copyMessage => 'Copy';
+
+  @override
+  String get editMessage => 'Edit';
+
+  @override
+  String get copiedToClipboard => 'Copied to clipboard';
+
+  @override
+  String get expandHistory => 'Expand history';
+
+  @override
+  String get saveEdit => 'Save';
+
+  @override
+  String get cancelEdit => 'Cancel';
 }

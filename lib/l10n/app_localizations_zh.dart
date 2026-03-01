@@ -717,6 +717,56 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get installSkill => '安装技能';
+
+  @override
+  String get installSkillHint => '输入 Git URL 或本地路径';
+
+  @override
+  String get installSkillPlaceholder =>
+      'https://github.com/user/skill-repo 或 /path/to/skill';
+
+  @override
+  String get installing => '安装中...';
+
+  @override
+  String skillInstalled(String name) {
+    return '技能 \'$name\' 安装成功';
+  }
+
+  @override
+  String installFailed(String error) {
+    return '安装失败: $error';
+  }
+
+  @override
+  String get removeSkill => '移除';
+
+  @override
+  String get removeSkillTitle => '移除技能';
+
+  @override
+  String removeSkillConfirm(String name) {
+    return '确定移除技能 \'$name\'？此操作不可撤销。';
+  }
+
+  @override
+  String skillRemoved(String name) {
+    return '技能 \'$name\' 已移除';
+  }
+
+  @override
+  String removeFailed(String error) {
+    return '移除失败: $error';
+  }
+
+  @override
+  String get gitUrlExample => '例如 https://github.com/user/my-skill';
+
+  @override
+  String get supportedSources => '支持 Git URL（https/ssh）或本地目录路径';
+
+  @override
   String get deleteCronJobTitle => '删除定时任务';
 
   @override
@@ -938,4 +988,22 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get knowledgeCategoryConversation => '对话';
+
+  @override
+  String get copyMessage => '复制';
+
+  @override
+  String get editMessage => '编辑';
+
+  @override
+  String get copiedToClipboard => '已复制到剪贴板';
+
+  @override
+  String get expandHistory => '展开历史';
+
+  @override
+  String get saveEdit => '保存';
+
+  @override
+  String get cancelEdit => '取消';
 }

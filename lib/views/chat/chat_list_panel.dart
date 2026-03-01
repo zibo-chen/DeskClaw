@@ -43,10 +43,12 @@ class ChatListPanel extends ConsumerWidget {
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.copy_all, size: 18),
+                  icon: const Icon(Icons.format_indent_decrease, size: 18),
                   color: c.textHint,
-                  onPressed: () {},
-                  tooltip: l10n.tooltipCopy,
+                  onPressed: () {
+                    ref.read(chatListCollapsedProvider.notifier).state = true;
+                  },
+                  tooltip: l10n.collapseHistory,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(
                     minWidth: 32,

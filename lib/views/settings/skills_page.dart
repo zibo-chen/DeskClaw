@@ -4,7 +4,7 @@ import 'package:deskclaw/l10n/app_localizations.dart';
 import 'package:deskclaw/theme/app_theme.dart';
 import 'package:deskclaw/src/rust/api/skills_api.dart' as skills_api;
 
-/// Skills management page - browse, enable/disable skills
+/// Skills management page - browse, install, remove, and configure skills
 class SkillsPage extends ConsumerStatefulWidget {
   const SkillsPage({super.key});
 
@@ -16,13 +16,24 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
   skills_api.SkillsConfigDto? _config;
   List<skills_api.SkillDto> _skills = [];
   bool _loading = true;
+  bool _installing = false;
   String? _message;
+  bool _isError = false;
+  final _installController = TextEditingController();
+  final _installFocus = FocusNode();
   DeskClawColors get c => DeskClawColors.of(context);
 
   @override
   void initState() {
     super.initState();
     _loadAll();
+  }
+
+  @override
+  void dispose() {
+    _installController.dispose();
+    _installFocus.dispose();
+    super.dispose();
   }
 
   Future<void> _loadAll() async {
@@ -48,10 +59,14 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
               ? AppLocalizations.of(context)!.enabled
               : AppLocalizations.of(context)!.disabled,
         ),
+        isError: false,
       );
       _loadAll();
     } else {
-      _showMessage('${AppLocalizations.of(context)!.operationFailed}: $result');
+      _showMessage(
+        '${AppLocalizations.of(context)!.operationFailed}: $result',
+        isError: true,
+      );
     }
   }
 
@@ -59,16 +74,92 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
     final result = await skills_api.updatePromptInjectionMode(mode: mode);
     if (!mounted) return;
     if (result == 'ok') {
-      _showMessage(AppLocalizations.of(context)!.injectionModeUpdated(mode));
+      _showMessage(
+        AppLocalizations.of(context)!.injectionModeUpdated(mode),
+        isError: false,
+      );
       _loadAll();
     } else {
-      _showMessage('${AppLocalizations.of(context)!.operationFailed}: $result');
+      _showMessage(
+        '${AppLocalizations.of(context)!.operationFailed}: $result',
+        isError: true,
+      );
     }
   }
 
-  void _showMessage(String msg) {
-    setState(() => _message = msg);
-    Future.delayed(const Duration(seconds: 3), () {
+  Future<void> _installSkill() async {
+    final source = _installController.text.trim();
+    if (source.isEmpty) return;
+
+    setState(() => _installing = true);
+
+    final result = await skills_api.installSkill(source: source);
+    if (!mounted) return;
+
+    if (result.startsWith('ok:')) {
+      final name = result.substring(3);
+      _installController.clear();
+      _showMessage(
+        AppLocalizations.of(context)!.skillInstalled(name),
+        isError: false,
+      );
+      _loadAll();
+    } else {
+      final error = result.startsWith('error: ') ? result.substring(7) : result;
+      _showMessage(
+        AppLocalizations.of(context)!.installFailed(error),
+        isError: true,
+      );
+    }
+
+    setState(() => _installing = false);
+  }
+
+  Future<void> _removeSkill(String name) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppLocalizations.of(ctx)!.removeSkillTitle),
+        content: Text(AppLocalizations.of(ctx)!.removeSkillConfirm(name)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(AppLocalizations.of(ctx)!.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: Text(AppLocalizations.of(ctx)!.removeSkill),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    final result = await skills_api.removeSkill(name: name);
+    if (!mounted) return;
+
+    if (result == 'ok') {
+      _showMessage(
+        AppLocalizations.of(context)!.skillRemoved(name),
+        isError: false,
+      );
+      _loadAll();
+    } else {
+      final error = result.startsWith('error: ') ? result.substring(7) : result;
+      _showMessage(
+        AppLocalizations.of(context)!.removeFailed(error),
+        isError: true,
+      );
+    }
+  }
+
+  void _showMessage(String msg, {required bool isError}) {
+    setState(() {
+      _message = msg;
+      _isError = isError;
+    });
+    Future.delayed(const Duration(seconds: 4), () {
       if (mounted) setState(() => _message = null);
     });
   }
@@ -109,21 +200,25 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
           ),
           const Spacer(),
           if (_message != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: _message!.contains('失败')
-                    ? AppColors.error.withValues(alpha: 0.1)
-                    : AppColors.success.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                _message!,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: _message!.contains('失败')
-                      ? AppColors.error
-                      : AppColors.success,
+            Flexible(
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: _isError
+                      ? AppColors.error.withValues(alpha: 0.1)
+                      : AppColors.success.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  _message!,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: _isError ? AppColors.error : AppColors.success,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ),
@@ -138,10 +233,173 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _buildInstallSection(),
+          const SizedBox(height: 24),
           _buildConfigSection(),
           const SizedBox(height: 24),
           _buildSkillsList(),
         ],
+      ),
+    );
+  }
+
+  // ─────────────── Install Section ───────────────────
+
+  Widget _buildInstallSection() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: c.cardBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.add_circle_outline,
+                size: 18,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                AppLocalizations.of(context)!.installSkill,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: c.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            AppLocalizations.of(context)!.supportedSources,
+            style: TextStyle(fontSize: 12, color: c.textHint),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _installController,
+                  focusNode: _installFocus,
+                  enabled: !_installing,
+                  style: TextStyle(fontSize: 13, color: c.textPrimary),
+                  decoration: InputDecoration(
+                    hintText: AppLocalizations.of(
+                      context,
+                    )!.installSkillPlaceholder,
+                    hintStyle: TextStyle(fontSize: 12, color: c.textHint),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    filled: true,
+                    fillColor: c.inputBg,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: c.inputBorder),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: c.inputBorder),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: AppColors.primary,
+                        width: 2,
+                      ),
+                    ),
+                    prefixIcon: Icon(Icons.link, size: 18, color: c.textHint),
+                  ),
+                  onSubmitted: (_) => _installSkill(),
+                ),
+              ),
+              const SizedBox(width: 12),
+              SizedBox(
+                height: 44,
+                child: ElevatedButton.icon(
+                  onPressed: _installing ? null : _installSkill,
+                  icon: _installing
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.download, size: 18),
+                  label: Text(
+                    _installing
+                        ? AppLocalizations.of(context)!.installing
+                        : AppLocalizations.of(context)!.installSkill,
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            children: [
+              _buildQuickInstallChip(
+                'besoeasy/open-skills',
+                'https://github.com/besoeasy/open-skills',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickInstallChip(String label, String url) {
+    return InkWell(
+      onTap: _installing
+          ? null
+          : () {
+              _installController.text = url;
+              _installFocus.requestFocus();
+            },
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: c.inputBg,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: c.inputBorder),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.auto_awesome, size: 12, color: c.textHint),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                color: c.textSecondary,
+                fontFamily: 'monospace',
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -407,6 +665,7 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
   }
 
   Widget _buildSkillCard(skills_api.SkillDto skill) {
+    final isLocal = skill.source == 'local';
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
@@ -469,24 +728,45 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
                     vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: skill.source == 'local'
+                    color: isLocal
                         ? AppColors.primary.withValues(alpha: 0.1)
                         : AppColors.success.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    skill.source == 'local'
+                    isLocal
                         ? AppLocalizations.of(context)!.sourceLocal
                         : AppLocalizations.of(context)!.sourceCommunity,
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
-                      color: skill.source == 'local'
-                          ? AppColors.primary
-                          : Colors.green,
+                      color: isLocal ? AppColors.primary : Colors.green,
                     ),
                   ),
                 ),
+                // Remove button (only for local skills)
+                if (isLocal) ...[
+                  const SizedBox(width: 6),
+                  Tooltip(
+                    message: AppLocalizations.of(context)!.removeSkill,
+                    child: InkWell(
+                      onTap: () => _removeSkill(skill.name),
+                      borderRadius: BorderRadius.circular(6),
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(6),
+                          color: AppColors.error.withValues(alpha: 0.08),
+                        ),
+                        child: Icon(
+                          Icons.delete_outline,
+                          size: 16,
+                          color: AppColors.error.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
 

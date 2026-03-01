@@ -349,6 +349,7 @@ class _ChatViewState extends ConsumerState<ChatView> {
   }
 
   Widget _buildTopBar(AppLocalizations l10n) {
+    final isCollapsed = ref.watch(chatListCollapsedProvider);
     return Container(
       height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -358,6 +359,21 @@ class _ChatViewState extends ConsumerState<ChatView> {
       ),
       child: Row(
         children: [
+          // Show expand button when chat list is collapsed
+          if (isCollapsed)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: IconButton(
+                icon: const Icon(Icons.menu_open, size: 20),
+                color: c.textSecondary,
+                tooltip: l10n.expandHistory,
+                onPressed: () {
+                  ref.read(chatListCollapsedProvider.notifier).state = false;
+                },
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              ),
+            ),
           Text(
             l10n.chatTitle,
             style: TextStyle(
@@ -493,8 +509,29 @@ class _ChatViewState extends ConsumerState<ChatView> {
       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
       itemCount: messages.length,
       itemBuilder: (context, index) {
-        return MessageBubble(message: messages[index]);
+        final msg = messages[index];
+        return MessageBubble(
+          message: msg,
+          onEdit: msg.isUser
+              ? (newText) => _handleEditMessage(index, newText)
+              : null,
+        );
       },
     );
+  }
+
+  /// Edit a user message: truncate everything after it, re-send with new text.
+  void _handleEditMessage(int index, String newText) {
+    final sessionId = ref.read(activeSessionIdProvider);
+    if (sessionId == null) return;
+
+    // Truncate messages from [index] onward
+    final current = ref.read(messagesProvider);
+    final truncated = current.sublist(0, index);
+    ref.read(messagesProvider.notifier).setMessages(truncated);
+    ref.read(messagesProvider.notifier).saveToCache(sessionId);
+
+    // Send the edited text as a new user message
+    _handleSend(newText);
   }
 }

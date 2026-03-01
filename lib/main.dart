@@ -6,6 +6,7 @@ import 'package:deskclaw/src/rust/frb_generated.dart';
 import 'package:deskclaw/src/rust/api/agent_api.dart' as agent_api;
 import 'package:deskclaw/src/rust/api/sessions_api.dart' as sessions_api;
 import 'package:deskclaw/src/rust/api/cron_api.dart' as cron_api;
+import 'package:deskclaw/services/settings_service.dart';
 import 'package:deskclaw/theme/app_theme.dart';
 import 'package:deskclaw/views/shell/app_shell.dart';
 import 'package:deskclaw/providers/providers.dart';
@@ -13,6 +14,9 @@ import 'package:deskclaw/providers/providers.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await RustLib.init();
+
+  // Load persisted user settings (locale, theme, etc.)
+  await SettingsService.init();
 
   // Initialize Zeroclaw runtime (loads config from ~/.zeroclaw/config.toml)
   final status = await agent_api.initRuntime();
@@ -38,6 +42,14 @@ class DeskClawApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Persist locale & theme whenever they change
+    ref.listen<Locale>(localeProvider, (_, next) {
+      SettingsService.locale = next.languageCode;
+    });
+    ref.listen<ThemeMode>(themeModeProvider, (_, next) {
+      SettingsService.themeMode = next == ThemeMode.dark ? 'dark' : 'light';
+    });
+
     final themeMode = ref.watch(themeModeProvider);
     final locale = ref.watch(localeProvider);
     return MaterialApp(

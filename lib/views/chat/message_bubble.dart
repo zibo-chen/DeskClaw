@@ -7,11 +7,66 @@ import 'package:deskclaw/models/models.dart';
 import 'package:deskclaw/theme/app_theme.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 
-/// Individual message bubble
-class MessageBubble extends StatelessWidget {
+/// Individual message bubble with hover-based action bar (copy / edit).
+class MessageBubble extends StatefulWidget {
   final ChatMessage message;
 
-  const MessageBubble({super.key, required this.message});
+  /// Called when the user confirms an edit on their own message.
+  /// Passes the new text back to the parent (ChatView) for re-send.
+  final ValueChanged<String>? onEdit;
+
+  const MessageBubble({super.key, required this.message, this.onEdit});
+
+  @override
+  State<MessageBubble> createState() => _MessageBubbleState();
+}
+
+class _MessageBubbleState extends State<MessageBubble> {
+  bool _hovering = false;
+  bool _editing = false;
+  late TextEditingController _editController;
+
+  ChatMessage get message => widget.message;
+
+  @override
+  void initState() {
+    super.initState();
+    _editController = TextEditingController(text: message.content);
+  }
+
+  @override
+  void dispose() {
+    _editController.dispose();
+    super.dispose();
+  }
+
+  void _copyContent() {
+    Clipboard.setData(ClipboardData(text: message.content));
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l10n.copiedToClipboard),
+        duration: const Duration(seconds: 1),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _startEditing() {
+    _editController.text = message.content;
+    setState(() => _editing = true);
+  }
+
+  void _cancelEditing() {
+    setState(() => _editing = false);
+  }
+
+  void _confirmEditing() {
+    final text = _editController.text.trim();
+    if (text.isEmpty) return;
+    setState(() => _editing = false);
+    widget.onEdit?.call(text);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,111 +76,293 @@ class MessageBubble extends StatelessWidget {
     return _buildAssistantBubble(context);
   }
 
+  // ── User bubble ────────────────────────────────────────
+
   Widget _buildUserBubble(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Spacer(flex: 2),
-          Flexible(
-            flex: 8,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(
-                  16,
-                ).copyWith(bottomRight: const Radius.circular(4)),
-              ),
-              child: Text(
-                message.content,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  height: 1.5,
+    final c = DeskClawColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovering = true),
+      onExit: (_) => setState(() => _hovering = false),
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Spacer(flex: 2),
+                Flexible(
+                  flex: 8,
+                  child: _editing
+                      ? _buildEditField(c, l10n)
+                      : Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(
+                              16,
+                            ).copyWith(bottomRight: const Radius.circular(4)),
+                          ),
+                          child: SelectableText(
+                            message.content,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              height: 1.5,
+                            ),
+                          ),
+                        ),
                 ),
+                const SizedBox(width: 8),
+                _buildAvatar(
+                  icon: Icons.person,
+                  bgColor: AppColors.primaryLight,
+                ),
+              ],
+            ),
+            // Hover action bar
+            if (_hovering && !_editing)
+              Padding(
+                padding: const EdgeInsets.only(right: 44, top: 4),
+                child: _buildActionBar(c, l10n, isUser: true),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEditField(DeskClawColors c, AppLocalizations l10n) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: c.surfaceBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          TextField(
+            controller: _editController,
+            maxLines: null,
+            autofocus: true,
+            style: TextStyle(fontSize: 14, color: c.textPrimary, height: 1.5),
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              isDense: true,
+              contentPadding: EdgeInsets.zero,
+              hintStyle: TextStyle(color: c.textHint),
             ),
           ),
-          const SizedBox(width: 8),
-          _buildAvatar(icon: Icons.person, bgColor: AppColors.primaryLight),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextButton(
+                onPressed: _cancelEditing,
+                style: TextButton.styleFrom(
+                  foregroundColor: c.textSecondary,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  minimumSize: Size.zero,
+                ),
+                child: Text(
+                  l10n.cancelEdit,
+                  style: const TextStyle(fontSize: 13),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: _confirmEditing,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 6,
+                  ),
+                  minimumSize: Size.zero,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  l10n.saveEdit,
+                  style: const TextStyle(fontSize: 13),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 
+  // ── Assistant bubble ───────────────────────────────────
+
   Widget _buildAssistantBubble(BuildContext context) {
     final c = DeskClawColors.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildAvatar(icon: Icons.pets, bgColor: c.textPrimary),
-          const SizedBox(width: 8),
-          Flexible(
-            flex: 8,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: c.surfaceBg,
-                borderRadius: BorderRadius.circular(
-                  16,
-                ).copyWith(bottomLeft: const Radius.circular(4)),
-                border: Border.all(color: c.chatListBorder),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Tool calls if any (expandable)
-                  if (message.toolCalls != null) ...[
-                    for (final tc in message.toolCalls!)
-                      _ToolCallCard(toolCall: tc),
-                    const SizedBox(height: 8),
-                  ],
+    final l10n = AppLocalizations.of(context)!;
 
-                  // Message content
-                  if (message.content.isNotEmpty)
-                    MarkdownBody(
-                      data: message.content,
-                      styleSheet: MarkdownStyleSheet(
-                        p: TextStyle(
-                          fontSize: 14,
-                          height: 1.6,
-                          color: c.textPrimary,
-                        ),
-                        code: TextStyle(
-                          fontSize: 13,
-                          backgroundColor: c.inputBg,
-                          color: AppColors.primaryDark,
-                        ),
-                        codeblockDecoration: BoxDecoration(
-                          color: c.inputBg,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        strong: const TextStyle(fontWeight: FontWeight.w600),
-                        listBullet: TextStyle(
-                          fontSize: 14,
-                          color: c.textPrimary,
-                        ),
-                      ),
-                      selectable: true,
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovering = true),
+      onExit: (_) => setState(() => _hovering = false),
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildAvatar(icon: Icons.pets, bgColor: c.textPrimary),
+                const SizedBox(width: 8),
+                Flexible(
+                  flex: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
                     ),
+                    decoration: BoxDecoration(
+                      color: c.surfaceBg,
+                      borderRadius: BorderRadius.circular(
+                        16,
+                      ).copyWith(bottomLeft: const Radius.circular(4)),
+                      border: Border.all(color: c.chatListBorder),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Tool calls if any (expandable)
+                        if (message.toolCalls != null) ...[
+                          for (final tc in message.toolCalls!)
+                            _ToolCallCard(toolCall: tc),
+                          const SizedBox(height: 8),
+                        ],
 
-                  // Streaming indicator
-                  if (message.isStreaming)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: _buildStreamingDots(),
+                        // Message content
+                        if (message.content.isNotEmpty)
+                          MarkdownBody(
+                            data: message.content,
+                            styleSheet: MarkdownStyleSheet(
+                              p: TextStyle(
+                                fontSize: 14,
+                                height: 1.6,
+                                color: c.textPrimary,
+                              ),
+                              code: TextStyle(
+                                fontSize: 13,
+                                backgroundColor: c.inputBg,
+                                color: AppColors.primaryDark,
+                              ),
+                              codeblockDecoration: BoxDecoration(
+                                color: c.inputBg,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              strong: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                              listBullet: TextStyle(
+                                fontSize: 14,
+                                color: c.textPrimary,
+                              ),
+                            ),
+                            selectable: true,
+                          ),
+
+                        // Streaming indicator
+                        if (message.isStreaming)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: _buildStreamingDots(),
+                          ),
+                      ],
                     ),
-                ],
-              ),
+                  ),
+                ),
+                const Spacer(flex: 2),
+              ],
             ),
+            // Hover action bar
+            if (_hovering && !message.isStreaming)
+              Padding(
+                padding: const EdgeInsets.only(left: 44, top: 4),
+                child: _buildActionBar(c, l10n, isUser: false),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Shared widgets ─────────────────────────────────────
+
+  Widget _buildActionBar(
+    DeskClawColors c,
+    AppLocalizations l10n, {
+    required bool isUser,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      decoration: BoxDecoration(
+        color: c.surfaceBg,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: c.chatListBorder),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
           ),
-          const Spacer(flex: 2),
         ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _actionButton(
+            icon: Icons.copy_outlined,
+            tooltip: l10n.copyMessage,
+            onTap: _copyContent,
+            c: c,
+          ),
+          if (isUser && widget.onEdit != null)
+            _actionButton(
+              icon: Icons.edit_outlined,
+              tooltip: l10n.editMessage,
+              onTap: _startEditing,
+              c: c,
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _actionButton({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onTap,
+    required DeskClawColors c,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(6),
+        child: Padding(
+          padding: const EdgeInsets.all(6),
+          child: Icon(icon, size: 16, color: c.textSecondary),
+        ),
       ),
     );
   }

@@ -6,7 +6,7 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `count_skills_in_dir`, `load_skills_from_dir`, `parse_skill_md`, `parse_skill_toml`, `sync_open_skills_repo`
+// These functions are ignored because they are not marked as `pub`: `copy_dir_no_symlinks`, `count_skills_in_dir`, `count_skills_recursive`, `install_git_skill`, `install_local_skill`, `is_git_scp_source`, `is_git_source`, `load_skills_from_dir_recursive`, `load_skills_from_dir`, `parse_skill_md`, `parse_skill_toml`, `sync_open_skills_repo`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`
 
 /// Get skills configuration from zeroclaw config
@@ -24,6 +24,16 @@ Future<String> toggleOpenSkills({required bool enabled}) =>
 /// Update prompt injection mode ("full" or "compact")
 Future<String> updatePromptInjectionMode({required String mode}) =>
     RustLib.instance.api.crateApiSkillsApiUpdatePromptInjectionMode(mode: mode);
+
+/// Install a skill from a Git URL or local path.
+/// Returns "ok" on success, or an error message.
+Future<String> installSkill({required String source}) =>
+    RustLib.instance.api.crateApiSkillsApiInstallSkill(source: source);
+
+/// Remove an installed skill by name.
+/// Returns "ok" on success, or an error message.
+Future<String> removeSkill({required String name}) =>
+    RustLib.instance.api.crateApiSkillsApiRemoveSkill(name: name);
 
 /// A skill loaded from the skills directory
 class SkillDto {

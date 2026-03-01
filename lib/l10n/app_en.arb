@@ -731,6 +731,60 @@
     "placeholders": { "mode": { "type": "String" } }
   },
 
+  "installSkill": "Install Skill",
+  "@installSkill": { "description": "Install skill button" },
+
+  "installSkillHint": "Enter Git URL or local path",
+  "@installSkillHint": { "description": "Install skill input hint" },
+
+  "installSkillPlaceholder": "https://github.com/user/skill-repo or /path/to/skill",
+  "@installSkillPlaceholder": { "description": "Install skill input placeholder" },
+
+  "installing": "Installing...",
+  "@installing": { "description": "Installing progress text" },
+
+  "skillInstalled": "Skill '{name}' installed successfully",
+  "@skillInstalled": {
+    "description": "Skill installed success message",
+    "placeholders": { "name": { "type": "String" } }
+  },
+
+  "installFailed": "Install failed: {error}",
+  "@installFailed": {
+    "description": "Install failed message",
+    "placeholders": { "error": { "type": "String" } }
+  },
+
+  "removeSkill": "Remove",
+  "@removeSkill": { "description": "Remove skill button" },
+
+  "removeSkillTitle": "Remove Skill",
+  "@removeSkillTitle": { "description": "Remove skill dialog title" },
+
+  "removeSkillConfirm": "Are you sure you want to remove skill '{name}'? This cannot be undone.",
+  "@removeSkillConfirm": {
+    "description": "Remove skill confirmation",
+    "placeholders": { "name": { "type": "String" } }
+  },
+
+  "skillRemoved": "Skill '{name}' removed",
+  "@skillRemoved": {
+    "description": "Skill removed message",
+    "placeholders": { "name": { "type": "String" } }
+  },
+
+  "removeFailed": "Remove failed: {error}",
+  "@removeFailed": {
+    "description": "Remove failed message",
+    "placeholders": { "error": { "type": "String" } }
+  },
+
+  "gitUrlExample": "e.g. https://github.com/user/my-skill",
+  "@gitUrlExample": { "description": "Git URL example" },
+
+  "supportedSources": "Supports Git URL (https/ssh) or local directory path",
+  "@supportedSources": { "description": "Supported sources description" },
+
   "deleteCronJobTitle": "Delete Cron Job",
   "@deleteCronJobTitle": { "description": "Delete cron job dialog title" },
 
@@ -957,5 +1011,26 @@
   "@knowledgeCategoryDaily": { "description": "Daily category" },
 
   "knowledgeCategoryConversation": "Conversation",
-  "@knowledgeCategoryConversation": { "description": "Conversation category" }
+  "@knowledgeCategoryConversation": { "description": "Conversation category" },
+
+  "copyMessage": "Copy",
+  "@copyMessage": { "description": "Copy message button tooltip" },
+
+  "editMessage": "Edit",
+  "@editMessage": { "description": "Edit user message button tooltip" },
+
+  "copiedToClipboard": "Copied to clipboard",
+  "@copiedToClipboard": { "description": "Snackbar message after copying" },
+
+  "collapseHistory": "Collapse history",
+  "@collapseHistory": { "description": "Tooltip for collapsing chat list panel" },
+
+  "expandHistory": "Expand history",
+  "@expandHistory": { "description": "Tooltip for expanding chat list panel" },
+
+  "saveEdit": "Save",
+  "@saveEdit": { "description": "Save edit button" },
+
+  "cancelEdit": "Cancel",
+  "@cancelEdit": { "description": "Cancel edit button" }
 }

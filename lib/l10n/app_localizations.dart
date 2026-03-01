@@ -1436,6 +1436,84 @@ abstract class AppLocalizations {
   /// **'Injection mode updated to {mode}'**
   String injectionModeUpdated(String mode);
 
+  /// Install skill button
+  ///
+  /// In en, this message translates to:
+  /// **'Install Skill'**
+  String get installSkill;
+
+  /// Install skill input hint
+  ///
+  /// In en, this message translates to:
+  /// **'Enter Git URL or local path'**
+  String get installSkillHint;
+
+  /// Install skill input placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'https://github.com/user/skill-repo or /path/to/skill'**
+  String get installSkillPlaceholder;
+
+  /// Installing progress text
+  ///
+  /// In en, this message translates to:
+  /// **'Installing...'**
+  String get installing;
+
+  /// Skill installed success message
+  ///
+  /// In en, this message translates to:
+  /// **'Skill \'{name}\' installed successfully'**
+  String skillInstalled(String name);
+
+  /// Install failed message
+  ///
+  /// In en, this message translates to:
+  /// **'Install failed: {error}'**
+  String installFailed(String error);
+
+  /// Remove skill button
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get removeSkill;
+
+  /// Remove skill dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Skill'**
+  String get removeSkillTitle;
+
+  /// Remove skill confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to remove skill \'{name}\'? This cannot be undone.'**
+  String removeSkillConfirm(String name);
+
+  /// Skill removed message
+  ///
+  /// In en, this message translates to:
+  /// **'Skill \'{name}\' removed'**
+  String skillRemoved(String name);
+
+  /// Remove failed message
+  ///
+  /// In en, this message translates to:
+  /// **'Remove failed: {error}'**
+  String removeFailed(String error);
+
+  /// Git URL example
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. https://github.com/user/my-skill'**
+  String get gitUrlExample;
+
+  /// Supported sources description
+  ///
+  /// In en, this message translates to:
+  /// **'Supports Git URL (https/ssh) or local directory path'**
+  String get supportedSources;
+
   /// Delete cron job dialog title
   ///
   /// In en, this message translates to:
@@ -1538,10 +1616,10 @@ abstract class AppLocalizations {
   /// **'Run Now'**
   String get runNow;
 
-  /// Collapse history button
+  /// Tooltip for collapsing chat list panel
   ///
   /// In en, this message translates to:
-  /// **'Collapse History'**
+  /// **'Collapse history'**
   String get collapseHistory;
 
   /// Run history button
@@ -1861,6 +1939,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Conversation'**
   String get knowledgeCategoryConversation;
+
+  /// Copy message button tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get copyMessage;
+
+  /// Edit user message button tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get editMessage;
+
+  /// Snackbar message after copying
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get copiedToClipboard;
+
+  /// Tooltip for expanding chat list panel
+  ///
+  /// In en, this message translates to:
+  /// **'Expand history'**
+  String get expandHistory;
+
+  /// Save edit button
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get saveEdit;
+
+  /// Cancel edit button
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancelEdit;
 }
 
 class _AppLocalizationsDelegate

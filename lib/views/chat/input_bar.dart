@@ -34,7 +34,9 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
     if (text.isEmpty) return;
     widget.onSend(text);
     _controller.clear();
-    setState(() {});
+    setState(() {
+      _isExpanded = false;
+    });
   }
 
   @override
@@ -47,10 +49,12 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
             constraints: BoxConstraints(
-              minHeight: 56,
-              maxHeight: _isExpanded ? 200 : 120,
+              minHeight: _isExpanded ? 200 : 56,
+              maxHeight: _isExpanded ? 400 : 120,
             ),
             decoration: BoxDecoration(
               color: c.surfaceBg,
@@ -65,9 +69,8 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
               ],
             ),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                Flexible(
+                Expanded(
                   child: KeyboardListener(
                     focusNode: FocusNode(),
                     onKeyEvent: (event) {
@@ -84,6 +87,8 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
                       controller: _controller,
                       focusNode: _focusNode,
                       maxLines: null,
+                      expands: true,
+                      textAlignVertical: TextAlignVertical.top,
                       maxLength: AppConstants.maxInputLength,
                       enabled: !isProcessing,
                       decoration: InputDecoration(
