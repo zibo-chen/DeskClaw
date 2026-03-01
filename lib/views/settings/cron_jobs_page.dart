@@ -77,6 +77,7 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
     );
     if (confirm == true) {
       final result = await cron_api.removeCronJob(jobId: jobId);
+      if (!mounted) return;
       if (result == 'ok') {
         _showMessage(AppLocalizations.of(context)!.deleted);
         _loadAll();
@@ -92,6 +93,7 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
     final result = enabled
         ? await cron_api.resumeCronJob(jobId: jobId)
         : await cron_api.pauseCronJob(jobId: jobId);
+    if (!mounted) return;
     if (result == 'ok') {
       _showMessage(
         enabled
@@ -108,6 +110,7 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
     setState(() => _runningJobId = jobId);
     try {
       final result = await cron_api.runCronJobNow(jobId: jobId);
+      if (!mounted) return;
       if (result.startsWith('ok')) {
         _showMessage(AppLocalizations.of(context)!.executionSuccess);
       } else {
@@ -117,6 +120,7 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
       }
       _loadAll();
     } catch (e) {
+      if (!mounted) return;
       _showMessage(
         AppLocalizations.of(context)!.executionErrorWithError(e.toString()),
       );
@@ -152,6 +156,7 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
       );
     }
 
+    if (!mounted) return;
     if (!apiResult.startsWith('error')) {
       _showMessage(AppLocalizations.of(context)!.cronJobCreated);
       _loadAll();

@@ -40,6 +40,7 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
 
   Future<void> _toggleOpenSkills(bool enabled) async {
     final result = await skills_api.toggleOpenSkills(enabled: enabled);
+    if (!mounted) return;
     if (result == 'ok') {
       _showMessage(
         AppLocalizations.of(context)!.communitySkillsToggled(
@@ -56,6 +57,7 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
 
   Future<void> _updateInjectionMode(String mode) async {
     final result = await skills_api.updatePromptInjectionMode(mode: mode);
+    if (!mounted) return;
     if (result == 'ok') {
       _showMessage(AppLocalizations.of(context)!.injectionModeUpdated(mode));
       _loadAll();

@@ -43,6 +43,7 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
       feature: feature,
       enabled: enabled,
     );
+    if (!mounted) return;
     if (result == 'ok') {
       _showMessage(
         enabled
@@ -60,6 +61,7 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
       toolName: toolName,
       approval: approval,
     );
+    if (!mounted) return;
     if (result == 'ok') {
       _loadAll();
     } else {

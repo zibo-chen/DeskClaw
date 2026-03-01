@@ -16,6 +16,15 @@ class AppConstants {
   // Input limits
   static const int maxInputLength = 10000;
 
-  // Suggestion cards
-  static const List<String> defaultSuggestions = ['你能做什么？', '帮我写一篇关于人工智能的文章。'];
+  // Suggestion cards (all candidates; 2 will be randomly shown per new session)
+  static const List<String> defaultSuggestions = [
+    '你能做什么？',
+    '帮我写一篇关于人工智能的文章。',
+    '用简单的语言解释机器学习的基本原理。',
+    '帮我写一封专业邮件。',
+    '如何提高工作效率？',
+    '推荐几本值得阅读的书。',
+    '帮我规划一次短途旅行。',
+    '帮我头脑风暴一些创意。',
+  ];
 }

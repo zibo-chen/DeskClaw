@@ -63,6 +63,7 @@ class _ChannelsPageState extends ConsumerState<ChannelsPage> {
         channelType: channel.channelType,
         configJson: jsonEncode(result),
       );
+      if (!mounted) return;
       if (saveResult == 'ok') {
         _showMessage(
           AppLocalizations.of(context)!.channelConfigSaved(channel.name),
@@ -103,6 +104,7 @@ class _ChannelsPageState extends ConsumerState<ChannelsPage> {
         channelType: channel.channelType,
         enabled: false,
       );
+      if (!mounted) return;
       if (result == 'ok') {
         _showMessage(
           AppLocalizations.of(context)!.channelDisabled(channel.name),

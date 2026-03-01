@@ -82,6 +82,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get suggestionWriteArticle => 'Help me write an article about AI.';
 
   @override
+  String get suggestionExplainML =>
+      'Explain the basics of machine learning in simple terms.';
+
+  @override
+  String get suggestionWriteEmail => 'Help me write a professional email.';
+
+  @override
+  String get suggestionImproveProductivity =>
+      'How can I improve my productivity?';
+
+  @override
+  String get suggestionRecommendBooks => 'Recommend some books worth reading.';
+
+  @override
+  String get suggestionPlanTrip => 'Help me plan a short trip.';
+
+  @override
+  String get suggestionBrainstorm => 'Brainstorm some creative ideas.';
+
+  @override
   String get thinking => '💭 Thinking...';
 
   @override

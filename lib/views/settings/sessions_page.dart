@@ -73,6 +73,7 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
     );
     if (confirm == true) {
       await sessions_api.deleteSession(sessionId: id);
+      if (!mounted) return;
       _showMessage(AppLocalizations.of(context)!.sessionDeleted);
       if (_selectedDetail?.id == id) {
         setState(() => _selectedDetail = null);
@@ -109,6 +110,7 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
     );
     if (newTitle != null && newTitle.isNotEmpty && newTitle != currentTitle) {
       await sessions_api.renameSession(sessionId: id, newTitle: newTitle);
+      if (!mounted) return;
       _showMessage(AppLocalizations.of(context)!.sessionRenamed);
       _loadAll();
       if (_selectedDetail?.id == id) {
@@ -138,6 +140,7 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
     );
     if (confirm == true) {
       await sessions_api.clearAllSessions();
+      if (!mounted) return;
       _showMessage(AppLocalizations.of(context)!.allSessionsCleared);
       setState(() => _selectedDetail = null);
       _loadAll();
@@ -615,12 +618,15 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
     final now = DateTime.now();
     final diff = now.difference(date);
     if (diff.inMinutes < 1) return AppLocalizations.of(context)!.justNow;
-    if (diff.inHours < 1)
+    if (diff.inHours < 1) {
       return AppLocalizations.of(context)!.minutesAgo(diff.inMinutes);
-    if (diff.inDays < 1)
+    }
+    if (diff.inDays < 1) {
       return AppLocalizations.of(context)!.hoursAgo(diff.inHours);
-    if (diff.inDays < 7)
+    }
+    if (diff.inDays < 7) {
       return AppLocalizations.of(context)!.daysAgo(diff.inDays);
+    }
     return '${date.month}/${date.day}';
   }
 }

@@ -100,6 +100,7 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
       content: content,
       category: category,
     );
+    if (!mounted) return;
     if (res == 'ok') {
       _showMessage(AppLocalizations.of(context)!.knowledgeEntryAdded);
       _loadAll();
@@ -133,6 +134,7 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
     if (confirmed != true) return;
 
     final res = await kb_api.deleteKnowledgeEntry(key: key);
+    if (!mounted) return;
     if (res == 'ok') {
       _showMessage(AppLocalizations.of(context)!.knowledgeEntryDeleted);
       _loadAll();

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:deskclaw/l10n/app_localizations.dart';
@@ -20,6 +22,25 @@ class ChatView extends ConsumerStatefulWidget {
 class _ChatViewState extends ConsumerState<ChatView> {
   final ScrollController _scrollController = ScrollController();
   DeskClawColors get c => DeskClawColors.of(context);
+
+  static const int _totalSuggestions = 8;
+  late List<int> _selectedIndices;
+
+  @override
+  void initState() {
+    super.initState();
+    final pool = List<int>.generate(_totalSuggestions, (i) => i)
+      ..shuffle(Random());
+    _selectedIndices = pool.take(2).toList();
+  }
+
+  void _randomizeSuggestions() {
+    final pool = List<int>.generate(_totalSuggestions, (i) => i)
+      ..shuffle(Random());
+    setState(() {
+      _selectedIndices = pool.take(2).toList();
+    });
+  }
 
   @override
   void dispose() {
@@ -304,7 +325,9 @@ class _ChatViewState extends ConsumerState<ChatView> {
   @override
   Widget build(BuildContext context) {
     final messages = ref.watch(messagesProvider);
-    ref.watch(activeSessionIdProvider);
+    ref.listen(activeSessionIdProvider, (prev, next) {
+      if (prev != next) _randomizeSuggestions();
+    });
     final l10n = AppLocalizations.of(context)!;
 
     return Column(
@@ -349,6 +372,16 @@ class _ChatViewState extends ConsumerState<ChatView> {
   }
 
   Widget _buildWelcomeView(AppLocalizations l10n) {
+    final allSuggestions = [
+      l10n.suggestionWhatCanYouDo,
+      l10n.suggestionWriteArticle,
+      l10n.suggestionExplainML,
+      l10n.suggestionWriteEmail,
+      l10n.suggestionImproveProductivity,
+      l10n.suggestionRecommendBooks,
+      l10n.suggestionPlanTrip,
+      l10n.suggestionBrainstorm,
+    ];
     return Center(
       child: SingleChildScrollView(
         child: Column(
@@ -374,9 +407,9 @@ class _ChatViewState extends ConsumerState<ChatView> {
             ),
             const SizedBox(height: 32),
 
-            // Suggestion cards
-            _buildSuggestionCard(l10n.suggestionWhatCanYouDo),
-            _buildSuggestionCard(l10n.suggestionWriteArticle),
+            // Suggestion cards (2 random from all)
+            _buildSuggestionCard(allSuggestions[_selectedIndices[0]]),
+            _buildSuggestionCard(allSuggestions[_selectedIndices[1]]),
           ],
         ),
       ),

@@ -73,6 +73,24 @@
   "suggestionWriteArticle": "Help me write an article about AI.",
   "@suggestionWriteArticle": { "description": "Suggestion card 2" },
 
+  "suggestionExplainML": "Explain the basics of machine learning in simple terms.",
+  "@suggestionExplainML": { "description": "Suggestion card 3" },
+
+  "suggestionWriteEmail": "Help me write a professional email.",
+  "@suggestionWriteEmail": { "description": "Suggestion card 4" },
+
+  "suggestionImproveProductivity": "How can I improve my productivity?",
+  "@suggestionImproveProductivity": { "description": "Suggestion card 5" },
+
+  "suggestionRecommendBooks": "Recommend some books worth reading.",
+  "@suggestionRecommendBooks": { "description": "Suggestion card 6" },
+
+  "suggestionPlanTrip": "Help me plan a short trip.",
+  "@suggestionPlanTrip": { "description": "Suggestion card 7" },
+
+  "suggestionBrainstorm": "Brainstorm some creative ideas.",
+  "@suggestionBrainstorm": { "description": "Suggestion card 8" },
+
   "thinking": "💭 Thinking...",
   "@thinking": { "description": "Thinking indicator" },
 

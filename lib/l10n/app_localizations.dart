@@ -242,6 +242,42 @@ abstract class AppLocalizations {
   /// **'Help me write an article about AI.'**
   String get suggestionWriteArticle;
 
+  /// Suggestion card 3
+  ///
+  /// In en, this message translates to:
+  /// **'Explain the basics of machine learning in simple terms.'**
+  String get suggestionExplainML;
+
+  /// Suggestion card 4
+  ///
+  /// In en, this message translates to:
+  /// **'Help me write a professional email.'**
+  String get suggestionWriteEmail;
+
+  /// Suggestion card 5
+  ///
+  /// In en, this message translates to:
+  /// **'How can I improve my productivity?'**
+  String get suggestionImproveProductivity;
+
+  /// Suggestion card 6
+  ///
+  /// In en, this message translates to:
+  /// **'Recommend some books worth reading.'**
+  String get suggestionRecommendBooks;
+
+  /// Suggestion card 7
+  ///
+  /// In en, this message translates to:
+  /// **'Help me plan a short trip.'**
+  String get suggestionPlanTrip;
+
+  /// Suggestion card 8
+  ///
+  /// In en, this message translates to:
+  /// **'Brainstorm some creative ideas.'**
+  String get suggestionBrainstorm;
+
   /// Thinking indicator
   ///
   /// In en, this message translates to:

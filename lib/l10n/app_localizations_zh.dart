@@ -81,6 +81,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get suggestionWriteArticle => '帮我写一篇关于人工智能的文章。';
 
   @override
+  String get suggestionExplainML => '用简单的语言解释机器学习的基本原理。';
+
+  @override
+  String get suggestionWriteEmail => '帮我写一封专业邮件。';
+
+  @override
+  String get suggestionImproveProductivity => '如何提高工作效率？';
+
+  @override
+  String get suggestionRecommendBooks => '推荐几本值得阅读的书。';
+
+  @override
+  String get suggestionPlanTrip => '帮我规划一次短途旅行。';
+
+  @override
+  String get suggestionBrainstorm => '帮我头脑风暴一些创意。';
+
+  @override
   String get thinking => '💭 思考中...';
 
   @override
