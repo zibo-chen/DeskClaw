@@ -130,6 +130,14 @@ class SidebarNav extends ConsumerWidget {
                       _buildNavItem(
                         c,
                         ref: ref,
+                        icon: Icons.hub_outlined,
+                        label: l10n.navAgents,
+                        section: NavSection.agents,
+                        isActive: currentNav == NavSection.agents,
+                      ),
+                      _buildNavItem(
+                        c,
+                        ref: ref,
                         icon: Icons.settings,
                         label: l10n.navConfiguration,
                         section: NavSection.configuration,

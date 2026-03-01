@@ -11,6 +11,7 @@ import 'package:deskclaw/views/settings/configuration_page.dart';
 import 'package:deskclaw/views/settings/channels_page.dart';
 import 'package:deskclaw/views/settings/skills_page.dart';
 import 'package:deskclaw/views/settings/tools_page.dart';
+import 'package:deskclaw/views/settings/agents_page.dart';
 import 'package:deskclaw/views/settings/sessions_page.dart';
 import 'package:deskclaw/views/settings/cron_jobs_page.dart';
 import 'package:deskclaw/views/settings/knowledge_page.dart';
@@ -69,6 +70,7 @@ class _AppShellState extends ConsumerState<AppShell> {
       NavSection.knowledge => const KnowledgePage(),
       NavSection.skills => const SkillsPage(),
       NavSection.mcp => const ToolsPage(),
+      NavSection.agents => const AgentsPage(),
       NavSection.environments => PlaceholderPage(
         title: AppLocalizations.of(context)!.pageEnvironments,
         icon: Icons.language,

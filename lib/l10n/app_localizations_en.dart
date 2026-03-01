@@ -1030,4 +1030,87 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cancelEdit => 'Cancel';
+
+  @override
+  String get navAgents => 'Agents';
+
+  @override
+  String get pageAgents => 'Sub-Agents';
+
+  @override
+  String get agentOverview => 'Sub-Agent Overview';
+
+  @override
+  String get agentOverviewDesc =>
+      'Configure delegate sub-agents for multi-agent workflows. The primary agent can delegate specialized tasks (research, coding, summarization) to these sub-agents.';
+
+  @override
+  String get agentAgenticCount => 'Agentic';
+
+  @override
+  String get agentNew => 'New Agent';
+
+  @override
+  String get agentEdit => 'Edit Agent';
+
+  @override
+  String get agentNoAgents => 'No sub-agents configured';
+
+  @override
+  String get agentNoAgentsHint =>
+      'Create a sub-agent to delegate specialized tasks like research, coding, or summarization to different AI models.';
+
+  @override
+  String get agentNameLabel => 'Agent Name';
+
+  @override
+  String get agentSystemPrompt => 'System Prompt';
+
+  @override
+  String get agentSystemPromptHint => 'e.g. You are a research assistant.';
+
+  @override
+  String get agentMaxDepth => 'Max Depth';
+
+  @override
+  String get agentMaxIterations => 'Max Iterations';
+
+  @override
+  String get agentAgenticMode => 'Agentic Mode';
+
+  @override
+  String get agentAgenticModeDesc =>
+      'Enable multi-turn tool-call loop. The sub-agent can use tools iteratively to complete complex tasks.';
+
+  @override
+  String get agentAllowedTools => 'Allowed Tools';
+
+  @override
+  String get agentAgentic => 'Agentic';
+
+  @override
+  String get agentOptional => 'optional';
+
+  @override
+  String get agentDeleteTitle => 'Delete Agent';
+
+  @override
+  String agentDeleteConfirm(String name) {
+    return 'Are you sure you want to delete agent \'\'$name\'\'? This cannot be undone.';
+  }
+
+  @override
+  String agentDeleted(String name) {
+    return 'Agent \'\'$name\'\' deleted';
+  }
+
+  @override
+  String agentCreated(String name) {
+    return 'Agent \'\'$name\'\' created';
+  }
+
+  @override
+  String agentUpdated(String name) {
+    return 'Agent \'\'$name\'\' updated';
+  }
 }

@@ -16,6 +16,7 @@ enum NavSection {
   knowledge,
   skills,
   mcp,
+  agents,
   configuration,
   models,
   environments,

@@ -1006,4 +1006,85 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get cancelEdit => '取消';
+
+  @override
+  String get navAgents => '子代理';
+
+  @override
+  String get pageAgents => '子代理管理';
+
+  @override
+  String get agentOverview => '子代理概览';
+
+  @override
+  String get agentOverviewDesc =>
+      '配置委派子代理，实现多代理协作。主代理可以将研究、编码、摘要等专项任务委派给这些子代理。';
+
+  @override
+  String get agentAgenticCount => '自主模式';
+
+  @override
+  String get agentNew => '新建子代理';
+
+  @override
+  String get agentEdit => '编辑子代理';
+
+  @override
+  String get agentNoAgents => '暂无子代理';
+
+  @override
+  String get agentNoAgentsHint => '创建子代理可将研究、编码或总结等专项任务委派给不同的 AI 模型执行。';
+
+  @override
+  String get agentNameLabel => '代理名称';
+
+  @override
+  String get agentSystemPrompt => '系统提示词';
+
+  @override
+  String get agentSystemPromptHint => '例如：你是一个研究助手。';
+
+  @override
+  String get agentMaxDepth => '最大深度';
+
+  @override
+  String get agentMaxIterations => '最大迭代次数';
+
+  @override
+  String get agentAgenticMode => '自主模式';
+
+  @override
+  String get agentAgenticModeDesc => '启用多轮工具调用循环，子代理可迭代使用工具完成复杂任务。';
+
+  @override
+  String get agentAllowedTools => '允许的工具';
+
+  @override
+  String get agentAgentic => '自主';
+
+  @override
+  String get agentOptional => '可选';
+
+  @override
+  String get agentDeleteTitle => '删除子代理';
+
+  @override
+  String agentDeleteConfirm(String name) {
+    return '确定删除子代理 \'$name\'？此操作不可撤销。';
+  }
+
+  @override
+  String agentDeleted(String name) {
+    return '子代理 \'$name\' 已删除';
+  }
+
+  @override
+  String agentCreated(String name) {
+    return '子代理 \'$name\' 已创建';
+  }
+
+  @override
+  String agentUpdated(String name) {
+    return '子代理 \'$name\' 已更新';
+  }
 }

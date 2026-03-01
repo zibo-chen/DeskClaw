@@ -389,6 +389,53 @@ pub async fn save_config_to_disk() -> String {
     );
     table.insert("autonomy".into(), toml::Value::Table(autonomy_table));
 
+    // ── Persist delegate agents [agents.<name>] ─────────────
+    let mut agents_table = toml::Table::new();
+    for (name, agent_cfg) in &config.agents {
+        let mut entry = toml::Table::new();
+        entry.insert(
+            "provider".into(),
+            toml::Value::String(agent_cfg.provider.clone()),
+        );
+        entry.insert("model".into(), toml::Value::String(agent_cfg.model.clone()));
+        if let Some(ref sp) = agent_cfg.system_prompt {
+            entry.insert("system_prompt".into(), toml::Value::String(sp.clone()));
+        }
+        if let Some(ref key) = agent_cfg.api_key {
+            entry.insert("api_key".into(), toml::Value::String(key.clone()));
+        }
+        if let Some(temp) = agent_cfg.temperature {
+            entry.insert("temperature".into(), toml::Value::Float(temp));
+        }
+        entry.insert(
+            "max_depth".into(),
+            toml::Value::Integer(agent_cfg.max_depth as i64),
+        );
+        if agent_cfg.agentic {
+            entry.insert("agentic".into(), toml::Value::Boolean(true));
+            entry.insert(
+                "allowed_tools".into(),
+                toml::Value::Array(
+                    agent_cfg
+                        .allowed_tools
+                        .iter()
+                        .map(|s| toml::Value::String(s.clone()))
+                        .collect(),
+                ),
+            );
+            entry.insert(
+                "max_iterations".into(),
+                toml::Value::Integer(agent_cfg.max_iterations as i64),
+            );
+        }
+        agents_table.insert(name.clone(), toml::Value::Table(entry));
+    }
+    if !agents_table.is_empty() {
+        table.insert("agents".into(), toml::Value::Table(agents_table));
+    } else {
+        table.remove("agents");
+    }
+
     let output = match toml::to_string_pretty(&table) {
         Ok(s) => s,
         Err(e) => return format!("error: serialize failed: {e}"),

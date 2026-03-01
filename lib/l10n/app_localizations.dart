@@ -1975,6 +1975,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel'**
   String get cancelEdit;
+
+  /// Agents nav item
+  ///
+  /// In en, this message translates to:
+  /// **'Agents'**
+  String get navAgents;
+
+  /// Sub-agents page title
+  ///
+  /// In en, this message translates to:
+  /// **'Sub-Agents'**
+  String get pageAgents;
+
+  /// Overview section title
+  ///
+  /// In en, this message translates to:
+  /// **'Sub-Agent Overview'**
+  String get agentOverview;
+
+  /// Overview description
+  ///
+  /// In en, this message translates to:
+  /// **'Configure delegate sub-agents for multi-agent workflows. The primary agent can delegate specialized tasks (research, coding, summarization) to these sub-agents.'**
+  String get agentOverviewDesc;
+
+  /// Agentic agents count label
+  ///
+  /// In en, this message translates to:
+  /// **'Agentic'**
+  String get agentAgenticCount;
+
+  /// New agent button
+  ///
+  /// In en, this message translates to:
+  /// **'New Agent'**
+  String get agentNew;
+
+  /// Edit agent dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Agent'**
+  String get agentEdit;
+
+  /// Empty state title
+  ///
+  /// In en, this message translates to:
+  /// **'No sub-agents configured'**
+  String get agentNoAgents;
+
+  /// Empty state hint
+  ///
+  /// In en, this message translates to:
+  /// **'Create a sub-agent to delegate specialized tasks like research, coding, or summarization to different AI models.'**
+  String get agentNoAgentsHint;
+
+  /// Agent name input label
+  ///
+  /// In en, this message translates to:
+  /// **'Agent Name'**
+  String get agentNameLabel;
+
+  /// System prompt label
+  ///
+  /// In en, this message translates to:
+  /// **'System Prompt'**
+  String get agentSystemPrompt;
+
+  /// System prompt hint
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. You are a research assistant.'**
+  String get agentSystemPromptHint;
+
+  /// Max depth label
+  ///
+  /// In en, this message translates to:
+  /// **'Max Depth'**
+  String get agentMaxDepth;
+
+  /// Max iterations label
+  ///
+  /// In en, this message translates to:
+  /// **'Max Iterations'**
+  String get agentMaxIterations;
+
+  /// Agentic mode toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Agentic Mode'**
+  String get agentAgenticMode;
+
+  /// Agentic mode description
+  ///
+  /// In en, this message translates to:
+  /// **'Enable multi-turn tool-call loop. The sub-agent can use tools iteratively to complete complex tasks.'**
+  String get agentAgenticModeDesc;
+
+  /// Allowed tools label
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed Tools'**
+  String get agentAllowedTools;
+
+  /// Agentic badge
+  ///
+  /// In en, this message translates to:
+  /// **'Agentic'**
+  String get agentAgentic;
+
+  /// Optional field hint
+  ///
+  /// In en, this message translates to:
+  /// **'optional'**
+  String get agentOptional;
+
+  /// Delete agent dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Agent'**
+  String get agentDeleteTitle;
+
+  /// Delete agent confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete agent \'\'{name}\'\'? This cannot be undone.'**
+  String agentDeleteConfirm(String name);
+
+  /// Agent deleted message
+  ///
+  /// In en, this message translates to:
+  /// **'Agent \'\'{name}\'\' deleted'**
+  String agentDeleted(String name);
+
+  /// Agent created message
+  ///
+  /// In en, this message translates to:
+  /// **'Agent \'\'{name}\'\' created'**
+  String agentCreated(String name);
+
+  /// Agent updated message
+  ///
+  /// In en, this message translates to:
+  /// **'Agent \'\'{name}\'\' updated'**
+  String agentUpdated(String name);
 }
 
 class _AppLocalizationsDelegate

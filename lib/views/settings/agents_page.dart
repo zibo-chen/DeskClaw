@@ -1,0 +1,776 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:deskclaw/l10n/app_localizations.dart';
+import 'package:deskclaw/theme/app_theme.dart';
+import 'package:deskclaw/src/rust/api/agents_api.dart' as agents_api;
+import 'package:deskclaw/src/rust/api/config_api.dart' as config_api;
+
+/// Sub-agent management page: list, create, edit, delete delegate agents
+class AgentsPage extends ConsumerStatefulWidget {
+  const AgentsPage({super.key});
+
+  @override
+  ConsumerState<AgentsPage> createState() => _AgentsPageState();
+}
+
+class _AgentsPageState extends ConsumerState<AgentsPage> {
+  List<agents_api.DelegateAgentDto> _agents = [];
+  bool _loading = true;
+  String? _message;
+  bool _isError = false;
+  DeskClawColors get c => DeskClawColors.of(context);
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAgents();
+  }
+
+  Future<void> _loadAgents() async {
+    setState(() => _loading = true);
+    final agents = await agents_api.listDelegateAgents();
+    if (mounted) {
+      setState(() {
+        _agents = agents;
+        _loading = false;
+      });
+    }
+  }
+
+  void _showMessage(String msg, {bool isError = false}) {
+    setState(() {
+      _message = msg;
+      _isError = isError;
+    });
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) setState(() => _message = null);
+    });
+  }
+
+  Future<void> _deleteAgent(String name) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.agentDeleteTitle),
+        content: Text(l10n.agentDeleteConfirm(name)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    final result = await agents_api.removeDelegateAgent(name: name);
+    if (!mounted) return;
+    if (result == 'ok') {
+      _showMessage(l10n.agentDeleted(name));
+      _loadAgents();
+    } else {
+      _showMessage('${l10n.operationFailed}: $result', isError: true);
+    }
+  }
+
+  Future<void> _openEditor({agents_api.DelegateAgentDto? existing}) async {
+    final result = await showDialog<agents_api.DelegateAgentDto>(
+      context: context,
+      builder: (ctx) => _AgentEditorDialog(existing: existing),
+    );
+    if (result == null || !mounted) return;
+
+    final l10n = AppLocalizations.of(context)!;
+    final saveResult = await agents_api.upsertDelegateAgent(agent: result);
+    if (!mounted) return;
+    if (saveResult == 'ok') {
+      _showMessage(
+        existing == null
+            ? l10n.agentCreated(result.name)
+            : l10n.agentUpdated(result.name),
+      );
+      _loadAgents();
+    } else {
+      final error = saveResult.startsWith('error: ')
+          ? saveResult.substring(7)
+          : saveResult;
+      _showMessage('${l10n.operationFailed}: $error', isError: true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return _SettingsPageScaffold(
+      title: l10n.pageAgents,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh, size: 20),
+          tooltip: l10n.refresh,
+          onPressed: _loadAgents,
+        ),
+        const SizedBox(width: 4),
+        FilledButton.icon(
+          icon: const Icon(Icons.add, size: 18),
+          label: Text(l10n.agentNew),
+          onPressed: () => _openEditor(),
+        ),
+      ],
+      child: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Status message
+                if (_message != null)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: _isError
+                          ? Colors.red.withValues(alpha: 0.1)
+                          : Colors.green.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: _isError
+                            ? Colors.red.withValues(alpha: 0.3)
+                            : Colors.green.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Text(
+                      _message!,
+                      style: TextStyle(
+                        color: _isError ? Colors.red : Colors.green[700],
+                      ),
+                    ),
+                  ),
+
+                // Overview
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: c.cardBg,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: c.chatListBorder),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.agentOverview,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: c.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        l10n.agentOverviewDesc,
+                        style: TextStyle(fontSize: 13, color: c.textSecondary),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          _StatChip(
+                            label: l10n.totalCount,
+                            value: '${_agents.length}',
+                            color: AppColors.primary,
+                            c: c,
+                          ),
+                          const SizedBox(width: 12),
+                          _StatChip(
+                            label: l10n.agentAgenticCount,
+                            value: '${_agents.where((a) => a.agentic).length}',
+                            color: Colors.orange,
+                            c: c,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Agent list or empty state
+                if (_agents.isEmpty)
+                  _buildEmptyState(l10n)
+                else
+                  ..._agents.map((agent) => _buildAgentCard(agent, l10n)),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildEmptyState(AppLocalizations l10n) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+      decoration: BoxDecoration(
+        color: c.cardBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: c.chatListBorder),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.hub_outlined, size: 48, color: c.textHint),
+          const SizedBox(height: 16),
+          Text(
+            l10n.agentNoAgents,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: c.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.agentNoAgentsHint,
+            style: TextStyle(fontSize: 13, color: c.textSecondary),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          FilledButton.icon(
+            icon: const Icon(Icons.add, size: 18),
+            label: Text(l10n.agentNew),
+            onPressed: () => _openEditor(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAgentCard(
+    agents_api.DelegateAgentDto agent,
+    AppLocalizations l10n,
+  ) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: c.cardBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: c.chatListBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header row: name + badges + actions
+          Row(
+            children: [
+              Icon(
+                agent.agentic ? Icons.smart_toy : Icons.assistant,
+                size: 20,
+                color: agent.agentic ? Colors.orange : AppColors.primary,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  agent.name,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: c.textPrimary,
+                  ),
+                ),
+              ),
+              if (agent.agentic)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    l10n.agentAgentic,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.orange,
+                    ),
+                  ),
+                ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: Icon(Icons.edit_outlined, size: 18, color: c.textHint),
+                tooltip: l10n.editMessage,
+                onPressed: () => _openEditor(existing: agent),
+                visualDensity: VisualDensity.compact,
+              ),
+              IconButton(
+                icon: const Icon(
+                  Icons.delete_outline,
+                  size: 18,
+                  color: Colors.red,
+                ),
+                tooltip: l10n.delete,
+                onPressed: () => _deleteAgent(agent.name),
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // Info grid
+          Wrap(
+            spacing: 16,
+            runSpacing: 6,
+            children: [
+              _InfoTag(label: l10n.providerLabel, value: agent.provider, c: c),
+              _InfoTag(label: l10n.modelLabel, value: agent.model, c: c),
+              if (agent.temperature != null)
+                _InfoTag(
+                  label: l10n.temperatureLabel,
+                  value: agent.temperature!.toStringAsFixed(1),
+                  c: c,
+                ),
+              _InfoTag(
+                label: l10n.agentMaxDepth,
+                value: '${agent.maxDepth}',
+                c: c,
+              ),
+              if (agent.agentic)
+                _InfoTag(
+                  label: l10n.agentMaxIterations,
+                  value: '${agent.maxIterations}',
+                  c: c,
+                ),
+            ],
+          ),
+
+          // System prompt (truncated)
+          if (agent.systemPrompt != null && agent.systemPrompt!.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(
+              agent.systemPrompt!.length > 120
+                  ? '${agent.systemPrompt!.substring(0, 120)}…'
+                  : agent.systemPrompt!,
+              style: TextStyle(
+                fontSize: 12,
+                color: c.textSecondary,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+
+          // Allowed tools
+          if (agent.agentic && agent.allowedTools.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: agent.allowedTools
+                  .map(
+                    (tool) => Chip(
+                      label: Text(tool, style: const TextStyle(fontSize: 11)),
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                    ),
+                  )
+                  .toList(),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Editor Dialog
+// ═══════════════════════════════════════════════════════════════
+
+class _AgentEditorDialog extends StatefulWidget {
+  final agents_api.DelegateAgentDto? existing;
+  const _AgentEditorDialog({this.existing});
+
+  @override
+  State<_AgentEditorDialog> createState() => _AgentEditorDialogState();
+}
+
+class _AgentEditorDialogState extends State<_AgentEditorDialog> {
+  late final TextEditingController _nameCtrl;
+  late final TextEditingController _modelCtrl;
+  late final TextEditingController _apiKeyCtrl;
+  late final TextEditingController _systemPromptCtrl;
+  late final TextEditingController _tempCtrl;
+  late final TextEditingController _maxDepthCtrl;
+  late final TextEditingController _maxIterCtrl;
+  late final TextEditingController _allowedToolsCtrl;
+
+  late String _selectedProvider;
+  late bool _agentic;
+  bool get _isEdit => widget.existing != null;
+
+  late List<config_api.ProviderInfo> _providers;
+
+  @override
+  void initState() {
+    super.initState();
+    _providers = config_api.listProviders();
+    final e = widget.existing;
+    _selectedProvider = e?.provider ?? 'openrouter';
+    _agentic = e?.agentic ?? false;
+    _nameCtrl = TextEditingController(text: e?.name ?? '');
+    _modelCtrl = TextEditingController(text: e?.model ?? '');
+    _apiKeyCtrl = TextEditingController(text: e?.apiKey ?? '');
+    _systemPromptCtrl = TextEditingController(text: e?.systemPrompt ?? '');
+    _tempCtrl = TextEditingController(
+      text: e?.temperature != null ? e!.temperature!.toStringAsFixed(1) : '',
+    );
+    _maxDepthCtrl = TextEditingController(text: '${e?.maxDepth ?? 3}');
+    _maxIterCtrl = TextEditingController(text: '${e?.maxIterations ?? 10}');
+    _allowedToolsCtrl = TextEditingController(
+      text: e?.allowedTools.join(', ') ?? '',
+    );
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _modelCtrl.dispose();
+    _apiKeyCtrl.dispose();
+    _systemPromptCtrl.dispose();
+    _tempCtrl.dispose();
+    _maxDepthCtrl.dispose();
+    _maxIterCtrl.dispose();
+    _allowedToolsCtrl.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final name = _nameCtrl.text.trim();
+    final model = _modelCtrl.text.trim();
+    if (name.isEmpty || model.isEmpty) return;
+
+    final temp = _tempCtrl.text.trim().isEmpty
+        ? null
+        : double.tryParse(_tempCtrl.text.trim());
+
+    final allowedTools = _allowedToolsCtrl.text
+        .split(RegExp(r'[,\s]+'))
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+
+    final dto = agents_api.DelegateAgentDto(
+      name: name,
+      provider: _selectedProvider,
+      model: model,
+      systemPrompt: _systemPromptCtrl.text.trim().isEmpty
+          ? null
+          : _systemPromptCtrl.text.trim(),
+      apiKey: _apiKeyCtrl.text.trim().isEmpty ? null : _apiKeyCtrl.text.trim(),
+      temperature: temp,
+      maxDepth: int.tryParse(_maxDepthCtrl.text.trim()) ?? 3,
+      agentic: _agentic,
+      allowedTools: allowedTools,
+      maxIterations: int.tryParse(_maxIterCtrl.text.trim()) ?? 10,
+    );
+
+    Navigator.pop(context, dto);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final c = DeskClawColors.of(context);
+
+    return AlertDialog(
+      title: Text(_isEdit ? l10n.agentEdit : l10n.agentNew),
+      content: SizedBox(
+        width: 480,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Name
+              TextField(
+                controller: _nameCtrl,
+                enabled: !_isEdit,
+                decoration: InputDecoration(
+                  labelText: l10n.agentNameLabel,
+                  hintText: 'researcher, coder, summarizer...',
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Provider
+              DropdownButtonFormField<String>(
+                initialValue: _providers.any((p) => p.id == _selectedProvider)
+                    ? _selectedProvider
+                    : _providers.first.id,
+                decoration: InputDecoration(
+                  labelText: l10n.providerLabel,
+                  border: const OutlineInputBorder(),
+                ),
+                items: _providers
+                    .map(
+                      (p) => DropdownMenuItem(value: p.id, child: Text(p.name)),
+                    )
+                    .toList(),
+                onChanged: (v) {
+                  if (v != null) setState(() => _selectedProvider = v);
+                },
+              ),
+              const SizedBox(height: 12),
+
+              // Model
+              TextField(
+                controller: _modelCtrl,
+                decoration: InputDecoration(
+                  labelText: l10n.modelLabel,
+                  hintText: l10n.modelNameHint,
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // API Key (optional)
+              TextField(
+                controller: _apiKeyCtrl,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: '${l10n.apiKeyLabel} (${l10n.agentOptional})',
+                  hintText: l10n.apiKeyHint,
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Temperature + Max Depth row
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _tempCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText:
+                            '${l10n.temperatureLabel} (${l10n.agentOptional})',
+                        hintText: '0.7',
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _maxDepthCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: l10n.agentMaxDepth,
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              // System prompt
+              TextField(
+                controller: _systemPromptCtrl,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  labelText: l10n.agentSystemPrompt,
+                  hintText: l10n.agentSystemPromptHint,
+                  border: const OutlineInputBorder(),
+                  alignLabelWithHint: true,
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Agentic toggle
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(
+                  l10n.agentAgenticMode,
+                  style: TextStyle(fontSize: 14, color: c.textPrimary),
+                ),
+                subtitle: Text(
+                  l10n.agentAgenticModeDesc,
+                  style: TextStyle(fontSize: 12, color: c.textSecondary),
+                ),
+                value: _agentic,
+                onChanged: (v) => setState(() => _agentic = v),
+              ),
+
+              // Agentic options
+              if (_agentic) ...[
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _allowedToolsCtrl,
+                  decoration: InputDecoration(
+                    labelText: l10n.agentAllowedTools,
+                    hintText: 'web_search, file_read, shell',
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _maxIterCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: l10n.agentMaxIterations,
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          onPressed: _submit,
+          child: Text(_isEdit ? l10n.save : l10n.create),
+        ),
+      ],
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Shared widgets (same pattern as other settings pages)
+// ═══════════════════════════════════════════════════════════════
+
+class _SettingsPageScaffold extends StatelessWidget {
+  final String title;
+  final List<Widget> actions;
+  final Widget child;
+
+  const _SettingsPageScaffold({
+    required this.title,
+    this.actions = const [],
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = DeskClawColors.of(context);
+    return Container(
+      color: c.surfaceBg,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title bar
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: c.chatListBorder)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: c.textPrimary,
+                    ),
+                  ),
+                ),
+                ...actions,
+              ],
+            ),
+          ),
+          // Body
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: child,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatChip extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+  final DeskClawColors c;
+
+  const _StatChip({
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.c,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(label, style: TextStyle(fontSize: 12, color: c.textSecondary)),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoTag extends StatelessWidget {
+  final String label;
+  final String value;
+  final DeskClawColors c;
+
+  const _InfoTag({required this.label, required this.value, required this.c});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text('$label: ', style: TextStyle(fontSize: 12, color: c.textHint)),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: c.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+}

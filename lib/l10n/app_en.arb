@@ -1032,5 +1032,89 @@
   "@saveEdit": { "description": "Save edit button" },
 
   "cancelEdit": "Cancel",
-  "@cancelEdit": { "description": "Cancel edit button" }
+  "@cancelEdit": { "description": "Cancel edit button" },
+
+  "navAgents": "Agents",
+  "@navAgents": { "description": "Agents nav item" },
+
+  "pageAgents": "Sub-Agents",
+  "@pageAgents": { "description": "Sub-agents page title" },
+
+  "agentOverview": "Sub-Agent Overview",
+  "@agentOverview": { "description": "Overview section title" },
+
+  "agentOverviewDesc": "Configure delegate sub-agents for multi-agent workflows. The primary agent can delegate specialized tasks (research, coding, summarization) to these sub-agents.",
+  "@agentOverviewDesc": { "description": "Overview description" },
+
+  "agentAgenticCount": "Agentic",
+  "@agentAgenticCount": { "description": "Agentic agents count label" },
+
+  "agentNew": "New Agent",
+  "@agentNew": { "description": "New agent button" },
+
+  "agentEdit": "Edit Agent",
+  "@agentEdit": { "description": "Edit agent dialog title" },
+
+  "agentNoAgents": "No sub-agents configured",
+  "@agentNoAgents": { "description": "Empty state title" },
+
+  "agentNoAgentsHint": "Create a sub-agent to delegate specialized tasks like research, coding, or summarization to different AI models.",
+  "@agentNoAgentsHint": { "description": "Empty state hint" },
+
+  "agentNameLabel": "Agent Name",
+  "@agentNameLabel": { "description": "Agent name input label" },
+
+  "agentSystemPrompt": "System Prompt",
+  "@agentSystemPrompt": { "description": "System prompt label" },
+
+  "agentSystemPromptHint": "e.g. You are a research assistant.",
+  "@agentSystemPromptHint": { "description": "System prompt hint" },
+
+  "agentMaxDepth": "Max Depth",
+  "@agentMaxDepth": { "description": "Max depth label" },
+
+  "agentMaxIterations": "Max Iterations",
+  "@agentMaxIterations": { "description": "Max iterations label" },
+
+  "agentAgenticMode": "Agentic Mode",
+  "@agentAgenticMode": { "description": "Agentic mode toggle" },
+
+  "agentAgenticModeDesc": "Enable multi-turn tool-call loop. The sub-agent can use tools iteratively to complete complex tasks.",
+  "@agentAgenticModeDesc": { "description": "Agentic mode description" },
+
+  "agentAllowedTools": "Allowed Tools",
+  "@agentAllowedTools": { "description": "Allowed tools label" },
+
+  "agentAgentic": "Agentic",
+  "@agentAgentic": { "description": "Agentic badge" },
+
+  "agentOptional": "optional",
+  "@agentOptional": { "description": "Optional field hint" },
+
+  "agentDeleteTitle": "Delete Agent",
+  "@agentDeleteTitle": { "description": "Delete agent dialog title" },
+
+  "agentDeleteConfirm": "Are you sure you want to delete agent ''{name}''? This cannot be undone.",
+  "@agentDeleteConfirm": {
+    "description": "Delete agent confirmation",
+    "placeholders": { "name": { "type": "String" } }
+  },
+
+  "agentDeleted": "Agent ''{name}'' deleted",
+  "@agentDeleted": {
+    "description": "Agent deleted message",
+    "placeholders": { "name": { "type": "String" } }
+  },
+
+  "agentCreated": "Agent ''{name}'' created",
+  "@agentCreated": {
+    "description": "Agent created message",
+    "placeholders": { "name": { "type": "String" } }
+  },
+
+  "agentUpdated": "Agent ''{name}'' updated",
+  "@agentUpdated": {
+    "description": "Agent updated message",
+    "placeholders": { "name": { "type": "String" } }
+  }
 }
