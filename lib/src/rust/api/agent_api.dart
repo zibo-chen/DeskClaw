@@ -11,7 +11,7 @@ part 'agent_api.freezed.dart';
 
 // These functions are ignored because they are not marked as `pub`: `agent_handle`, `config_state`, `ensure_agent`, `truncate_str`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ChatMessageDto`, `ConfigState`, `ToolCallDto`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 /// Initialize the agent runtime: load zeroclaw config from ~/.zeroclaw/config.toml.
 /// Returns a status string describing what was loaded.
@@ -90,6 +90,28 @@ Stream<AgentEvent> sendMessageStream({
 /// Uses `try_lock` to avoid blocking if agent is mid-turn.
 List<ToolSpecDto> listTools() =>
     RustLib.instance.api.crateApiAgentApiListTools();
+
+/// Get the workspace directory for a session
+Future<String> getSessionWorkspaceDir({required String sessionId}) => RustLib
+    .instance
+    .api
+    .crateApiAgentApiGetSessionWorkspaceDir(sessionId: sessionId);
+
+/// List files in a session's workspace directory
+Future<List<SessionFileEntry>> listSessionWorkspaceFiles({
+  required String sessionId,
+}) => RustLib.instance.api.crateApiAgentApiListSessionWorkspaceFiles(
+  sessionId: sessionId,
+);
+
+/// Open a file or directory with the system default application
+Future<String> openInSystem({required String path}) =>
+    RustLib.instance.api.crateApiAgentApiOpenInSystem(path: path);
+
+/// Copy a file from the session workspace to a user-chosen destination.
+/// Returns the destination path on success.
+Future<String> copyFileTo({required String src, required String dst}) =>
+    RustLib.instance.api.crateApiAgentApiCopyFileTo(src: src, dst: dst);
 
 @freezed
 sealed class AgentEvent with _$AgentEvent {
@@ -191,6 +213,35 @@ class RuntimeStatus {
           hasApiKey == other.hasApiKey &&
           provider == other.provider &&
           model == other.model;
+}
+
+/// File entry in the session workspace
+class SessionFileEntry {
+  final String name;
+  final String path;
+  final bool isDir;
+  final BigInt size;
+
+  const SessionFileEntry({
+    required this.name,
+    required this.path,
+    required this.isDir,
+    required this.size,
+  });
+
+  @override
+  int get hashCode =>
+      name.hashCode ^ path.hashCode ^ isDir.hashCode ^ size.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SessionFileEntry &&
+          runtimeType == other.runtimeType &&
+          name == other.name &&
+          path == other.path &&
+          isDir == other.isDir &&
+          size == other.size;
 }
 
 /// Tool specification for UI display

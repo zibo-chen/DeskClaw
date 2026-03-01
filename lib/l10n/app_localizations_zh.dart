@@ -1274,4 +1274,56 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get expandOutput => '展开';
+
+  @override
+  String get attachFile => '添加附件';
+
+  @override
+  String get addFiles => '添加文件';
+
+  @override
+  String get addFolder => '添加文件夹';
+
+  @override
+  String attachedFiles(int count) {
+    return '已附加 $count 个文件';
+  }
+
+  @override
+  String get clearAll => '全部清除';
+
+  @override
+  String get dropFilesHere => '将文件拖放到此处';
+
+  @override
+  String get dropFilesHint => '文件和文件夹将附加到当前会话';
+
+  @override
+  String get openWorkspaceFolder => '打开工作区文件夹';
+
+  @override
+  String get workspaceFiles => '工作区文件';
+
+  @override
+  String get noWorkspaceFiles => '暂无文件';
+
+  @override
+  String get noWorkspaceFilesHint => 'Agent 创建的文件将显示在此处';
+
+  @override
+  String get openFile => '打开';
+
+  @override
+  String get saveFileAs => '另存为…';
+
+  @override
+  String fileSaved(String path) {
+    return '文件已保存至 $path';
+  }
+
+  @override
+  String get fileSaveFailed => '保存文件失败';
+
+  @override
+  String get refreshFiles => '刷新';
 }

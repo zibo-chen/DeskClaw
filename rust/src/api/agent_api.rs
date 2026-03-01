@@ -91,6 +91,9 @@ pub struct RuntimeStatus {
 pub(crate) struct ConfigState {
     pub(crate) config: Option<zeroclaw::Config>,
     pub(crate) active_session_id: Option<String>,
+    /// Tracks which files were injected into allowed_roots for the current agent.
+    /// Used to detect when session files change and agent needs recreation.
+    pub(crate) injected_allowed_roots: Vec<String>,
 }
 
 pub(crate) fn config_state() -> &'static RwLock<ConfigState> {
@@ -99,6 +102,7 @@ pub(crate) fn config_state() -> &'static RwLock<ConfigState> {
         RwLock::new(ConfigState {
             config: None,
             active_session_id: None,
+            injected_allowed_roots: Vec::new(),
         })
     })
 }
@@ -655,7 +659,7 @@ pub async fn switch_session(session_id: String) {
 /// Returns an error string if something goes wrong.
 async fn ensure_agent(session_id: &str) -> Result<(), String> {
     // 1. Read config (short-lived RwLock read)
-    let config = {
+    let mut config = {
         let cs = config_state().read().await;
         match &cs.config {
             Some(c) => c.clone(),
@@ -670,19 +674,82 @@ async fn ensure_agent(session_id: &str) -> Result<(), String> {
         return Err("No API key configured. Please set your API key in Settings → Models.".into());
     }
 
-    // 3. Check if we need a new agent (separate locks, no overlap)
+    // 3. Get session attached files and inject into allowed_roots
+    let session_files = super::sessions_api::get_session_files(session_id.to_string()).await;
+
+    // 4. Check if we need a new agent
+    // Need new agent if: no agent, different session, OR session files changed
     let need_new = {
         let cs = config_state().read().await;
         let agent = agent_handle().lock().await;
-        agent.is_none() || cs.active_session_id.as_deref() != Some(session_id)
+        if agent.is_none() {
+            true
+        } else if cs.active_session_id.as_deref() != Some(session_id) {
+            true
+        } else {
+            // Check if session files changed since last agent creation
+            let current_injected = cs.injected_allowed_roots.clone();
+            current_injected != session_files
+        }
     };
 
     if need_new {
-        tracing::info!("Creating new agent for session {session_id}");
+        tracing::info!(
+            "Creating new agent for session {session_id} with {} attached files",
+            session_files.len()
+        );
+
+        // Override workspace_dir to per-session directory
+        let session_workspace = dirs::home_dir()
+            .unwrap_or_default()
+            .join(".zeroclaw")
+            .join("workspace")
+            .join("session")
+            .join(session_id);
+        // Create the directory if it doesn't exist
+        let _ = std::fs::create_dir_all(&session_workspace);
+
+        // Symlink the shared memory directory into the session workspace
+        // so that brain.db (knowledge base) is shared across all sessions.
+        let global_memory_dir = config.workspace_dir.join("memory");
+        let session_memory_link = session_workspace.join("memory");
+        if !session_memory_link.exists() {
+            let _ = std::fs::create_dir_all(&global_memory_dir);
+            #[cfg(unix)]
+            {
+                let _ = std::os::unix::fs::symlink(&global_memory_dir, &session_memory_link);
+            }
+            #[cfg(windows)]
+            {
+                let _ = std::os::windows::fs::symlink_dir(&global_memory_dir, &session_memory_link);
+            }
+        }
+
+        config.workspace_dir = session_workspace;
+
+        // Inject session files into allowed_roots for security policy
+        for file_path in &session_files {
+            let path_buf = std::path::PathBuf::from(file_path);
+            if !config.autonomy.allowed_roots.contains(file_path) {
+                config.autonomy.allowed_roots.push(file_path.clone());
+            }
+            // Also add parent directory for directory access
+            if let Some(parent) = path_buf.parent() {
+                let parent_str = parent.to_string_lossy().to_string();
+                if !config.autonomy.allowed_roots.contains(&parent_str) {
+                    config.autonomy.allowed_roots.push(parent_str);
+                }
+            }
+        }
+
         let agent = zeroclaw::agent::Agent::from_config(&config)
             .map_err(|e| format!("Failed to create agent: {e}"))?;
         *agent_handle().lock().await = Some(agent);
-        config_state().write().await.active_session_id = Some(session_id.to_string());
+
+        // Update state with new session and injected files
+        let mut cs = config_state().write().await;
+        cs.active_session_id = Some(session_id.to_string());
+        cs.injected_allowed_roots = session_files;
     }
 
     Ok(())
@@ -695,6 +762,26 @@ pub async fn send_message(session_id: String, message: String) -> Vec<AgentEvent
     if let Err(msg) = ensure_agent(&session_id).await {
         return vec![AgentEvent::Error { message: msg }];
     }
+
+    // Enrich message with session attached files context
+    let enriched_message = {
+        let files = super::sessions_api::get_session_files(session_id.clone()).await;
+        if files.is_empty() {
+            message
+        } else {
+            let files_list = files
+                .iter()
+                .map(|f| format!("- {f}"))
+                .collect::<Vec<_>>()
+                .join("\n");
+            format!(
+                "[The user has attached the following files/directories to this session. \
+                 You can read them using the file_read tool if they are relevant to the request. \
+                 You decide whether and how to use them based on the user's message.]\n\
+                 {files_list}\n\n{message}"
+            )
+        }
+    };
 
     // Lock agent only for the actual turn — config_state is NOT locked here,
     // so other APIs (get_runtime_status, get_current_config, etc.) stay responsive.
@@ -711,7 +798,7 @@ pub async fn send_message(session_id: String, message: String) -> Vec<AgentEvent
     let history_before = agent.history().len();
     let mut events = Vec::new();
 
-    match agent.turn(&message).await {
+    match agent.turn(&enriched_message).await {
         Ok(response) => {
             // Extract tool call events from conversation history
             let history = agent.history();
@@ -785,6 +872,26 @@ pub async fn send_message_stream(
         let _ = sink.add(AgentEvent::Error { message: msg });
         return;
     }
+
+    // Enrich message with session attached files context
+    let enriched_message = {
+        let files = super::sessions_api::get_session_files(session_id.clone()).await;
+        if files.is_empty() {
+            message
+        } else {
+            let files_list = files
+                .iter()
+                .map(|f| format!("- {f}"))
+                .collect::<Vec<_>>()
+                .join("\n");
+            format!(
+                "[The user has attached the following files/directories to this session. \
+                 You can read them using the file_read tool if they are relevant to the request. \
+                 You decide whether and how to use them based on the user's message.]\n\
+                 {files_list}\n\n{message}"
+            )
+        }
+    };
 
     let _ = sink.add(AgentEvent::Thinking);
 
@@ -889,7 +996,7 @@ pub async fn send_message_stream(
         };
         timeout(
             Duration::from_secs(TURN_TIMEOUT_SECS),
-            agent.turn_streaming(&message, tx),
+            agent.turn_streaming(&enriched_message, tx),
         )
         .await
     };
@@ -980,6 +1087,82 @@ pub fn list_tools() -> Vec<ToolSpecDto> {
             description: "Search file contents".into(),
         },
     ]
+}
+
+// ──────────────────── Session Workspace ───────────────────────
+
+/// File entry in the session workspace
+#[derive(Debug, Clone)]
+pub struct SessionFileEntry {
+    pub name: String,
+    pub path: String,
+    pub is_dir: bool,
+    pub size: u64,
+}
+
+/// Get the workspace directory for a session
+pub fn get_session_workspace_dir(session_id: String) -> String {
+    dirs::home_dir()
+        .unwrap_or_default()
+        .join(".zeroclaw")
+        .join("workspace")
+        .join("session")
+        .join(&session_id)
+        .to_string_lossy()
+        .to_string()
+}
+
+/// List files in a session's workspace directory
+pub fn list_session_workspace_files(session_id: String) -> Vec<SessionFileEntry> {
+    let dir = dirs::home_dir()
+        .unwrap_or_default()
+        .join(".zeroclaw")
+        .join("workspace")
+        .join("session")
+        .join(&session_id);
+
+    if !dir.exists() {
+        return vec![];
+    }
+
+    let mut entries = Vec::new();
+    if let Ok(read_dir) = std::fs::read_dir(&dir) {
+        for entry in read_dir.flatten() {
+            let metadata = entry.metadata().ok();
+            let is_dir = metadata.as_ref().map(|m| m.is_dir()).unwrap_or(false);
+            let size = metadata.as_ref().map(|m| m.len()).unwrap_or(0);
+            entries.push(SessionFileEntry {
+                name: entry.file_name().to_string_lossy().to_string(),
+                path: entry.path().to_string_lossy().to_string(),
+                is_dir,
+                size,
+            });
+        }
+    }
+    // Sort: directories first, then by name
+    entries.sort_by(|a, b| b.is_dir.cmp(&a.is_dir).then(a.name.cmp(&b.name)));
+    entries
+}
+
+/// Open a file or directory with the system default application
+pub fn open_in_system(path: String) -> String {
+    let p = std::path::Path::new(&path);
+    if !p.exists() {
+        return format!("error: path does not exist: {path}");
+    }
+    match open::that(&path) {
+        Ok(()) => "ok".into(),
+        Err(e) => format!("error: {e}"),
+    }
+}
+
+/// Copy a file from the session workspace to a user-chosen destination.
+/// Returns the destination path on success.
+pub async fn copy_file_to(src: String, dst: String) -> String {
+    match tokio::fs::copy(&src, &dst).await {
+        Ok(_) => dst,
+        Err(e) => format!("error: {e}"),
+    }
 }
 
 // ──────────────────── Helpers ─────────────────────────────────

@@ -25,6 +25,7 @@ chrono = { version = "0.4", features = ["clock", "std", "serde"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
 dirs = "5"
+open = "5"
 rusqlite = { version = "0.37", features = ["bundled"] }
 
 [lints.rust]

@@ -1,11 +1,13 @@
 import 'dart:convert';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:deskclaw/l10n/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:deskclaw/models/models.dart';
 import 'package:deskclaw/theme/app_theme.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:deskclaw/src/rust/api/agent_api.dart' as agent_api;
 
 /// Individual message bubble with hover-based action bar (copy / edit).
 class MessageBubble extends StatefulWidget {
@@ -425,6 +427,30 @@ class _ToolCallCardState extends State<_ToolCallCard> {
 
   ToolCallInfo get toolCall => widget.toolCall;
 
+  /// Tool names that produce files
+  static const _fileToolNames = {
+    'file_write',
+    'write_file',
+    'filewrite',
+    'writefile',
+    'file_edit',
+    'edit_file',
+    'fileedit',
+    'editfile',
+  };
+
+  /// Try to extract the file path from tool call arguments
+  String? get _filePath {
+    if (!_fileToolNames.contains(toolCall.name)) return null;
+    if (toolCall.success != true) return null;
+    try {
+      final args = jsonDecode(toolCall.arguments) as Map<String, dynamic>;
+      return args['path'] as String?;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Color _statusColor(DeskClawColors c) => switch (toolCall.status) {
     ToolCallStatus.pending => c.textHint,
     ToolCallStatus.running => AppColors.warning,
@@ -497,6 +523,11 @@ class _ToolCallCardState extends State<_ToolCallCard> {
                         style: TextStyle(fontSize: 12, color: statusColor),
                       ),
                     ),
+                  // File action buttons for file-writing tools
+                  if (_filePath != null) ...[
+                    _FileActionButtons(filePath: _filePath!),
+                    const SizedBox(width: 4),
+                  ],
                   AnimatedRotation(
                     turns: _expanded ? 0.5 : 0,
                     duration: const Duration(milliseconds: 200),
@@ -612,6 +643,90 @@ class _ToolCallCardState extends State<_ToolCallCard> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Inline action buttons for file-producing tool calls (Open / Save as)
+class _FileActionButtons extends StatelessWidget {
+  final String filePath;
+
+  const _FileActionButtons({required this.filePath});
+
+  String get _fileName {
+    final parts = filePath.split('/');
+    return parts.isNotEmpty ? parts.last : filePath;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = DeskClawColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Open file
+        SizedBox(
+          height: 24,
+          child: TextButton.icon(
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              textStyle: const TextStyle(fontSize: 11),
+            ),
+            icon: Icon(Icons.open_in_new, size: 13, color: AppColors.primary),
+            label: Text(l10n.openFile),
+            onPressed: () => agent_api.openInSystem(path: filePath),
+          ),
+        ),
+        const SizedBox(width: 2),
+        // Save as
+        SizedBox(
+          height: 24,
+          child: TextButton.icon(
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              textStyle: const TextStyle(fontSize: 11),
+            ),
+            icon: Icon(Icons.save_alt, size: 13, color: c.textSecondary),
+            label: Text(
+              l10n.saveFileAs,
+              style: TextStyle(color: c.textSecondary),
+            ),
+            onPressed: () async {
+              final result = await FilePicker.platform.saveFile(
+                dialogTitle: l10n.saveFileAs,
+                fileName: _fileName,
+              );
+              if (result == null) return;
+              final res = await agent_api.copyFileTo(
+                src: filePath,
+                dst: result,
+              );
+              if (!context.mounted) return;
+              if (res.startsWith('error:')) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(l10n.fileSaveFailed),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(l10n.fileSaved(res)),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            },
+          ),
+        ),
+      ],
     );
   }
 }

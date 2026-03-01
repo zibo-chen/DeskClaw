@@ -1299,5 +1299,63 @@
   "@collapse": { "description": "Collapse output button" },
 
   "copiedToClipboard": "Copied to clipboard",
-  "@copiedToClipboard": { "description": "Copied confirmation" }
+  "@copiedToClipboard": { "description": "Copied confirmation" },
+
+  "attachFile": "Attach file",
+  "@attachFile": { "description": "Attach file button tooltip" },
+
+  "addFiles": "Add files",
+  "@addFiles": { "description": "Add files menu item" },
+
+  "addFolder": "Add folder",
+  "@addFolder": { "description": "Add folder menu item" },
+
+  "attachedFiles": "{count} file(s) attached",
+  "@attachedFiles": {
+    "description": "Attached files count",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "clearAll": "Clear all",
+  "@clearAll": { "description": "Clear all attached files" },
+
+  "dropFilesHere": "Drop files here",
+  "@dropFilesHere": { "description": "Drop zone title" },
+
+  "dropFilesHint": "Files and folders will be attached to the current session",
+  "@dropFilesHint": { "description": "Drop zone hint" },
+
+  "openWorkspaceFolder": "Open workspace folder",
+  "@openWorkspaceFolder": { "description": "Button to open session workspace folder in system file manager" },
+
+  "workspaceFiles": "Workspace files",
+  "@workspaceFiles": { "description": "Session workspace files panel title" },
+
+  "noWorkspaceFiles": "No files yet",
+  "@noWorkspaceFiles": { "description": "Empty state when session workspace has no files" },
+
+  "noWorkspaceFilesHint": "Files created by the agent will appear here",
+  "@noWorkspaceFilesHint": { "description": "Empty state hint" },
+
+  "openFile": "Open",
+  "@openFile": { "description": "Open file button" },
+
+  "saveFileAs": "Save as…",
+  "@saveFileAs": { "description": "Save file as button" },
+
+  "fileSaved": "File saved to {path}",
+  "@fileSaved": {
+    "description": "File saved success message",
+    "placeholders": {
+      "path": { "type": "String" }
+    }
+  },
+
+  "fileSaveFailed": "Failed to save file",
+  "@fileSaveFailed": { "description": "File save failure message" },
+
+  "refreshFiles": "Refresh",
+  "@refreshFiles": { "description": "Refresh file list button" }
 }

@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -141,6 +142,9 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
                           minHeight: 32,
                         ),
                       ),
+                      const SizedBox(width: 4),
+                      // File attachment button
+                      _AttachmentButton(),
                       const Spacer(),
                       // Character count
                       Text(
@@ -191,5 +195,93 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
         ],
       ),
     );
+  }
+}
+
+/// Attachment button with popup menu for adding files or folders
+class _AttachmentButton extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final c = DeskClawColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
+
+    return PopupMenuButton<String>(
+      tooltip: l10n.attachFile,
+      icon: Icon(Icons.attach_file, size: 16, color: c.textHint),
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+      offset: const Offset(0, -120),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: c.surfaceBg,
+      onSelected: (value) async {
+        switch (value) {
+          case 'file':
+            await _pickFiles(ref);
+            break;
+          case 'folder':
+            await _pickFolder(ref);
+            break;
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'file',
+          child: Row(
+            children: [
+              Icon(
+                Icons.insert_drive_file_outlined,
+                size: 18,
+                color: c.textSecondary,
+              ),
+              const SizedBox(width: 8),
+              Text(l10n.addFiles),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'folder',
+          child: Row(
+            children: [
+              Icon(Icons.folder_outlined, size: 18, color: c.textSecondary),
+              const SizedBox(width: 8),
+              Text(l10n.addFolder),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _pickFiles(WidgetRef ref) async {
+    final result = await FilePicker.platform.pickFiles(
+      allowMultiple: true,
+      type: FileType.any,
+    );
+    if (result == null || result.files.isEmpty) return;
+
+    final paths = result.files
+        .where((f) => f.path != null)
+        .map((f) => f.path!)
+        .toList();
+    if (paths.isEmpty) return;
+
+    var sessionId = ref.read(activeSessionIdProvider);
+    if (sessionId == null) {
+      sessionId = ref.read(sessionsProvider.notifier).createSession();
+      ref.read(activeSessionIdProvider.notifier).state = sessionId;
+    }
+    ref.read(sessionFilesProvider.notifier).addFiles(sessionId, paths);
+  }
+
+  Future<void> _pickFolder(WidgetRef ref) async {
+    final result = await FilePicker.platform.getDirectoryPath();
+    if (result == null || result.isEmpty) return;
+
+    var sessionId = ref.read(activeSessionIdProvider);
+    if (sessionId == null) {
+      sessionId = ref.read(sessionsProvider.notifier).createSession();
+      ref.read(activeSessionIdProvider.notifier).state = sessionId;
+    }
+    ref.read(sessionFilesProvider.notifier).addFiles(sessionId, [result]);
   }
 }

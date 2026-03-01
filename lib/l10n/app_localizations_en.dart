@@ -1310,4 +1310,58 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get expandOutput => 'Expand';
+
+  @override
+  String get attachFile => 'Attach file';
+
+  @override
+  String get addFiles => 'Add files';
+
+  @override
+  String get addFolder => 'Add folder';
+
+  @override
+  String attachedFiles(int count) {
+    return '$count file(s) attached';
+  }
+
+  @override
+  String get clearAll => 'Clear all';
+
+  @override
+  String get dropFilesHere => 'Drop files here';
+
+  @override
+  String get dropFilesHint =>
+      'Files and folders will be attached to the current session';
+
+  @override
+  String get openWorkspaceFolder => 'Open workspace folder';
+
+  @override
+  String get workspaceFiles => 'Workspace files';
+
+  @override
+  String get noWorkspaceFiles => 'No files yet';
+
+  @override
+  String get noWorkspaceFilesHint =>
+      'Files created by the agent will appear here';
+
+  @override
+  String get openFile => 'Open';
+
+  @override
+  String get saveFileAs => 'Save as…';
+
+  @override
+  String fileSaved(String path) {
+    return 'File saved to $path';
+  }
+
+  @override
+  String get fileSaveFailed => 'Failed to save file';
+
+  @override
+  String get refreshFiles => 'Refresh';
 }

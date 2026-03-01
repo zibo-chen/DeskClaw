@@ -57,6 +57,37 @@ Future<SessionStats> getSessionStats() =>
 Future<String> clearAllSessions() =>
     RustLib.instance.api.crateApiSessionsApiClearAllSessions();
 
+/// Add files to a session's attached files list.
+/// Deduplicates and validates paths exist on disk.
+Future<List<String>> addSessionFiles({
+  required String sessionId,
+  required List<String> filePaths,
+}) => RustLib.instance.api.crateApiSessionsApiAddSessionFiles(
+  sessionId: sessionId,
+  filePaths: filePaths,
+);
+
+/// Remove a file from a session's attached files list.
+Future<List<String>> removeSessionFile({
+  required String sessionId,
+  required String filePath,
+}) => RustLib.instance.api.crateApiSessionsApiRemoveSessionFile(
+  sessionId: sessionId,
+  filePath: filePath,
+);
+
+/// Get the attached files for a session.
+Future<List<String>> getSessionFiles({required String sessionId}) => RustLib
+    .instance
+    .api
+    .crateApiSessionsApiGetSessionFiles(sessionId: sessionId);
+
+/// Clear all attached files for a session.
+Future<String> clearSessionFiles({required String sessionId}) => RustLib
+    .instance
+    .api
+    .crateApiSessionsApiClearSessionFiles(sessionId: sessionId);
+
 /// A persisted chat session with messages
 class SessionDetail {
   final String id;
@@ -65,6 +96,7 @@ class SessionDetail {
   final PlatformInt64 updatedAt;
   final int messageCount;
   final List<SessionMessage> messages;
+  final List<String> attachedFiles;
 
   const SessionDetail({
     required this.id,
@@ -73,6 +105,7 @@ class SessionDetail {
     required this.updatedAt,
     required this.messageCount,
     required this.messages,
+    required this.attachedFiles,
   });
 
   @override
@@ -82,7 +115,8 @@ class SessionDetail {
       createdAt.hashCode ^
       updatedAt.hashCode ^
       messageCount.hashCode ^
-      messages.hashCode;
+      messages.hashCode ^
+      attachedFiles.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -94,7 +128,8 @@ class SessionDetail {
           createdAt == other.createdAt &&
           updatedAt == other.updatedAt &&
           messageCount == other.messageCount &&
-          messages == other.messages;
+          messages == other.messages &&
+          attachedFiles == other.attachedFiles;
 }
 
 /// A message within a session
@@ -162,6 +197,7 @@ class SessionSummary {
   final PlatformInt64 updatedAt;
   final int messageCount;
   final String lastMessagePreview;
+  final List<String> attachedFiles;
 
   const SessionSummary({
     required this.id,
@@ -170,6 +206,7 @@ class SessionSummary {
     required this.updatedAt,
     required this.messageCount,
     required this.lastMessagePreview,
+    required this.attachedFiles,
   });
 
   @override
@@ -179,7 +216,8 @@ class SessionSummary {
       createdAt.hashCode ^
       updatedAt.hashCode ^
       messageCount.hashCode ^
-      lastMessagePreview.hashCode;
+      lastMessagePreview.hashCode ^
+      attachedFiles.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -191,5 +229,6 @@ class SessionSummary {
           createdAt == other.createdAt &&
           updatedAt == other.updatedAt &&
           messageCount == other.messageCount &&
-          lastMessagePreview == other.lastMessagePreview;
+          lastMessagePreview == other.lastMessagePreview &&
+          attachedFiles == other.attachedFiles;
 }

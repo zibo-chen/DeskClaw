@@ -13,6 +13,7 @@ pub struct SessionDetail {
     pub updated_at: i64,
     pub message_count: u32,
     pub messages: Vec<SessionMessage>,
+    pub attached_files: Vec<String>,
 }
 
 /// A message within a session
@@ -33,6 +34,7 @@ pub struct SessionSummary {
     pub updated_at: i64,
     pub message_count: u32,
     pub last_message_preview: String,
+    pub attached_files: Vec<String>,
 }
 
 /// Session statistics
@@ -53,6 +55,8 @@ struct PersistedSession {
     created_at: i64,
     updated_at: i64,
     messages: Vec<PersistedMessage>,
+    #[serde(default)]
+    attached_files: Vec<String>,
 }
 
 #[frb(ignore)]
@@ -127,6 +131,7 @@ pub async fn list_sessions() -> Vec<SessionSummary> {
                 updated_at: s.updated_at,
                 message_count: s.messages.len() as u32,
                 last_message_preview: preview,
+                attached_files: s.attached_files.clone(),
             }
         })
         .collect()
@@ -155,6 +160,7 @@ pub async fn get_session_detail(session_id: String) -> Option<SessionDetail> {
                     timestamp: m.timestamp,
                 })
                 .collect(),
+            attached_files: s.attached_files.clone(),
         })
 }
 
@@ -190,6 +196,7 @@ pub async fn save_session(
                 created_at: now,
                 updated_at: now,
                 messages: persisted_msgs,
+                attached_files: vec![],
             },
         );
     }
@@ -236,6 +243,88 @@ pub async fn get_session_stats() -> SessionStats {
 pub async fn clear_all_sessions() -> String {
     let mut store = session_store().lock().await;
     store.sessions.clear();
+    drop(store);
+    persist_to_disk().await
+}
+
+// ──────────────────── Session File Attachments ───────────────
+
+/// Add files to a session's attached files list.
+/// Deduplicates and validates paths exist on disk.
+pub async fn add_session_files(session_id: String, file_paths: Vec<String>) -> Vec<String> {
+    let mut store = session_store().lock().await;
+
+    // Ensure session exists — create a stub if it doesn't yet
+    if !store.sessions.iter().any(|s| s.id == session_id) {
+        let now = chrono::Utc::now().timestamp();
+        store.sessions.insert(
+            0,
+            PersistedSession {
+                id: session_id.clone(),
+                title: "New Chat".into(),
+                created_at: now,
+                updated_at: now,
+                messages: vec![],
+                attached_files: vec![],
+            },
+        );
+    }
+
+    let session = store
+        .sessions
+        .iter_mut()
+        .find(|s| s.id == session_id)
+        .unwrap();
+
+    for path in &file_paths {
+        let p = std::path::Path::new(path);
+        if p.exists() && !session.attached_files.contains(path) {
+            session.attached_files.push(path.clone());
+        }
+    }
+    session.updated_at = chrono::Utc::now().timestamp();
+    let result = session.attached_files.clone();
+    drop(store);
+    let _ = persist_to_disk().await;
+    result
+}
+
+/// Remove a file from a session's attached files list.
+pub async fn remove_session_file(session_id: String, file_path: String) -> Vec<String> {
+    let mut store = session_store().lock().await;
+    if let Some(session) = store.sessions.iter_mut().find(|s| s.id == session_id) {
+        session.attached_files.retain(|f| f != &file_path);
+        session.updated_at = chrono::Utc::now().timestamp();
+    }
+    let result = store
+        .sessions
+        .iter()
+        .find(|s| s.id == session_id)
+        .map(|s| s.attached_files.clone())
+        .unwrap_or_default();
+    drop(store);
+    let _ = persist_to_disk().await;
+    result
+}
+
+/// Get the attached files for a session.
+pub async fn get_session_files(session_id: String) -> Vec<String> {
+    let store = session_store().lock().await;
+    store
+        .sessions
+        .iter()
+        .find(|s| s.id == session_id)
+        .map(|s| s.attached_files.clone())
+        .unwrap_or_default()
+}
+
+/// Clear all attached files for a session.
+pub async fn clear_session_files(session_id: String) -> String {
+    let mut store = session_store().lock().await;
+    if let Some(session) = store.sessions.iter_mut().find(|s| s.id == session_id) {
+        session.attached_files.clear();
+        session.updated_at = chrono::Utc::now().timestamp();
+    }
     drop(store);
     persist_to_disk().await
 }

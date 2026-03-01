@@ -57,6 +57,10 @@ dependencies:
   freezed_annotation: ^3.1.0
   shared_preferences: ^2.5.4
 
+  # File handling
+  desktop_drop: ^0.5.0
+  file_picker: ^8.1.7
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

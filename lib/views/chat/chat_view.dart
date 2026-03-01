@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:deskclaw/l10n/app_localizations.dart';
@@ -8,6 +9,8 @@ import 'package:deskclaw/providers/providers.dart';
 import 'package:deskclaw/theme/app_theme.dart';
 import 'package:deskclaw/views/chat/message_bubble.dart';
 import 'package:deskclaw/views/chat/input_bar.dart';
+import 'package:deskclaw/views/chat/file_attachment_bar.dart';
+import 'package:deskclaw/views/chat/workspace_files_panel.dart';
 import 'package:deskclaw/src/rust/api/agent_api.dart' as agent_api;
 import 'package:deskclaw/src/rust/api/sessions_api.dart' as sessions_api;
 
@@ -22,6 +25,8 @@ class ChatView extends ConsumerStatefulWidget {
 class _ChatViewState extends ConsumerState<ChatView> {
   final ScrollController _scrollController = ScrollController();
   DeskClawColors get c => DeskClawColors.of(context);
+  bool _isDragging = false;
+  bool _showFilesPanel = false;
 
   static const int _totalSuggestions = 8;
   late List<int> _selectedIndices;
@@ -40,6 +45,31 @@ class _ChatViewState extends ConsumerState<ChatView> {
     setState(() {
       _selectedIndices = pool.take(2).toList();
     });
+  }
+
+  /// Handle files dropped onto the chat view
+  void _handleFileDrop(DropDoneDetails details) {
+    final paths = details.files
+        .map((f) => f.path)
+        .where((p) => p.isNotEmpty)
+        .toList();
+    if (paths.isEmpty) return;
+
+    // Ensure there's an active session
+    var sessionId = ref.read(activeSessionIdProvider);
+    if (sessionId == null) {
+      sessionId = ref.read(sessionsProvider.notifier).createSession();
+      ref.read(activeSessionIdProvider.notifier).state = sessionId;
+    }
+
+    ref.read(sessionFilesProvider.notifier).addFiles(sessionId, paths);
+  }
+
+  /// Load session files when switching sessions
+  void _loadSessionFiles(String? sessionId) {
+    if (sessionId != null) {
+      ref.read(sessionFilesProvider.notifier).loadForSession(sessionId);
+    }
   }
 
   @override
@@ -326,25 +356,111 @@ class _ChatViewState extends ConsumerState<ChatView> {
   Widget build(BuildContext context) {
     final messages = ref.watch(messagesProvider);
     ref.listen(activeSessionIdProvider, (prev, next) {
-      if (prev != next) _randomizeSuggestions();
+      if (prev != next) {
+        _randomizeSuggestions();
+        _loadSessionFiles(next);
+      }
     });
     final l10n = AppLocalizations.of(context)!;
 
-    return Column(
-      children: [
-        // Top bar
-        _buildTopBar(l10n),
+    return DropTarget(
+      onDragEntered: (_) => setState(() => _isDragging = true),
+      onDragExited: (_) => setState(() => _isDragging = false),
+      onDragDone: (details) {
+        setState(() => _isDragging = false);
+        _handleFileDrop(details);
+      },
+      child: Stack(
+        children: [
+          Row(
+            children: [
+              // Main chat area
+              Expanded(
+                child: Column(
+                  children: [
+                    // Top bar
+                    _buildTopBar(l10n),
 
-        // Main content
-        Expanded(
-          child: messages.isEmpty
-              ? _buildWelcomeView(l10n)
-              : _buildMessageList(messages),
+                    // Main content
+                    Expanded(
+                      child: messages.isEmpty
+                          ? _buildWelcomeView(l10n)
+                          : _buildMessageList(messages),
+                    ),
+
+                    // File attachment bar
+                    const FileAttachmentBar(),
+
+                    // Input bar
+                    ChatInputBar(onSend: _handleSend),
+                  ],
+                ),
+              ),
+
+              // Workspace files side panel
+              if (_showFilesPanel)
+                WorkspaceFilesPanel(
+                  onClose: () => setState(() => _showFilesPanel = false),
+                ),
+            ],
+          ),
+
+          // Drag overlay
+          if (_isDragging) _buildDragOverlay(l10n),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDragOverlay(AppLocalizations l10n) {
+    return Positioned.fill(
+      child: Container(
+        color: AppColors.primary.withValues(alpha: 0.08),
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
+            decoration: BoxDecoration(
+              color: c.surfaceBg,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.5),
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  blurRadius: 20,
+                  spreadRadius: 4,
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.file_upload_outlined,
+                  size: 48,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  l10n.dropFilesHere,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: c.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.dropFilesHint,
+                  style: TextStyle(fontSize: 13, color: c.textSecondary),
+                ),
+              ],
+            ),
+          ),
         ),
-
-        // Input bar
-        ChatInputBar(onSend: _handleSend),
-      ],
+      ),
     );
   }
 
@@ -381,6 +497,36 @@ class _ChatViewState extends ConsumerState<ChatView> {
               fontWeight: FontWeight.w600,
               color: c.textPrimary,
             ),
+          ),
+          const Spacer(),
+          // Toggle workspace files panel
+          IconButton(
+            icon: Icon(
+              _showFilesPanel ? Icons.folder_open : Icons.folder_outlined,
+              size: 20,
+            ),
+            color: _showFilesPanel ? AppColors.primary : c.textSecondary,
+            tooltip: l10n.workspaceFiles,
+            onPressed: () => setState(() => _showFilesPanel = !_showFilesPanel),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          ),
+          const SizedBox(width: 4),
+          // Open workspace folder in system
+          IconButton(
+            icon: const Icon(Icons.open_in_new, size: 18),
+            color: c.textSecondary,
+            tooltip: l10n.openWorkspaceFolder,
+            onPressed: () async {
+              final sessionId = ref.read(activeSessionIdProvider);
+              if (sessionId == null) return;
+              final dir = await agent_api.getSessionWorkspaceDir(
+                sessionId: sessionId,
+              );
+              await agent_api.openInSystem(path: dir);
+            },
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           ),
         ],
       ),

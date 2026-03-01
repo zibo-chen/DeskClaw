@@ -182,6 +182,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<ProxyServiceInfo> dco_decode_list_proxy_service_info(dynamic raw);
 
   @protected
+  List<SessionFileEntry> dco_decode_list_session_file_entry(dynamic raw);
+
+  @protected
   List<SessionMessage> dco_decode_list_session_message(dynamic raw);
 
   @protected
@@ -252,6 +255,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SessionDetail dco_decode_session_detail(dynamic raw);
+
+  @protected
+  SessionFileEntry dco_decode_session_file_entry(dynamic raw);
 
   @protected
   SessionMessage dco_decode_session_message(dynamic raw);
@@ -479,6 +485,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<SessionFileEntry> sse_decode_list_session_file_entry(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<SessionMessage> sse_decode_list_session_message(
     SseDeserializer deserializer,
   );
@@ -561,6 +572,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SessionDetail sse_decode_session_detail(SseDeserializer deserializer);
+
+  @protected
+  SessionFileEntry sse_decode_session_file_entry(SseDeserializer deserializer);
 
   @protected
   SessionMessage sse_decode_session_message(SseDeserializer deserializer);
@@ -854,6 +868,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_session_file_entry(
+    List<SessionFileEntry> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_session_message(
     List<SessionMessage> self,
     SseSerializer serializer,
@@ -957,6 +977,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_session_detail(SessionDetail self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_session_file_entry(
+    SessionFileEntry self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_session_message(

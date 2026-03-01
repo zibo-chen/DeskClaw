@@ -67,6 +67,7 @@ class SessionsNotifier extends StateNotifier<List<ChatSession>> {
                   (s.updatedAt * 1000).toInt(),
                 ),
                 messageCount: s.messageCount.toInt(),
+                attachedFiles: s.attachedFiles,
               ),
             )
             .toList();
@@ -260,3 +261,82 @@ final chatListCollapsedProvider = StateProvider<bool>((ref) => false);
 
 /// Whether the left sidebar is collapsed to icon rail
 final sidebarCollapsedProvider = StateProvider<bool>((ref) => false);
+
+/// Attached files for the active session
+final sessionFilesProvider =
+    StateNotifierProvider<SessionFilesNotifier, List<String>>((ref) {
+      return SessionFilesNotifier();
+    });
+
+class SessionFilesNotifier extends StateNotifier<List<String>> {
+  SessionFilesNotifier() : super([]);
+
+  /// In-memory cache of files per session
+  final Map<String, List<String>> _sessionFiles = {};
+
+  /// Load files from Rust session store for a given session
+  Future<void> loadForSession(String sessionId) async {
+    // Check memory cache first
+    if (_sessionFiles.containsKey(sessionId)) {
+      state = List.from(_sessionFiles[sessionId]!);
+      return;
+    }
+    try {
+      final files = await sessions_api.getSessionFiles(sessionId: sessionId);
+      _sessionFiles[sessionId] = List.from(files);
+      state = List.from(files);
+    } catch (e) {
+      debugPrint('Failed to load session files: $e');
+      state = [];
+    }
+  }
+
+  /// Add files to the active session
+  Future<void> addFiles(String sessionId, List<String> paths) async {
+    try {
+      final updated = await sessions_api.addSessionFiles(
+        sessionId: sessionId,
+        filePaths: paths,
+      );
+      _sessionFiles[sessionId] = List.from(updated);
+      state = List.from(updated);
+    } catch (e) {
+      debugPrint('Failed to add session files: $e');
+    }
+  }
+
+  /// Remove a file from the active session
+  Future<void> removeFile(String sessionId, String path) async {
+    try {
+      final updated = await sessions_api.removeSessionFile(
+        sessionId: sessionId,
+        filePath: path,
+      );
+      _sessionFiles[sessionId] = List.from(updated);
+      state = List.from(updated);
+    } catch (e) {
+      debugPrint('Failed to remove session file: $e');
+    }
+  }
+
+  /// Clear all files for a session
+  Future<void> clearFiles(String sessionId) async {
+    try {
+      await sessions_api.clearSessionFiles(sessionId: sessionId);
+      _sessionFiles[sessionId] = [];
+      state = [];
+    } catch (e) {
+      debugPrint('Failed to clear session files: $e');
+    }
+  }
+
+  /// Switch active view to another session's files
+  void switchSession(String sessionId) {
+    state = List.from(_sessionFiles[sessionId] ?? []);
+  }
+
+  /// Remove cache for a deleted session
+  void removeCache(String sessionId) {
+    _sessionFiles.remove(sessionId);
+  }
+}

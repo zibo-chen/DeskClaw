@@ -2473,6 +2473,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Expand'**
   String get expandOutput;
+
+  /// Attach file button tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Attach file'**
+  String get attachFile;
+
+  /// Add files menu item
+  ///
+  /// In en, this message translates to:
+  /// **'Add files'**
+  String get addFiles;
+
+  /// Add folder menu item
+  ///
+  /// In en, this message translates to:
+  /// **'Add folder'**
+  String get addFolder;
+
+  /// Attached files count
+  ///
+  /// In en, this message translates to:
+  /// **'{count} file(s) attached'**
+  String attachedFiles(int count);
+
+  /// Clear all attached files
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all'**
+  String get clearAll;
+
+  /// Drop zone title
+  ///
+  /// In en, this message translates to:
+  /// **'Drop files here'**
+  String get dropFilesHere;
+
+  /// Drop zone hint
+  ///
+  /// In en, this message translates to:
+  /// **'Files and folders will be attached to the current session'**
+  String get dropFilesHint;
+
+  /// Button to open session workspace folder in system file manager
+  ///
+  /// In en, this message translates to:
+  /// **'Open workspace folder'**
+  String get openWorkspaceFolder;
+
+  /// Session workspace files panel title
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace files'**
+  String get workspaceFiles;
+
+  /// Empty state when session workspace has no files
+  ///
+  /// In en, this message translates to:
+  /// **'No files yet'**
+  String get noWorkspaceFiles;
+
+  /// Empty state hint
+  ///
+  /// In en, this message translates to:
+  /// **'Files created by the agent will appear here'**
+  String get noWorkspaceFilesHint;
+
+  /// Open file button
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get openFile;
+
+  /// Save file as button
+  ///
+  /// In en, this message translates to:
+  /// **'Save as…'**
+  String get saveFileAs;
+
+  /// File saved success message
+  ///
+  /// In en, this message translates to:
+  /// **'File saved to {path}'**
+  String fileSaved(String path);
+
+  /// File save failure message
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save file'**
+  String get fileSaveFailed;
+
+  /// Refresh file list button
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get refreshFiles;
 }
 
 class _AppLocalizationsDelegate
