@@ -9,6 +9,7 @@ import 'api/config_api.dart';
 import 'api/cron_api.dart';
 import 'api/knowledge_api.dart';
 import 'api/proxy_api.dart';
+import 'api/routes_api.dart';
 import 'api/sessions_api.dart';
 import 'api/simple.dart';
 import 'api/skills_api.dart';
@@ -61,6 +62,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   DelegateAgentDto dco_decode_box_autoadd_delegate_agent_dto(dynamic raw);
 
   @protected
+  EmbeddingConfigDto dco_decode_box_autoadd_embedding_config_dto(dynamic raw);
+
+  @protected
+  EmbeddingRouteDto dco_decode_box_autoadd_embedding_route_dto(dynamic raw);
+
+  @protected
   double dco_decode_box_autoadd_f_64(dynamic raw);
 
   @protected
@@ -68,6 +75,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   KnowledgeEntry dco_decode_box_autoadd_knowledge_entry(dynamic raw);
+
+  @protected
+  ModelRouteDto dco_decode_box_autoadd_model_route_dto(dynamic raw);
 
   @protected
   ProxyConfigDto dco_decode_box_autoadd_proxy_config_dto(dynamic raw);
@@ -101,6 +111,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   DelegateAgentDto dco_decode_delegate_agent_dto(dynamic raw);
+
+  @protected
+  EmbeddingConfigDto dco_decode_embedding_config_dto(dynamic raw);
+
+  @protected
+  EmbeddingRouteDto dco_decode_embedding_route_dto(dynamic raw);
 
   @protected
   double dco_decode_f_64(dynamic raw);
@@ -139,7 +155,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<DelegateAgentDto> dco_decode_list_delegate_agent_dto(dynamic raw);
 
   @protected
+  List<EmbeddingRouteDto> dco_decode_list_embedding_route_dto(dynamic raw);
+
+  @protected
   List<KnowledgeEntry> dco_decode_list_knowledge_entry(dynamic raw);
+
+  @protected
+  List<ModelRouteDto> dco_decode_list_model_route_dto(dynamic raw);
 
   @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
@@ -170,6 +192,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   MemoryConfigDto dco_decode_memory_config_dto(dynamic raw);
+
+  @protected
+  ModelRouteDto dco_decode_model_route_dto(dynamic raw);
 
   @protected
   String? dco_decode_opt_String(dynamic raw);
@@ -296,6 +321,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  EmbeddingConfigDto sse_decode_box_autoadd_embedding_config_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  EmbeddingRouteDto sse_decode_box_autoadd_embedding_route_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   double sse_decode_box_autoadd_f_64(SseDeserializer deserializer);
 
   @protected
@@ -303,6 +338,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   KnowledgeEntry sse_decode_box_autoadd_knowledge_entry(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ModelRouteDto sse_decode_box_autoadd_model_route_dto(
     SseDeserializer deserializer,
   );
 
@@ -342,6 +382,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   DelegateAgentDto sse_decode_delegate_agent_dto(SseDeserializer deserializer);
+
+  @protected
+  EmbeddingConfigDto sse_decode_embedding_config_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  EmbeddingRouteDto sse_decode_embedding_route_dto(
+    SseDeserializer deserializer,
+  );
 
   @protected
   double sse_decode_f_64(SseDeserializer deserializer);
@@ -384,7 +434,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<EmbeddingRouteDto> sse_decode_list_embedding_route_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<KnowledgeEntry> sse_decode_list_knowledge_entry(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<ModelRouteDto> sse_decode_list_model_route_dto(
     SseDeserializer deserializer,
   );
 
@@ -427,6 +487,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   MemoryConfigDto sse_decode_memory_config_dto(SseDeserializer deserializer);
+
+  @protected
+  ModelRouteDto sse_decode_model_route_dto(SseDeserializer deserializer);
 
   @protected
   String? sse_decode_opt_String(SseDeserializer deserializer);
@@ -573,6 +636,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_embedding_config_dto(
+    EmbeddingConfigDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_embedding_route_dto(
+    EmbeddingRouteDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_f_64(double self, SseSerializer serializer);
 
   @protected
@@ -584,6 +659,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_knowledge_entry(
     KnowledgeEntry self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_model_route_dto(
+    ModelRouteDto self,
     SseSerializer serializer,
   );
 
@@ -632,6 +713,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_delegate_agent_dto(
     DelegateAgentDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_embedding_config_dto(
+    EmbeddingConfigDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_embedding_route_dto(
+    EmbeddingRouteDto self,
     SseSerializer serializer,
   );
 
@@ -696,8 +789,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_embedding_route_dto(
+    List<EmbeddingRouteDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_knowledge_entry(
     List<KnowledgeEntry> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_model_route_dto(
+    List<ModelRouteDto> self,
     SseSerializer serializer,
   );
 
@@ -754,6 +859,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     MemoryConfigDto self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_model_route_dto(ModelRouteDto self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_String(String? self, SseSerializer serializer);

@@ -4,6 +4,7 @@ pub mod config_api;
 pub mod cron_api;
 pub mod knowledge_api;
 pub mod proxy_api;
+pub mod routes_api;
 pub mod sessions_api;
 pub mod simple;
 pub mod skills_api;

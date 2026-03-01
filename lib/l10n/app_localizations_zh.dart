@@ -1155,4 +1155,78 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get proxyServiceSelectorsHelp =>
       '选择哪些服务应使用代理。可使用通配符如 provider.* 匹配所有供应商。';
+
+  @override
+  String get modelRoutes => '模型路由';
+
+  @override
+  String get modelRoutesDesc =>
+      '为不同任务配置不同的模型路由，例如推理用强模型、日常用快速模型。子代理可通过路由提示引用，无需手动配置供应商。';
+
+  @override
+  String get addRoute => '新增路由';
+
+  @override
+  String get editRoute => '编辑路由';
+
+  @override
+  String get routeHint => '路由提示';
+
+  @override
+  String get routeHintHint => '例如: reasoning, fast, code';
+
+  @override
+  String get noModelRoutes => '暂无模型路由';
+
+  @override
+  String get noModelRoutesHint => '路由允许为不同任务使用不同模型，子代理可通过路由提示引用，无需逐个配置供应商和模型。';
+
+  @override
+  String get deleteRouteTitle => '删除路由';
+
+  @override
+  String get deleteRouteConfirm => '确定删除此路由？此操作不可撤销。';
+
+  @override
+  String get routeDeleted => '路由已删除';
+
+  @override
+  String get routeSaved => '路由已保存';
+
+  @override
+  String get embeddingConfiguration => '向量嵌入配置';
+
+  @override
+  String get embeddingConfigDesc =>
+      '配置向量嵌入供应商以启用语义搜索，可显著提升知识库和记忆召回的准确性，尤其是中文等非英语文本。';
+
+  @override
+  String get embeddingDimensions => '嵌入维度';
+
+  @override
+  String get vectorWeight => '向量权重';
+
+  @override
+  String get keywordWeight => '关键词权重';
+
+  @override
+  String get minRelevanceScore => '最小相关度';
+
+  @override
+  String get embeddingSaved => '嵌入配置已保存！';
+
+  @override
+  String get embeddingProviderNone => '无 (仅关键词搜索)';
+
+  @override
+  String get embeddingProviderOpenai => 'OpenAI';
+
+  @override
+  String get embeddingProviderCustom => '自定义 (OpenAI 兼容)';
+
+  @override
+  String get agentUseDefault => '使用默认配置';
+
+  @override
+  String get agentUseDefaultDesc => '使用模型页面中配置的默认供应商和模型，无需逐个配置。';
 }

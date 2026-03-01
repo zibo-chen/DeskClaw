@@ -1187,4 +1187,81 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get proxyServiceSelectorsHelp =>
       'Choose which services should use the proxy. Use wildcards like provider.* to match all providers.';
+
+  @override
+  String get modelRoutes => 'Model Routes';
+
+  @override
+  String get modelRoutesDesc =>
+      'Route tasks to different models based on hints. E.g., use a reasoning model for complex analysis and a fast model for simple queries.';
+
+  @override
+  String get addRoute => 'Add Route';
+
+  @override
+  String get editRoute => 'Edit Route';
+
+  @override
+  String get routeHint => 'Route Hint';
+
+  @override
+  String get routeHintHint => 'e.g., reasoning, fast, code';
+
+  @override
+  String get noModelRoutes => 'No model routes configured';
+
+  @override
+  String get noModelRoutesHint =>
+      'Routes let you use different models for different tasks. Sub-agents can reference routes by hint instead of configuring provider/model manually.';
+
+  @override
+  String get deleteRouteTitle => 'Delete Route';
+
+  @override
+  String get deleteRouteConfirm =>
+      'Are you sure you want to delete this route? This cannot be undone.';
+
+  @override
+  String get routeDeleted => 'Route deleted';
+
+  @override
+  String get routeSaved => 'Route saved';
+
+  @override
+  String get embeddingConfiguration => 'Embedding Configuration';
+
+  @override
+  String get embeddingConfigDesc =>
+      'Configure the embedding provider for semantic search. This improves knowledge base and memory recall accuracy, especially for non-English text.';
+
+  @override
+  String get embeddingDimensions => 'Embedding Dimensions';
+
+  @override
+  String get vectorWeight => 'Vector Weight';
+
+  @override
+  String get keywordWeight => 'Keyword Weight';
+
+  @override
+  String get minRelevanceScore => 'Min Relevance Score';
+
+  @override
+  String get embeddingSaved => 'Embedding configuration saved!';
+
+  @override
+  String get embeddingProviderNone => 'None (keyword only)';
+
+  @override
+  String get embeddingProviderOpenai => 'OpenAI';
+
+  @override
+  String get embeddingProviderCustom => 'Custom (OpenAI Compatible)';
+
+  @override
+  String get agentUseDefault => 'Use Default Provider';
+
+  @override
+  String get agentUseDefaultDesc =>
+      'Use the default provider/model configured in the Models page instead of specifying individually.';
 }

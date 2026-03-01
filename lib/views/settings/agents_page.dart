@@ -415,9 +415,11 @@ class _AgentEditorDialogState extends State<_AgentEditorDialog> {
 
   late String _selectedProvider;
   late bool _agentic;
+  late bool _useDefault;
   bool get _isEdit => widget.existing != null;
 
   late List<config_api.ProviderInfo> _providers;
+  config_api.AppConfig? _defaultConfig;
 
   @override
   void initState() {
@@ -426,6 +428,8 @@ class _AgentEditorDialogState extends State<_AgentEditorDialog> {
     final e = widget.existing;
     _selectedProvider = e?.provider ?? 'openrouter';
     _agentic = e?.agentic ?? false;
+    // Detect if the existing agent uses the default provider
+    _useDefault = false;
     _nameCtrl = TextEditingController(text: e?.name ?? '');
     _modelCtrl = TextEditingController(text: e?.model ?? '');
     _apiKeyCtrl = TextEditingController(text: e?.apiKey ?? '');
@@ -438,6 +442,8 @@ class _AgentEditorDialogState extends State<_AgentEditorDialog> {
     _allowedToolsCtrl = TextEditingController(
       text: e?.allowedTools.join(', ') ?? '',
     );
+    // Load default config for the toggle
+    _loadDefaultConfig();
   }
 
   @override
@@ -451,6 +457,22 @@ class _AgentEditorDialogState extends State<_AgentEditorDialog> {
     _maxIterCtrl.dispose();
     _allowedToolsCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadDefaultConfig() async {
+    final cfg = await config_api.loadConfig();
+    if (mounted) {
+      setState(() => _defaultConfig = cfg);
+    }
+  }
+
+  void _applyDefaultConfig() {
+    if (_defaultConfig == null) return;
+    setState(() {
+      _selectedProvider = _defaultConfig!.provider;
+      _modelCtrl.text = _defaultConfig!.model;
+      _apiKeyCtrl.text = _defaultConfig!.apiKey;
+    });
   }
 
   void _submit() {
@@ -499,6 +521,27 @@ class _AgentEditorDialogState extends State<_AgentEditorDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Use default provider toggle
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(
+                  l10n.agentUseDefault,
+                  style: TextStyle(fontSize: 14, color: c.textPrimary),
+                ),
+                subtitle: Text(
+                  l10n.agentUseDefaultDesc,
+                  style: TextStyle(fontSize: 12, color: c.textSecondary),
+                ),
+                value: _useDefault,
+                onChanged: (v) {
+                  setState(() {
+                    _useDefault = v;
+                    if (v) _applyDefaultConfig();
+                  });
+                },
+              ),
+              const SizedBox(height: 8),
+
               // Name
               TextField(
                 controller: _nameCtrl,
@@ -525,15 +568,18 @@ class _AgentEditorDialogState extends State<_AgentEditorDialog> {
                       (p) => DropdownMenuItem(value: p.id, child: Text(p.name)),
                     )
                     .toList(),
-                onChanged: (v) {
-                  if (v != null) setState(() => _selectedProvider = v);
-                },
+                onChanged: _useDefault
+                    ? null
+                    : (v) {
+                        if (v != null) setState(() => _selectedProvider = v);
+                      },
               ),
               const SizedBox(height: 12),
 
               // Model
               TextField(
                 controller: _modelCtrl,
+                enabled: !_useDefault,
                 decoration: InputDecoration(
                   labelText: l10n.modelLabel,
                   hintText: l10n.modelNameHint,
@@ -546,6 +592,7 @@ class _AgentEditorDialogState extends State<_AgentEditorDialog> {
               TextField(
                 controller: _apiKeyCtrl,
                 obscureText: true,
+                enabled: !_useDefault,
                 decoration: InputDecoration(
                   labelText: '${l10n.apiKeyLabel} (${l10n.agentOptional})',
                   hintText: l10n.apiKeyHint,

@@ -1182,5 +1182,77 @@
   "@proxyServiceSelectors": { "description": "Service selectors title" },
 
   "proxyServiceSelectorsHelp": "Choose which services should use the proxy. Use wildcards like provider.* to match all providers.",
-  "@proxyServiceSelectorsHelp": { "description": "Service selectors help" }
+  "@proxyServiceSelectorsHelp": { "description": "Service selectors help" },
+
+  "modelRoutes": "Model Routes",
+  "@modelRoutes": { "description": "Model routes section title" },
+
+  "modelRoutesDesc": "Route tasks to different models based on hints. E.g., use a reasoning model for complex analysis and a fast model for simple queries.",
+  "@modelRoutesDesc": { "description": "Model routes description" },
+
+  "addRoute": "Add Route",
+  "@addRoute": { "description": "Add route button" },
+
+  "editRoute": "Edit Route",
+  "@editRoute": { "description": "Edit route dialog title" },
+
+  "routeHint": "Route Hint",
+  "@routeHint": { "description": "Route hint label" },
+
+  "routeHintHint": "e.g., reasoning, fast, code",
+  "@routeHintHint": { "description": "Route hint placeholder" },
+
+  "noModelRoutes": "No model routes configured",
+  "@noModelRoutes": { "description": "Empty routes message" },
+
+  "noModelRoutesHint": "Routes let you use different models for different tasks. Sub-agents can reference routes by hint instead of configuring provider/model manually.",
+  "@noModelRoutesHint": { "description": "Empty routes hint" },
+
+  "deleteRouteTitle": "Delete Route",
+  "@deleteRouteTitle": { "description": "Delete route dialog title" },
+
+  "deleteRouteConfirm": "Are you sure you want to delete this route? This cannot be undone.",
+  "@deleteRouteConfirm": { "description": "Delete route confirmation" },
+
+  "routeDeleted": "Route deleted",
+  "@routeDeleted": { "description": "Route deleted message" },
+
+  "routeSaved": "Route saved",
+  "@routeSaved": { "description": "Route saved message" },
+
+  "embeddingConfiguration": "Embedding Configuration",
+  "@embeddingConfiguration": { "description": "Embedding config section title" },
+
+  "embeddingConfigDesc": "Configure the embedding provider for semantic search. This improves knowledge base and memory recall accuracy, especially for non-English text.",
+  "@embeddingConfigDesc": { "description": "Embedding config description" },
+
+  "embeddingDimensions": "Embedding Dimensions",
+  "@embeddingDimensions": { "description": "Embedding dimensions label" },
+
+  "vectorWeight": "Vector Weight",
+  "@vectorWeight": { "description": "Vector weight label" },
+
+  "keywordWeight": "Keyword Weight",
+  "@keywordWeight": { "description": "Keyword weight label" },
+
+  "minRelevanceScore": "Min Relevance Score",
+  "@minRelevanceScore": { "description": "Min relevance score label" },
+
+  "embeddingSaved": "Embedding configuration saved!",
+  "@embeddingSaved": { "description": "Embedding config saved message" },
+
+  "embeddingProviderNone": "None (keyword only)",
+  "@embeddingProviderNone": { "description": "No embedding provider option" },
+
+  "embeddingProviderOpenai": "OpenAI",
+  "@embeddingProviderOpenai": { "description": "OpenAI embedding provider" },
+
+  "embeddingProviderCustom": "Custom (OpenAI Compatible)",
+  "@embeddingProviderCustom": { "description": "Custom embedding provider" },
+
+  "agentUseDefault": "Use Default Provider",
+  "@agentUseDefault": { "description": "Use default provider toggle" },
+
+  "agentUseDefaultDesc": "Use the default provider/model configured in the Models page instead of specifying individually.",
+  "@agentUseDefaultDesc": { "description": "Use default provider description" }
 }

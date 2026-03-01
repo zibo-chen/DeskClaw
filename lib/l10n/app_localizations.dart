@@ -2251,6 +2251,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose which services should use the proxy. Use wildcards like provider.* to match all providers.'**
   String get proxyServiceSelectorsHelp;
+
+  /// Model routes section title
+  ///
+  /// In en, this message translates to:
+  /// **'Model Routes'**
+  String get modelRoutes;
+
+  /// Model routes description
+  ///
+  /// In en, this message translates to:
+  /// **'Route tasks to different models based on hints. E.g., use a reasoning model for complex analysis and a fast model for simple queries.'**
+  String get modelRoutesDesc;
+
+  /// Add route button
+  ///
+  /// In en, this message translates to:
+  /// **'Add Route'**
+  String get addRoute;
+
+  /// Edit route dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Route'**
+  String get editRoute;
+
+  /// Route hint label
+  ///
+  /// In en, this message translates to:
+  /// **'Route Hint'**
+  String get routeHint;
+
+  /// Route hint placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., reasoning, fast, code'**
+  String get routeHintHint;
+
+  /// Empty routes message
+  ///
+  /// In en, this message translates to:
+  /// **'No model routes configured'**
+  String get noModelRoutes;
+
+  /// Empty routes hint
+  ///
+  /// In en, this message translates to:
+  /// **'Routes let you use different models for different tasks. Sub-agents can reference routes by hint instead of configuring provider/model manually.'**
+  String get noModelRoutesHint;
+
+  /// Delete route dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Route'**
+  String get deleteRouteTitle;
+
+  /// Delete route confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this route? This cannot be undone.'**
+  String get deleteRouteConfirm;
+
+  /// Route deleted message
+  ///
+  /// In en, this message translates to:
+  /// **'Route deleted'**
+  String get routeDeleted;
+
+  /// Route saved message
+  ///
+  /// In en, this message translates to:
+  /// **'Route saved'**
+  String get routeSaved;
+
+  /// Embedding config section title
+  ///
+  /// In en, this message translates to:
+  /// **'Embedding Configuration'**
+  String get embeddingConfiguration;
+
+  /// Embedding config description
+  ///
+  /// In en, this message translates to:
+  /// **'Configure the embedding provider for semantic search. This improves knowledge base and memory recall accuracy, especially for non-English text.'**
+  String get embeddingConfigDesc;
+
+  /// Embedding dimensions label
+  ///
+  /// In en, this message translates to:
+  /// **'Embedding Dimensions'**
+  String get embeddingDimensions;
+
+  /// Vector weight label
+  ///
+  /// In en, this message translates to:
+  /// **'Vector Weight'**
+  String get vectorWeight;
+
+  /// Keyword weight label
+  ///
+  /// In en, this message translates to:
+  /// **'Keyword Weight'**
+  String get keywordWeight;
+
+  /// Min relevance score label
+  ///
+  /// In en, this message translates to:
+  /// **'Min Relevance Score'**
+  String get minRelevanceScore;
+
+  /// Embedding config saved message
+  ///
+  /// In en, this message translates to:
+  /// **'Embedding configuration saved!'**
+  String get embeddingSaved;
+
+  /// No embedding provider option
+  ///
+  /// In en, this message translates to:
+  /// **'None (keyword only)'**
+  String get embeddingProviderNone;
+
+  /// OpenAI embedding provider
+  ///
+  /// In en, this message translates to:
+  /// **'OpenAI'**
+  String get embeddingProviderOpenai;
+
+  /// Custom embedding provider
+  ///
+  /// In en, this message translates to:
+  /// **'Custom (OpenAI Compatible)'**
+  String get embeddingProviderCustom;
+
+  /// Use default provider toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Use Default Provider'**
+  String get agentUseDefault;
+
+  /// Use default provider description
+  ///
+  /// In en, this message translates to:
+  /// **'Use the default provider/model configured in the Models page instead of specifying individually.'**
+  String get agentUseDefaultDesc;
 }
 
 class _AppLocalizationsDelegate

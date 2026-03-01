@@ -2,6 +2,7 @@ use crate::frb_generated::StreamSink;
 use flutter_rust_bridge::frb;
 use std::sync::{Arc, OnceLock};
 use tokio::sync::{Mutex as TokioMutex, RwLock};
+use tokio::time::{timeout, Duration};
 
 // ──────────────────────────── DTOs ────────────────────────────
 
@@ -322,7 +323,76 @@ pub async fn save_config_to_disk() -> String {
         "auto_save".into(),
         toml::Value::Boolean(config.memory.auto_save),
     );
+    mem_table.insert(
+        "embedding_provider".into(),
+        toml::Value::String(config.memory.embedding_provider.clone()),
+    );
+    mem_table.insert(
+        "embedding_model".into(),
+        toml::Value::String(config.memory.embedding_model.clone()),
+    );
+    mem_table.insert(
+        "embedding_dimensions".into(),
+        toml::Value::Integer(config.memory.embedding_dimensions as i64),
+    );
+    mem_table.insert(
+        "vector_weight".into(),
+        toml::Value::Float(config.memory.vector_weight),
+    );
+    mem_table.insert(
+        "keyword_weight".into(),
+        toml::Value::Float(config.memory.keyword_weight),
+    );
+    mem_table.insert(
+        "min_relevance_score".into(),
+        toml::Value::Float(config.memory.min_relevance_score),
+    );
     table.insert("memory".into(), toml::Value::Table(mem_table));
+
+    // [[model_routes]]
+    if !config.model_routes.is_empty() {
+        let routes: Vec<toml::Value> = config
+            .model_routes
+            .iter()
+            .map(|r| {
+                let mut t = toml::Table::new();
+                t.insert("hint".into(), toml::Value::String(r.hint.clone()));
+                t.insert("provider".into(), toml::Value::String(r.provider.clone()));
+                t.insert("model".into(), toml::Value::String(r.model.clone()));
+                if let Some(ref key) = r.api_key {
+                    t.insert("api_key".into(), toml::Value::String(key.clone()));
+                }
+                toml::Value::Table(t)
+            })
+            .collect();
+        table.insert("model_routes".into(), toml::Value::Array(routes));
+    } else {
+        table.remove("model_routes");
+    }
+
+    // [[embedding_routes]]
+    if !config.embedding_routes.is_empty() {
+        let routes: Vec<toml::Value> = config
+            .embedding_routes
+            .iter()
+            .map(|r| {
+                let mut t = toml::Table::new();
+                t.insert("hint".into(), toml::Value::String(r.hint.clone()));
+                t.insert("provider".into(), toml::Value::String(r.provider.clone()));
+                t.insert("model".into(), toml::Value::String(r.model.clone()));
+                if let Some(dims) = r.dimensions {
+                    t.insert("dimensions".into(), toml::Value::Integer(dims as i64));
+                }
+                if let Some(ref key) = r.api_key {
+                    t.insert("api_key".into(), toml::Value::String(key.clone()));
+                }
+                toml::Value::Table(t)
+            })
+            .collect();
+        table.insert("embedding_routes".into(), toml::Value::Array(routes));
+    } else {
+        table.remove("embedding_routes");
+    }
 
     // [cost]
     let mut cost_table = table
@@ -436,10 +506,7 @@ pub async fn save_config_to_disk() -> String {
         .and_then(|v| v.as_table())
         .cloned()
         .unwrap_or_default();
-    proxy_table.insert(
-        "enabled".into(),
-        toml::Value::Boolean(config.proxy.enabled),
-    );
+    proxy_table.insert("enabled".into(), toml::Value::Boolean(config.proxy.enabled));
     if let Some(ref url) = config.proxy.http_proxy {
         proxy_table.insert("http_proxy".into(), toml::Value::String(url.clone()));
     } else {
@@ -710,6 +777,9 @@ pub async fn send_message_stream(
     message: String,
     sink: StreamSink<AgentEvent>,
 ) {
+    const TURN_TIMEOUT_SECS: u64 = 180;
+    const RELAY_DRAIN_TIMEOUT_SECS: u64 = 3;
+
     // Ensure agent ready — short config lock
     if let Err(msg) = ensure_agent(&session_id).await {
         let _ = sink.add(AgentEvent::Error { message: msg });
@@ -803,8 +873,10 @@ pub async fn send_message_stream(
         }
     });
 
-    // Lock only the agent (not config) for the duration of the LLM turn
-    let result = {
+    // Lock only the agent (not config) for the duration of the LLM turn.
+    // Guard with a timeout so Flutter stream won't hang forever when provider
+    // or tool loop gets stuck.
+    let turn_result = {
         let mut agent_guard = agent_handle().lock().await;
         let agent = match agent_guard.as_mut() {
             Some(a) => a,
@@ -815,24 +887,45 @@ pub async fn send_message_stream(
                 return;
             }
         };
-        agent.turn_streaming(&message, tx).await
+        timeout(
+            Duration::from_secs(TURN_TIMEOUT_SECS),
+            agent.turn_streaming(&message, tx),
+        )
+        .await
     };
 
-    // Wait for relay task to finish draining
-    let _ = relay_handle.await;
+    // If relay cannot finish quickly, abort it so the stream can close.
+    let relay_abort = relay_handle.abort_handle();
+    if timeout(Duration::from_secs(RELAY_DRAIN_TIMEOUT_SECS), relay_handle)
+        .await
+        .is_err()
+    {
+        relay_abort.abort();
+        tracing::warn!(
+            "send_message_stream relay drain timed out for session {session_id}; aborting relay"
+        );
+    }
 
-    match result {
-        Ok(_) => {
+    match turn_result {
+        Ok(Ok(_)) => {
             let _ = sink.add(AgentEvent::MessageComplete {
                 input_tokens: None,
                 output_tokens: None,
             });
         }
-        Err(e) => {
+        Ok(Err(e)) => {
             tracing::error!("Agent turn error: {e}");
             let _ = sink.add(AgentEvent::Error {
                 message: e.to_string(),
             });
+        }
+        Err(_) => {
+            let msg =
+                format!("Request timed out after {TURN_TIMEOUT_SECS} seconds. Please try again.");
+            tracing::error!(
+                "send_message_stream timeout for session {session_id}: {TURN_TIMEOUT_SECS}s"
+            );
+            let _ = sink.add(AgentEvent::Error { message: msg });
         }
     }
 }
