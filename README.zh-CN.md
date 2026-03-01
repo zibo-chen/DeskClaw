@@ -168,6 +168,23 @@ flutter run -d linux
 flutter run -d windows
 ```
 
+### 6. Rust 日志（调试）
+
+应用启动时会自动初始化 Rust 日志，默认级别为 `info`。
+
+```bash
+# 默认（应用已自动开启）
+flutter run -d macos
+
+# 调试时建议使用更详细日志
+RUST_LOG=debug flutter run -d macos
+
+# 查看最详细的 Rust 内部日志
+RUST_LOG=trace flutter run -d macos
+```
+
+如果你使用 VS Code 启动，请在调试配置的 `env` 里设置 `RUST_LOG`，即可获得相同行为。
+
 ---
 
 ## 截图

@@ -170,6 +170,23 @@ flutter run -d windows
 
 ```
 
+### 6. Rust logging (debugging)
+
+Rust logs are now initialized at app startup and default to `info` level.
+
+```bash
+# Default (already enabled by the app)
+flutter run -d macos
+
+# More verbose logs (recommended while debugging)
+RUST_LOG=debug flutter run -d macos
+
+# Very verbose logs for Rust internals
+RUST_LOG=trace flutter run -d macos
+```
+
+If you launch from VS Code, set `RUST_LOG` in your debug configuration `env` to see the same behavior.
+
 ---
 
 ## Screenshots

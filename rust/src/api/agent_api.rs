@@ -114,13 +114,7 @@ pub(crate) fn agent_handle() -> &'static TokioMutex<Option<zeroclaw::agent::Agen
 /// Initialize the agent runtime: load zeroclaw config from ~/.zeroclaw/config.toml.
 /// Returns a status string describing what was loaded.
 pub async fn init_runtime() -> String {
-    // Initialize tracing for debug logging
-    let _ = tracing_subscriber::fmt()
-        .with_env_filter(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("warn")),
-        )
-        .try_init();
+    crate::logging::init_rust_logging();
 
     match zeroclaw::Config::load_or_init().await {
         Ok(config) => {
