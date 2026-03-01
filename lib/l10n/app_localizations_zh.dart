@@ -1002,6 +1002,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get expandHistory => '展开历史';
 
   @override
+  String get collapseSidebar => '收起侧边栏';
+
+  @override
+  String get expandSidebar => '展开侧边栏';
+
+  @override
   String get saveEdit => '保存';
 
   @override
@@ -1229,4 +1235,43 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get agentUseDefaultDesc => '使用模型页面中配置的默认供应商和模型，无需逐个配置。';
+
+  @override
+  String cronNotifSuccess(String name) {
+    return '✅ 定时任务 [$name] 执行成功';
+  }
+
+  @override
+  String cronNotifFailed(String name) {
+    return '❌ 定时任务 [$name] 执行失败';
+  }
+
+  @override
+  String cronNotifDuration(String ms) {
+    return '耗时 ${ms}ms';
+  }
+
+  @override
+  String get cronNotifInjected => '结果已注入当前会话';
+
+  @override
+  String get viewOutput => '查看输出';
+
+  @override
+  String get notificationPanelTitle => '通知中心';
+
+  @override
+  String get clearNotifications => '清空通知';
+
+  @override
+  String get close => '关闭';
+
+  @override
+  String get noNotifications => '暂无通知';
+
+  @override
+  String get noNotificationsHint => '定时任务执行后的通知将在此显示';
+
+  @override
+  String get expandOutput => '展开';
 }

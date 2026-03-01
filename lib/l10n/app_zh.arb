@@ -313,6 +313,8 @@
   "copiedToClipboard": "已复制到剪贴板",
   "collapseHistory": "收起历史",
   "expandHistory": "展开历史",
+  "collapseSidebar": "收起侧边栏",
+  "expandSidebar": "展开侧边栏",
   "saveEdit": "保存",
   "cancelEdit": "取消",
 
@@ -387,5 +389,18 @@
   "embeddingProviderOpenai": "OpenAI",
   "embeddingProviderCustom": "自定义 (OpenAI 兼容)",
   "agentUseDefault": "使用默认配置",
-  "agentUseDefaultDesc": "使用模型页面中配置的默认供应商和模型，无需逐个配置。"
+  "agentUseDefaultDesc": "使用模型页面中配置的默认供应商和模型，无需逐个配置。",
+  "cronNotifSuccess": "✅ 定时任务 [{name}] 执行成功",
+  "cronNotifFailed": "❌ 定时任务 [{name}] 执行失败",
+  "cronNotifDuration": "耗时 {ms}ms",
+  "cronNotifInjected": "结果已注入当前会话",
+  "viewOutput": "查看输出",
+  "notificationPanelTitle": "通知中心",
+  "clearNotifications": "清空通知",
+  "close": "关闭",
+  "noNotifications": "暂无通知",
+  "noNotificationsHint": "定时任务执行后的通知将在此显示",
+  "expandOutput": "展开",
+  "collapse": "收起",
+  "copiedToClipboard": "已复制到剪贴板"
 }

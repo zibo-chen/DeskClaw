@@ -10,6 +10,7 @@ import 'api/agent_api.dart';
 import 'api/agents_api.dart';
 import 'api/config_api.dart';
 import 'api/cron_api.dart';
+import 'api/cron_notification_api.dart';
 import 'api/knowledge_api.dart';
 import 'api/proxy_api.dart';
 import 'api/routes_api.dart';
@@ -35,6 +36,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RustStreamSink<AgentEvent> dco_decode_StreamSink_agent_event_Sse(dynamic raw);
+
+  @protected
+  RustStreamSink<CronNotification> dco_decode_StreamSink_cron_notification_Sse(
+    dynamic raw,
+  );
 
   @protected
   String dco_decode_String(dynamic raw);
@@ -107,6 +113,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CronJobDto dco_decode_cron_job_dto(dynamic raw);
+
+  @protected
+  CronNotification dco_decode_cron_notification(dynamic raw);
 
   @protected
   CronRunDto dco_decode_cron_run_dto(dynamic raw);
@@ -294,6 +303,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  RustStreamSink<CronNotification> sse_decode_StreamSink_cron_notification_Sse(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   String sse_decode_String(SseDeserializer deserializer);
 
   @protected
@@ -378,6 +392,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CronJobDto sse_decode_cron_job_dto(SseDeserializer deserializer);
+
+  @protected
+  CronNotification sse_decode_cron_notification(SseDeserializer deserializer);
 
   @protected
   CronRunDto sse_decode_cron_run_dto(SseDeserializer deserializer);
@@ -599,6 +616,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_StreamSink_cron_notification_Sse(
+    RustStreamSink<CronNotification> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_String(String self, SseSerializer serializer);
 
   @protected
@@ -708,6 +731,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_cron_job_dto(CronJobDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_cron_notification(
+    CronNotification self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_cron_run_dto(CronRunDto self, SseSerializer serializer);

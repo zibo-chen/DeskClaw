@@ -39,6 +39,7 @@ Future<String> addAgentCronJob({
   required String sessionTarget,
   String? model,
   required bool deleteAfterRun,
+  String? targetSessionId,
 }) => RustLib.instance.api.crateApiCronApiAddAgentCronJob(
   name: name,
   scheduleType: scheduleType,
@@ -47,6 +48,7 @@ Future<String> addAgentCronJob({
   sessionTarget: sessionTarget,
   model: model,
   deleteAfterRun: deleteAfterRun,
+  targetSessionId: targetSessionId,
 );
 
 /// Remove a cron job
@@ -144,6 +146,7 @@ class CronJobDto {
   final String prompt;
   final String jobType;
   final String sessionTarget;
+  final String targetSessionId;
   final String model;
   final bool enabled;
   final bool deleteAfterRun;
@@ -163,6 +166,7 @@ class CronJobDto {
     required this.prompt,
     required this.jobType,
     required this.sessionTarget,
+    required this.targetSessionId,
     required this.model,
     required this.enabled,
     required this.deleteAfterRun,
@@ -184,6 +188,7 @@ class CronJobDto {
       prompt.hashCode ^
       jobType.hashCode ^
       sessionTarget.hashCode ^
+      targetSessionId.hashCode ^
       model.hashCode ^
       enabled.hashCode ^
       deleteAfterRun.hashCode ^
@@ -207,6 +212,7 @@ class CronJobDto {
           prompt == other.prompt &&
           jobType == other.jobType &&
           sessionTarget == other.sessionTarget &&
+          targetSessionId == other.targetSessionId &&
           model == other.model &&
           enabled == other.enabled &&
           deleteAfterRun == other.deleteAfterRun &&

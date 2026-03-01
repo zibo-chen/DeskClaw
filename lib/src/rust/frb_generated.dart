@@ -7,6 +7,7 @@ import 'api/agent_api.dart';
 import 'api/agents_api.dart';
 import 'api/config_api.dart';
 import 'api/cron_api.dart';
+import 'api/cron_notification_api.dart';
 import 'api/knowledge_api.dart';
 import 'api/proxy_api.dart';
 import 'api/routes_api.dart';
@@ -76,7 +77,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => 2090713479;
+  int get rustContentHash => 303665686;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -95,6 +96,7 @@ abstract class RustLibApi extends BaseApi {
     required String sessionTarget,
     String? model,
     required bool deleteAfterRun,
+    String? targetSessionId,
   });
 
   Future<String> crateApiKnowledgeApiAddKnowledgeEntry({
@@ -283,6 +285,9 @@ abstract class RustLibApi extends BaseApi {
 
   Future<String> crateApiCronApiStartCronScheduler();
 
+  Stream<CronNotification>
+  crateApiCronNotificationApiSubscribeCronNotifications();
+
   Future<void> crateApiAgentApiSwitchSession({required String sessionId});
 
   Future<String> crateApiWorkspaceApiToggleChannel({
@@ -370,6 +375,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required String sessionTarget,
     String? model,
     required bool deleteAfterRun,
+    String? targetSessionId,
   }) {
     return handler.executeNormal(
       NormalTask(
@@ -382,6 +388,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_String(sessionTarget, serializer);
           sse_encode_opt_String(model, serializer);
           sse_encode_bool(deleteAfterRun, serializer);
+          sse_encode_opt_String(targetSessionId, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -402,6 +409,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sessionTarget,
           model,
           deleteAfterRun,
+          targetSessionId,
         ],
         apiImpl: this,
       ),
@@ -419,6 +427,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           "sessionTarget",
           "model",
           "deleteAfterRun",
+          "targetSessionId",
         ],
       );
 
@@ -2380,6 +2389,44 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "start_cron_scheduler", argNames: []);
 
   @override
+  Stream<CronNotification>
+  crateApiCronNotificationApiSubscribeCronNotifications() {
+    final sink = RustStreamSink<CronNotification>();
+    unawaited(
+      handler.executeNormal(
+        NormalTask(
+          callFfi: (port_) {
+            final serializer = SseSerializer(generalizedFrbRustBinding);
+            sse_encode_StreamSink_cron_notification_Sse(sink, serializer);
+            pdeCallFfi(
+              generalizedFrbRustBinding,
+              serializer,
+              funcId: 70,
+              port: port_,
+            );
+          },
+          codec: SseCodec(
+            decodeSuccessData: sse_decode_unit,
+            decodeErrorData: null,
+          ),
+          constMeta:
+              kCrateApiCronNotificationApiSubscribeCronNotificationsConstMeta,
+          argValues: [sink],
+          apiImpl: this,
+        ),
+      ),
+    );
+    return sink.stream;
+  }
+
+  TaskConstMeta
+  get kCrateApiCronNotificationApiSubscribeCronNotificationsConstMeta =>
+      const TaskConstMeta(
+        debugName: "subscribe_cron_notifications",
+        argNames: ["sink"],
+      );
+
+  @override
   Future<void> crateApiAgentApiSwitchSession({required String sessionId}) {
     return handler.executeNormal(
       NormalTask(
@@ -2389,7 +2436,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 70,
+            funcId: 71,
             port: port_,
           );
         },
@@ -2421,7 +2468,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 71,
+            funcId: 72,
             port: port_,
           );
         },
@@ -2452,7 +2499,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 72,
+            funcId: 73,
             port: port_,
           );
         },
@@ -2491,7 +2538,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 73,
+            funcId: 74,
             port: port_,
           );
         },
@@ -2534,7 +2581,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 74,
+            funcId: 75,
             port: port_,
           );
         },
@@ -2575,7 +2622,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 75,
+            funcId: 76,
             port: port_,
           );
         },
@@ -2620,7 +2667,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 76,
+            funcId: 77,
             port: port_,
           );
         },
@@ -2669,7 +2716,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 77,
+            funcId: 78,
             port: port_,
           );
         },
@@ -2704,7 +2751,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 78,
+            funcId: 79,
             port: port_,
           );
         },
@@ -2737,7 +2784,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 79,
+            funcId: 80,
             port: port_,
           );
         },
@@ -2770,7 +2817,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 80,
+            funcId: 81,
             port: port_,
           );
         },
@@ -2803,7 +2850,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 81,
+            funcId: 82,
             port: port_,
           );
         },
@@ -2836,7 +2883,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 82,
+            funcId: 83,
             port: port_,
           );
         },
@@ -2869,7 +2916,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 83,
+            funcId: 84,
             port: port_,
           );
         },
@@ -2894,7 +2941,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(url, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 84)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 85)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_String,
@@ -2918,6 +2965,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   RustStreamSink<AgentEvent> dco_decode_StreamSink_agent_event_Sse(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError();
+  }
+
+  @protected
+  RustStreamSink<CronNotification> dco_decode_StreamSink_cron_notification_Sse(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
@@ -3160,8 +3215,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   CronJobDto dco_decode_cron_job_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 17)
-      throw Exception('unexpected arr length: expect 17 but see ${arr.length}');
+    if (arr.length != 18)
+      throw Exception('unexpected arr length: expect 18 but see ${arr.length}');
     return CronJobDto(
       id: dco_decode_String(arr[0]),
       name: dco_decode_String(arr[1]),
@@ -3172,14 +3227,35 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       prompt: dco_decode_String(arr[6]),
       jobType: dco_decode_String(arr[7]),
       sessionTarget: dco_decode_String(arr[8]),
-      model: dco_decode_String(arr[9]),
-      enabled: dco_decode_bool(arr[10]),
-      deleteAfterRun: dco_decode_bool(arr[11]),
-      createdAt: dco_decode_i_64(arr[12]),
-      nextRun: dco_decode_i_64(arr[13]),
-      lastRun: dco_decode_opt_box_autoadd_i_64(arr[14]),
-      lastStatus: dco_decode_String(arr[15]),
-      lastOutput: dco_decode_String(arr[16]),
+      targetSessionId: dco_decode_String(arr[9]),
+      model: dco_decode_String(arr[10]),
+      enabled: dco_decode_bool(arr[11]),
+      deleteAfterRun: dco_decode_bool(arr[12]),
+      createdAt: dco_decode_i_64(arr[13]),
+      nextRun: dco_decode_i_64(arr[14]),
+      lastRun: dco_decode_opt_box_autoadd_i_64(arr[15]),
+      lastStatus: dco_decode_String(arr[16]),
+      lastOutput: dco_decode_String(arr[17]),
+    );
+  }
+
+  @protected
+  CronNotification dco_decode_cron_notification(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 10)
+      throw Exception('unexpected arr length: expect 10 but see ${arr.length}');
+    return CronNotification(
+      jobId: dco_decode_String(arr[0]),
+      jobName: dco_decode_String(arr[1]),
+      jobType: dco_decode_String(arr[2]),
+      sessionTarget: dco_decode_String(arr[3]),
+      targetSessionId: dco_decode_String(arr[4]),
+      status: dco_decode_String(arr[5]),
+      output: dco_decode_String(arr[6]),
+      prompt: dco_decode_String(arr[7]),
+      durationMs: dco_decode_i_64(arr[8]),
+      finishedAt: dco_decode_i_64(arr[9]),
     );
   }
 
@@ -3768,6 +3844,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  RustStreamSink<CronNotification> sse_decode_StreamSink_cron_notification_Sse(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    throw UnimplementedError('Unreachable ()');
+  }
+
+  @protected
   String sse_decode_String(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var inner = sse_decode_list_prim_u_8_strict(deserializer);
@@ -4054,6 +4138,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_prompt = sse_decode_String(deserializer);
     var var_jobType = sse_decode_String(deserializer);
     var var_sessionTarget = sse_decode_String(deserializer);
+    var var_targetSessionId = sse_decode_String(deserializer);
     var var_model = sse_decode_String(deserializer);
     var var_enabled = sse_decode_bool(deserializer);
     var var_deleteAfterRun = sse_decode_bool(deserializer);
@@ -4072,6 +4157,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       prompt: var_prompt,
       jobType: var_jobType,
       sessionTarget: var_sessionTarget,
+      targetSessionId: var_targetSessionId,
       model: var_model,
       enabled: var_enabled,
       deleteAfterRun: var_deleteAfterRun,
@@ -4080,6 +4166,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       lastRun: var_lastRun,
       lastStatus: var_lastStatus,
       lastOutput: var_lastOutput,
+    );
+  }
+
+  @protected
+  CronNotification sse_decode_cron_notification(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_jobId = sse_decode_String(deserializer);
+    var var_jobName = sse_decode_String(deserializer);
+    var var_jobType = sse_decode_String(deserializer);
+    var var_sessionTarget = sse_decode_String(deserializer);
+    var var_targetSessionId = sse_decode_String(deserializer);
+    var var_status = sse_decode_String(deserializer);
+    var var_output = sse_decode_String(deserializer);
+    var var_prompt = sse_decode_String(deserializer);
+    var var_durationMs = sse_decode_i_64(deserializer);
+    var var_finishedAt = sse_decode_i_64(deserializer);
+    return CronNotification(
+      jobId: var_jobId,
+      jobName: var_jobName,
+      jobType: var_jobType,
+      sessionTarget: var_sessionTarget,
+      targetSessionId: var_targetSessionId,
+      status: var_status,
+      output: var_output,
+      prompt: var_prompt,
+      durationMs: var_durationMs,
+      finishedAt: var_finishedAt,
     );
   }
 
@@ -4908,6 +5021,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_StreamSink_cron_notification_Sse(
+    RustStreamSink<CronNotification> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(
+      self.setupAndSerialize(
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_cron_notification,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+      ),
+      serializer,
+    );
+  }
+
+  @protected
   void sse_encode_String(String self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_list_prim_u_8_strict(utf8.encoder.convert(self), serializer);
@@ -5165,6 +5295,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.prompt, serializer);
     sse_encode_String(self.jobType, serializer);
     sse_encode_String(self.sessionTarget, serializer);
+    sse_encode_String(self.targetSessionId, serializer);
     sse_encode_String(self.model, serializer);
     sse_encode_bool(self.enabled, serializer);
     sse_encode_bool(self.deleteAfterRun, serializer);
@@ -5173,6 +5304,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_box_autoadd_i_64(self.lastRun, serializer);
     sse_encode_String(self.lastStatus, serializer);
     sse_encode_String(self.lastOutput, serializer);
+  }
+
+  @protected
+  void sse_encode_cron_notification(
+    CronNotification self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.jobId, serializer);
+    sse_encode_String(self.jobName, serializer);
+    sse_encode_String(self.jobType, serializer);
+    sse_encode_String(self.sessionTarget, serializer);
+    sse_encode_String(self.targetSessionId, serializer);
+    sse_encode_String(self.status, serializer);
+    sse_encode_String(self.output, serializer);
+    sse_encode_String(self.prompt, serializer);
+    sse_encode_i_64(self.durationMs, serializer);
+    sse_encode_i_64(self.finishedAt, serializer);
   }
 
   @protected

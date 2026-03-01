@@ -13,8 +13,9 @@ pub struct CronJobDto {
     pub schedule_display: String,
     pub command: String,
     pub prompt: String,
-    pub job_type: String,       // "shell" or "agent"
-    pub session_target: String, // "isolated" or "main"
+    pub job_type: String,          // "shell" or "agent"
+    pub session_target: String,    // "isolated" or "main"
+    pub target_session_id: String, // actual session ID when session_target == "main"
     pub model: String,
     pub enabled: bool,
     pub delete_after_run: bool,
@@ -98,6 +99,13 @@ fn open_db() -> Result<Connection, String> {
         );",
     )
     .map_err(|e| e.to_string())?;
+
+    // Migration: add target_session_id column (ignore error if column already exists)
+    let _ = conn.execute(
+        "ALTER TABLE cron_jobs ADD COLUMN target_session_id TEXT",
+        [],
+    );
+
     Ok(conn)
 }
 
@@ -172,6 +180,7 @@ fn row_to_dto(row: &rusqlite::Row<'_>) -> Result<CronJobDto, rusqlite::Error> {
         last_run: last_run_str.map(|s| parse_rfc3339_to_ts(&s)),
         last_status: row.get::<_, Option<String>>(15)?.unwrap_or_default(),
         last_output: row.get::<_, Option<String>>(16)?.unwrap_or_default(),
+        target_session_id: row.get::<_, Option<String>>(17)?.unwrap_or_default(),
     })
 }
 
@@ -224,7 +233,7 @@ pub fn list_cron_jobs() -> Vec<CronJobDto> {
 
     let sql = "SELECT id, expression, command, schedule, job_type, prompt, name, \
                session_target, model, enabled, delivery, delete_after_run, \
-               created_at, next_run, last_run, last_status, last_output \
+               created_at, next_run, last_run, last_status, last_output, target_session_id \
                FROM cron_jobs ORDER BY next_run ASC";
 
     let mut stmt = match conn.prepare(sql) {
@@ -292,6 +301,7 @@ pub fn add_agent_cron_job(
     session_target: String,
     model: Option<String>,
     delete_after_run: bool,
+    target_session_id: Option<String>,
 ) -> String {
     let conn = match open_db() {
         Ok(c) => c,
@@ -308,10 +318,18 @@ pub fn add_agent_cron_job(
         "isolated"
     };
 
+    // Only store target_session_id when session_target is "main"
+    let stored_session_id: Option<&str> = if target == "main" {
+        target_session_id.as_deref()
+    } else {
+        None
+    };
+
     let r = conn.execute(
         "INSERT INTO cron_jobs (id, expression, command, schedule, job_type, prompt, name, \
-         session_target, model, enabled, delivery, delete_after_run, created_at, next_run) \
-         VALUES (?1,?2,'',?3,'agent',?4,?5,?6,?7,1,NULL,?8,?9,?10)",
+         session_target, model, enabled, delivery, delete_after_run, created_at, next_run, \
+         target_session_id) \
+         VALUES (?1,?2,'',?3,'agent',?4,?5,?6,?7,1,NULL,?8,?9,?10,?11)",
         params![
             id,
             expression,
@@ -323,6 +341,7 @@ pub fn add_agent_cron_job(
             delete_after_run as i32,
             now.to_rfc3339(),
             next_run.to_rfc3339(),
+            stored_session_id,
         ],
     );
 
@@ -437,7 +456,7 @@ pub fn update_cron_job(
     // Read current job first
     let sql = "SELECT id, expression, command, schedule, job_type, prompt, name, \
                session_target, model, enabled, delivery, delete_after_run, \
-               created_at, next_run, last_run, last_status, last_output \
+               created_at, next_run, last_run, last_status, last_output, target_session_id \
                FROM cron_jobs WHERE id = ?1";
     let current = conn.query_row(sql, params![job_id], |row| row_to_dto(row));
     let current = match current {
@@ -558,7 +577,7 @@ pub async fn run_cron_job_now(job_id: String) -> String {
 
     let sql = "SELECT id, expression, command, schedule, job_type, prompt, name, \
                session_target, model, enabled, delivery, delete_after_run, \
-               created_at, next_run, last_run, last_status, last_output \
+               created_at, next_run, last_run, last_status, last_output, target_session_id \
                FROM cron_jobs WHERE id = ?1";
     let job = match conn.query_row(sql, params![job_id], |row| row_to_dto(row)) {
         Ok(j) => j,
@@ -616,7 +635,23 @@ pub async fn run_cron_job_now(job_id: String) -> String {
         params![started_rfc, &status, &output, next_run.to_rfc3339(), job_id,],
     );
 
-    // 5. Handle delete_after_run
+    // 5. Emit notification to Flutter UI
+    super::cron_notification_api::emit_notification(
+        super::cron_notification_api::CronNotification {
+            job_id: job_id.clone(),
+            job_name: job.name.clone(),
+            job_type: job.job_type.clone(),
+            session_target: job.session_target.clone(),
+            target_session_id: job.target_session_id.clone(),
+            status: status.clone(),
+            output: output.clone(),
+            prompt: job.prompt.clone(),
+            duration_ms,
+            finished_at: finished.timestamp(),
+        },
+    );
+
+    // 6. Handle delete_after_run
     if job.delete_after_run {
         let _ = conn.execute("DELETE FROM cron_jobs WHERE id = ?1", params![job_id]);
     }

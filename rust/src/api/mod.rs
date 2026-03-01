@@ -2,6 +2,7 @@ pub mod agent_api;
 pub mod agents_api;
 pub mod config_api;
 pub mod cron_api;
+pub mod cron_notification_api;
 pub mod knowledge_api;
 pub mod proxy_api;
 pub mod routes_api;

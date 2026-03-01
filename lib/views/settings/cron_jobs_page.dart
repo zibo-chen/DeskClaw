@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:deskclaw/l10n/app_localizations.dart';
 import 'package:deskclaw/theme/app_theme.dart';
+import 'package:deskclaw/providers/chat_provider.dart';
 import 'package:deskclaw/src/rust/api/cron_api.dart' as cron_api;
 
 /// Cron Jobs management page - list, add, edit, delete scheduled tasks
@@ -145,6 +146,12 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
         command: result.command,
       );
     } else {
+      // When session_target is "main", capture the current active session ID
+      // so cron results get injected into that specific session later
+      final String? targetSessionId = result.sessionTarget == 'main'
+          ? ref.read(activeSessionIdProvider)
+          : null;
+
       apiResult = await cron_api.addAgentCronJob(
         name: result.name.isNotEmpty ? result.name : null,
         scheduleType: result.scheduleType,
@@ -153,6 +160,7 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
         sessionTarget: result.sessionTarget,
         model: result.model.isNotEmpty ? result.model : null,
         deleteAfterRun: result.deleteAfterRun,
+        targetSessionId: targetSessionId,
       );
     }
 

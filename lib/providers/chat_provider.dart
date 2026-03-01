@@ -257,3 +257,6 @@ final themeModeProvider = StateProvider<ThemeMode>(
 
 /// Whether the chat list panel is collapsed
 final chatListCollapsedProvider = StateProvider<bool>((ref) => false);
+
+/// Whether the left sidebar is collapsed to icon rail
+final sidebarCollapsedProvider = StateProvider<bool>((ref) => false);

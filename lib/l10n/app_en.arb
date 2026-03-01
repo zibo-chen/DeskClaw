@@ -1028,6 +1028,12 @@
   "expandHistory": "Expand history",
   "@expandHistory": { "description": "Tooltip for expanding chat list panel" },
 
+  "collapseSidebar": "Collapse sidebar",
+  "@collapseSidebar": { "description": "Tooltip for collapsing left sidebar" },
+
+  "expandSidebar": "Expand sidebar",
+  "@expandSidebar": { "description": "Tooltip for expanding left sidebar" },
+
   "saveEdit": "Save",
   "@saveEdit": { "description": "Save edit button" },
 
@@ -1254,5 +1260,44 @@
   "@agentUseDefault": { "description": "Use default provider toggle" },
 
   "agentUseDefaultDesc": "Use the default provider/model configured in the Models page instead of specifying individually.",
-  "@agentUseDefaultDesc": { "description": "Use default provider description" }
+  "@agentUseDefaultDesc": { "description": "Use default provider description" },
+
+  "cronNotifSuccess": "✅ Cron [{name}] succeeded",
+  "@cronNotifSuccess": { "description": "Cron success notification", "placeholders": { "name": { "type": "String" } } },
+
+  "cronNotifFailed": "❌ Cron [{name}] failed",
+  "@cronNotifFailed": { "description": "Cron failure notification", "placeholders": { "name": { "type": "String" } } },
+
+  "cronNotifDuration": "Duration: {ms}ms",
+  "@cronNotifDuration": { "description": "Cron duration info", "placeholders": { "ms": { "type": "String" } } },
+
+  "cronNotifInjected": "Result injected into current session",
+  "@cronNotifInjected": { "description": "Cron result injected notification" },
+
+  "viewOutput": "View Output",
+  "@viewOutput": { "description": "View output action" },
+
+  "notificationPanelTitle": "Notifications",
+  "@notificationPanelTitle": { "description": "Notification panel header title" },
+
+  "clearNotifications": "Clear All",
+  "@clearNotifications": { "description": "Clear notifications button" },
+
+  "close": "Close",
+  "@close": { "description": "Close button" },
+
+  "noNotifications": "No notifications",
+  "@noNotifications": { "description": "Empty notification list" },
+
+  "noNotificationsHint": "Cron job execution results will appear here",
+  "@noNotificationsHint": { "description": "Empty notification hint" },
+
+  "expandOutput": "Expand",
+  "@expandOutput": { "description": "Expand output button" },
+
+  "collapse": "Collapse",
+  "@collapse": { "description": "Collapse output button" },
+
+  "copiedToClipboard": "Copied to clipboard",
+  "@copiedToClipboard": { "description": "Copied confirmation" }
 }

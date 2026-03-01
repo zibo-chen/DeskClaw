@@ -314,7 +314,7 @@ abstract class AppLocalizations {
   /// **'Type your message...'**
   String get typeYourMessage;
 
-  /// Collapse button tooltip
+  /// Collapse output button
   ///
   /// In en, this message translates to:
   /// **'Collapse'**
@@ -1952,7 +1952,7 @@ abstract class AppLocalizations {
   /// **'Edit'**
   String get editMessage;
 
-  /// Snackbar message after copying
+  /// Copied confirmation
   ///
   /// In en, this message translates to:
   /// **'Copied to clipboard'**
@@ -1963,6 +1963,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Expand history'**
   String get expandHistory;
+
+  /// Tooltip for collapsing left sidebar
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse sidebar'**
+  String get collapseSidebar;
+
+  /// Tooltip for expanding left sidebar
+  ///
+  /// In en, this message translates to:
+  /// **'Expand sidebar'**
+  String get expandSidebar;
 
   /// Save edit button
   ///
@@ -2395,6 +2407,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use the default provider/model configured in the Models page instead of specifying individually.'**
   String get agentUseDefaultDesc;
+
+  /// Cron success notification
+  ///
+  /// In en, this message translates to:
+  /// **'✅ Cron [{name}] succeeded'**
+  String cronNotifSuccess(String name);
+
+  /// Cron failure notification
+  ///
+  /// In en, this message translates to:
+  /// **'❌ Cron [{name}] failed'**
+  String cronNotifFailed(String name);
+
+  /// Cron duration info
+  ///
+  /// In en, this message translates to:
+  /// **'Duration: {ms}ms'**
+  String cronNotifDuration(String ms);
+
+  /// Cron result injected notification
+  ///
+  /// In en, this message translates to:
+  /// **'Result injected into current session'**
+  String get cronNotifInjected;
+
+  /// View output action
+  ///
+  /// In en, this message translates to:
+  /// **'View Output'**
+  String get viewOutput;
+
+  /// Notification panel header title
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notificationPanelTitle;
+
+  /// Clear notifications button
+  ///
+  /// In en, this message translates to:
+  /// **'Clear All'**
+  String get clearNotifications;
+
+  /// Close button
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
+
+  /// Empty notification list
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications'**
+  String get noNotifications;
+
+  /// Empty notification hint
+  ///
+  /// In en, this message translates to:
+  /// **'Cron job execution results will appear here'**
+  String get noNotificationsHint;
+
+  /// Expand output button
+  ///
+  /// In en, this message translates to:
+  /// **'Expand'**
+  String get expandOutput;
 }
 
 class _AppLocalizationsDelegate

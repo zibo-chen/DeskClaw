@@ -37,7 +37,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.11.1";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 2090713479;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 303665686;
 
 // Section: executor
 
@@ -74,6 +74,7 @@ fn wire__crate__api__cron_api__add_agent_cron_job_impl(
             let api_session_target = <String>::sse_decode(&mut deserializer);
             let api_model = <Option<String>>::sse_decode(&mut deserializer);
             let api_delete_after_run = <bool>::sse_decode(&mut deserializer);
+            let api_target_session_id = <Option<String>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, ()>((move || {
@@ -85,6 +86,7 @@ fn wire__crate__api__cron_api__add_agent_cron_job_impl(
                         api_session_target,
                         api_model,
                         api_delete_after_run,
+                        api_target_session_id,
                     ))?;
                     Ok(output_ok)
                 })())
@@ -2592,6 +2594,50 @@ fn wire__crate__api__cron_api__start_cron_scheduler_impl(
         },
     )
 }
+fn wire__crate__api__cron_notification_api__subscribe_cron_notifications_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "subscribe_cron_notifications",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_sink = <StreamSink<
+                crate::api::cron_notification_api::CronNotification,
+                flutter_rust_bridge::for_generated::SseCodec,
+            >>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, ()>(
+                    (move || async move {
+                        let output_ok = Result::<_, ()>::Ok({
+                            crate::api::cron_notification_api::subscribe_cron_notifications(
+                                api_sink,
+                            )
+                            .await;
+                        })?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire__crate__api__agent_api__switch_session_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -3218,6 +3264,19 @@ impl SseDecode
     }
 }
 
+impl SseDecode
+    for StreamSink<
+        crate::api::cron_notification_api::CronNotification,
+        flutter_rust_bridge::for_generated::SseCodec,
+    >
+{
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <String>::sse_decode(deserializer);
+        return StreamSink::deserialize(inner);
+    }
+}
+
 impl SseDecode for String {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3434,6 +3493,7 @@ impl SseDecode for crate::api::cron_api::CronJobDto {
         let mut var_prompt = <String>::sse_decode(deserializer);
         let mut var_jobType = <String>::sse_decode(deserializer);
         let mut var_sessionTarget = <String>::sse_decode(deserializer);
+        let mut var_targetSessionId = <String>::sse_decode(deserializer);
         let mut var_model = <String>::sse_decode(deserializer);
         let mut var_enabled = <bool>::sse_decode(deserializer);
         let mut var_deleteAfterRun = <bool>::sse_decode(deserializer);
@@ -3452,6 +3512,7 @@ impl SseDecode for crate::api::cron_api::CronJobDto {
             prompt: var_prompt,
             job_type: var_jobType,
             session_target: var_sessionTarget,
+            target_session_id: var_targetSessionId,
             model: var_model,
             enabled: var_enabled,
             delete_after_run: var_deleteAfterRun,
@@ -3460,6 +3521,34 @@ impl SseDecode for crate::api::cron_api::CronJobDto {
             last_run: var_lastRun,
             last_status: var_lastStatus,
             last_output: var_lastOutput,
+        };
+    }
+}
+
+impl SseDecode for crate::api::cron_notification_api::CronNotification {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_jobId = <String>::sse_decode(deserializer);
+        let mut var_jobName = <String>::sse_decode(deserializer);
+        let mut var_jobType = <String>::sse_decode(deserializer);
+        let mut var_sessionTarget = <String>::sse_decode(deserializer);
+        let mut var_targetSessionId = <String>::sse_decode(deserializer);
+        let mut var_status = <String>::sse_decode(deserializer);
+        let mut var_output = <String>::sse_decode(deserializer);
+        let mut var_prompt = <String>::sse_decode(deserializer);
+        let mut var_durationMs = <i64>::sse_decode(deserializer);
+        let mut var_finishedAt = <i64>::sse_decode(deserializer);
+        return crate::api::cron_notification_api::CronNotification {
+            job_id: var_jobId,
+            job_name: var_jobName,
+            job_type: var_jobType,
+            session_target: var_sessionTarget,
+            target_session_id: var_targetSessionId,
+            status: var_status,
+            output: var_output,
+            prompt: var_prompt,
+            duration_ms: var_durationMs,
+            finished_at: var_finishedAt,
         };
     }
 }
@@ -4559,61 +4648,67 @@ fn pde_ffi_dispatcher_primary_impl(
         69 => {
             wire__crate__api__cron_api__start_cron_scheduler_impl(port, ptr, rust_vec_len, data_len)
         }
-        70 => wire__crate__api__agent_api__switch_session_impl(port, ptr, rust_vec_len, data_len),
-        71 => {
+        70 => wire__crate__api__cron_notification_api__subscribe_cron_notifications_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        71 => wire__crate__api__agent_api__switch_session_impl(port, ptr, rust_vec_len, data_len),
+        72 => {
             wire__crate__api__workspace_api__toggle_channel_impl(port, ptr, rust_vec_len, data_len)
         }
-        72 => {
+        73 => {
             wire__crate__api__skills_api__toggle_open_skills_impl(port, ptr, rust_vec_len, data_len)
         }
-        73 => wire__crate__api__workspace_api__update_agent_config_impl(
+        74 => wire__crate__api__workspace_api__update_agent_config_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        74 => wire__crate__api__workspace_api__update_autonomy_level_impl(
+        75 => wire__crate__api__workspace_api__update_autonomy_level_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        75 => wire__crate__api__agent_api__update_config_impl(port, ptr, rust_vec_len, data_len),
-        76 => wire__crate__api__cron_api__update_cron_job_impl(port, ptr, rust_vec_len, data_len),
-        77 => wire__crate__api__routes_api__update_embedding_config_impl(
+        76 => wire__crate__api__agent_api__update_config_impl(port, ptr, rust_vec_len, data_len),
+        77 => wire__crate__api__cron_api__update_cron_job_impl(port, ptr, rust_vec_len, data_len),
+        78 => wire__crate__api__routes_api__update_embedding_config_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        78 => wire__crate__api__workspace_api__update_feature_toggle_impl(
+        79 => wire__crate__api__workspace_api__update_feature_toggle_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        79 => wire__crate__api__skills_api__update_prompt_injection_mode_impl(
+        80 => wire__crate__api__skills_api__update_prompt_injection_mode_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        80 => {
+        81 => {
             wire__crate__api__proxy_api__update_proxy_config_impl(port, ptr, rust_vec_len, data_len)
         }
-        81 => wire__crate__api__agents_api__upsert_delegate_agent_impl(
+        82 => wire__crate__api__agents_api__upsert_delegate_agent_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        82 => wire__crate__api__routes_api__upsert_embedding_route_impl(
+        83 => wire__crate__api__routes_api__upsert_embedding_route_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        83 => {
+        84 => {
             wire__crate__api__routes_api__upsert_model_route_impl(port, ptr, rust_vec_len, data_len)
         }
         _ => unreachable!(),
@@ -4634,7 +4729,7 @@ fn pde_ffi_dispatcher_sync_impl(
         43 => wire__crate__api__config_api__list_providers_impl(ptr, rust_vec_len, data_len),
         44 => wire__crate__api__proxy_api__list_proxy_services_impl(ptr, rust_vec_len, data_len),
         47 => wire__crate__api__agent_api__list_tools_impl(ptr, rust_vec_len, data_len),
-        84 => wire__crate__api__proxy_api__validate_proxy_url_impl(ptr, rust_vec_len, data_len),
+        85 => wire__crate__api__proxy_api__validate_proxy_url_impl(ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -4884,6 +4979,7 @@ impl flutter_rust_bridge::IntoDart for crate::api::cron_api::CronJobDto {
             self.prompt.into_into_dart().into_dart(),
             self.job_type.into_into_dart().into_dart(),
             self.session_target.into_into_dart().into_dart(),
+            self.target_session_id.into_into_dart().into_dart(),
             self.model.into_into_dart().into_dart(),
             self.enabled.into_into_dart().into_dart(),
             self.delete_after_run.into_into_dart().into_dart(),
@@ -4904,6 +5000,35 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::cron_api::CronJobDto>
     for crate::api::cron_api::CronJobDto
 {
     fn into_into_dart(self) -> crate::api::cron_api::CronJobDto {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::cron_notification_api::CronNotification {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.job_id.into_into_dart().into_dart(),
+            self.job_name.into_into_dart().into_dart(),
+            self.job_type.into_into_dart().into_dart(),
+            self.session_target.into_into_dart().into_dart(),
+            self.target_session_id.into_into_dart().into_dart(),
+            self.status.into_into_dart().into_dart(),
+            self.output.into_into_dart().into_dart(),
+            self.prompt.into_into_dart().into_dart(),
+            self.duration_ms.into_into_dart().into_dart(),
+            self.finished_at.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::cron_notification_api::CronNotification
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::cron_notification_api::CronNotification>
+    for crate::api::cron_notification_api::CronNotification
+{
+    fn into_into_dart(self) -> crate::api::cron_notification_api::CronNotification {
         self
     }
 }
@@ -5537,6 +5662,18 @@ impl SseEncode
     }
 }
 
+impl SseEncode
+    for StreamSink<
+        crate::api::cron_notification_api::CronNotification,
+        flutter_rust_bridge::for_generated::SseCodec,
+    >
+{
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        unimplemented!("")
+    }
+}
+
 impl SseEncode for String {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5691,6 +5828,7 @@ impl SseEncode for crate::api::cron_api::CronJobDto {
         <String>::sse_encode(self.prompt, serializer);
         <String>::sse_encode(self.job_type, serializer);
         <String>::sse_encode(self.session_target, serializer);
+        <String>::sse_encode(self.target_session_id, serializer);
         <String>::sse_encode(self.model, serializer);
         <bool>::sse_encode(self.enabled, serializer);
         <bool>::sse_encode(self.delete_after_run, serializer);
@@ -5699,6 +5837,22 @@ impl SseEncode for crate::api::cron_api::CronJobDto {
         <Option<i64>>::sse_encode(self.last_run, serializer);
         <String>::sse_encode(self.last_status, serializer);
         <String>::sse_encode(self.last_output, serializer);
+    }
+}
+
+impl SseEncode for crate::api::cron_notification_api::CronNotification {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.job_id, serializer);
+        <String>::sse_encode(self.job_name, serializer);
+        <String>::sse_encode(self.job_type, serializer);
+        <String>::sse_encode(self.session_target, serializer);
+        <String>::sse_encode(self.target_session_id, serializer);
+        <String>::sse_encode(self.status, serializer);
+        <String>::sse_encode(self.output, serializer);
+        <String>::sse_encode(self.prompt, serializer);
+        <i64>::sse_encode(self.duration_ms, serializer);
+        <i64>::sse_encode(self.finished_at, serializer);
     }
 }
 

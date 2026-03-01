@@ -1026,6 +1026,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get expandHistory => 'Expand history';
 
   @override
+  String get collapseSidebar => 'Collapse sidebar';
+
+  @override
+  String get expandSidebar => 'Expand sidebar';
+
+  @override
   String get saveEdit => 'Save';
 
   @override
@@ -1264,4 +1270,44 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get agentUseDefaultDesc =>
       'Use the default provider/model configured in the Models page instead of specifying individually.';
+
+  @override
+  String cronNotifSuccess(String name) {
+    return '✅ Cron [$name] succeeded';
+  }
+
+  @override
+  String cronNotifFailed(String name) {
+    return '❌ Cron [$name] failed';
+  }
+
+  @override
+  String cronNotifDuration(String ms) {
+    return 'Duration: ${ms}ms';
+  }
+
+  @override
+  String get cronNotifInjected => 'Result injected into current session';
+
+  @override
+  String get viewOutput => 'View Output';
+
+  @override
+  String get notificationPanelTitle => 'Notifications';
+
+  @override
+  String get clearNotifications => 'Clear All';
+
+  @override
+  String get close => 'Close';
+
+  @override
+  String get noNotifications => 'No notifications';
+
+  @override
+  String get noNotificationsHint =>
+      'Cron job execution results will appear here';
+
+  @override
+  String get expandOutput => 'Expand';
 }
