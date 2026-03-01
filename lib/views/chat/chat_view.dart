@@ -266,7 +266,9 @@ class _ChatViewState extends ConsumerState<ChatView> {
   Future<void> _persistCurrentSession(String sessionId) async {
     if (!mounted) return;
     try {
-      final messages = ref.read(messagesProvider);
+      // Use cached messages for the specific session to support background persistence
+      final messagesNotifier = ref.read(messagesProvider.notifier);
+      final messages = messagesNotifier.getCachedMessages(sessionId);
       final sessions = ref.read(sessionsProvider);
       final session = sessions.firstWhere(
         (s) => s.id == sessionId,

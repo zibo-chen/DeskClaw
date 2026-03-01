@@ -867,4 +867,78 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pageEnvironments => 'Environments';
+
+  @override
+  String get navKnowledge => 'Knowledge';
+
+  @override
+  String get pageKnowledge => 'Knowledge Base';
+
+  @override
+  String get knowledgeOverview => 'Knowledge Base Overview';
+
+  @override
+  String get totalEntries => 'Total Entries';
+
+  @override
+  String get healthy => 'Healthy';
+
+  @override
+  String get unhealthy => 'Unhealthy';
+
+  @override
+  String get searchKnowledge => 'Search knowledge entries...';
+
+  @override
+  String get addKnowledge => 'Add Entry';
+
+  @override
+  String get knowledgeEntries => 'Knowledge Entries';
+
+  @override
+  String get noKnowledgeEntries => 'No knowledge entries yet';
+
+  @override
+  String get noKnowledgeHint =>
+      'Add knowledge entries to help your AI assistant remember important information, facts, and context.';
+
+  @override
+  String get knowledgeEntryAdded => 'Knowledge entry added';
+
+  @override
+  String get knowledgeEntryDeleted => 'Knowledge entry deleted';
+
+  @override
+  String get deleteKnowledgeTitle => 'Delete Entry';
+
+  @override
+  String get deleteKnowledgeConfirm =>
+      'Are you sure you want to delete this knowledge entry? This cannot be undone.';
+
+  @override
+  String get knowledgeKeyLabel => 'Key / Title';
+
+  @override
+  String get knowledgeKeyHint => 'e.g. user-preferences, project-guidelines';
+
+  @override
+  String get knowledgeContentLabel => 'Content';
+
+  @override
+  String get knowledgeContentHint => 'Enter the knowledge content...';
+
+  @override
+  String get knowledgeCategoryLabel => 'Category';
+
+  @override
+  String get knowledgeCategoryAll => 'All Categories';
+
+  @override
+  String get knowledgeCategoryCore => 'Core';
+
+  @override
+  String get knowledgeCategoryDaily => 'Daily';
+
+  @override
+  String get knowledgeCategoryConversation => 'Conversation';
 }

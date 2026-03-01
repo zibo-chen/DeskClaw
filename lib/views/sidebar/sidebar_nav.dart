@@ -106,6 +106,14 @@ class SidebarNav extends ConsumerWidget {
                       _buildNavItem(
                         c,
                         ref: ref,
+                        icon: Icons.menu_book,
+                        label: l10n.navKnowledge,
+                        section: NavSection.knowledge,
+                        isActive: currentNav == NavSection.knowledge,
+                      ),
+                      _buildNavItem(
+                        c,
+                        ref: ref,
                         icon: Icons.psychology,
                         label: l10n.navSkills,
                         section: NavSection.skills,

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:deskclaw/models/models.dart';
 import 'package:deskclaw/src/rust/api/agent_api.dart' as agent_api;
 import 'package:deskclaw/src/rust/api/config_api.dart' as config_api;
+import 'package:deskclaw/src/rust/api/sessions_api.dart' as sessions_api;
 
 /// Navigation section for sidebar
 enum NavSection {
@@ -11,6 +12,7 @@ enum NavSection {
   sessions,
   cronJobs,
   workspace,
+  knowledge,
   skills,
   mcp,
   configuration,
@@ -44,6 +46,33 @@ final sessionsProvider =
 
 class SessionsNotifier extends StateNotifier<List<ChatSession>> {
   SessionsNotifier() : super([]);
+
+  /// Load persisted sessions from Rust session store on app startup
+  Future<void> loadPersistedSessions() async {
+    try {
+      final summaries = await sessions_api.listSessions();
+      if (summaries.isNotEmpty) {
+        final loaded = summaries
+            .map(
+              (s) => ChatSession(
+                id: s.id,
+                title: s.title,
+                createdAt: DateTime.fromMillisecondsSinceEpoch(
+                  (s.createdAt * 1000).toInt(),
+                ),
+                updatedAt: DateTime.fromMillisecondsSinceEpoch(
+                  (s.updatedAt * 1000).toInt(),
+                ),
+                messageCount: s.messageCount.toInt(),
+              ),
+            )
+            .toList();
+        state = loaded;
+      }
+    } catch (e) {
+      debugPrint('Failed to load persisted sessions: $e');
+    }
+  }
 
   String createSession() {
     final now = DateTime.now();

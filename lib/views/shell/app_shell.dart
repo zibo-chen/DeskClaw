@@ -13,14 +13,29 @@ import 'package:deskclaw/views/settings/skills_page.dart';
 import 'package:deskclaw/views/settings/tools_page.dart';
 import 'package:deskclaw/views/settings/sessions_page.dart';
 import 'package:deskclaw/views/settings/cron_jobs_page.dart';
+import 'package:deskclaw/views/settings/knowledge_page.dart';
 import 'package:deskclaw/views/placeholder_page.dart';
 
 /// Root layout shell: Sidebar | Chat List (when in chat) | Main Content
-class AppShell extends ConsumerWidget {
+class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends ConsumerState<AppShell> {
+  @override
+  void initState() {
+    super.initState();
+    // Load persisted sessions from Rust store on startup
+    Future.microtask(() {
+      ref.read(sessionsProvider.notifier).loadPersistedSessions();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final currentNav = ref.watch(currentNavProvider);
     final showChatList = currentNav == NavSection.chat;
 
@@ -40,7 +55,7 @@ class AppShell extends ConsumerWidget {
     );
   }
 
-  Widget _buildMainContent(BuildContext context, NavSection section) {
+  static Widget _buildMainContent(BuildContext context, NavSection section) {
     return switch (section) {
       NavSection.chat => const ChatView(),
       NavSection.models => const ModelsPage(),
@@ -49,6 +64,7 @@ class AppShell extends ConsumerWidget {
       NavSection.configuration => const ConfigurationPage(),
       NavSection.sessions => const SessionsPage(),
       NavSection.cronJobs => const CronJobsPage(),
+      NavSection.knowledge => const KnowledgePage(),
       NavSection.skills => const SkillsPage(),
       NavSection.mcp => const ToolsPage(),
       NavSection.environments => PlaceholderPage(

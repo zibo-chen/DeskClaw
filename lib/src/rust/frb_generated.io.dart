@@ -6,6 +6,7 @@
 import 'api/agent_api.dart';
 import 'api/config_api.dart';
 import 'api/cron_api.dart';
+import 'api/knowledge_api.dart';
 import 'api/sessions_api.dart';
 import 'api/simple.dart';
 import 'api/skills_api.dart';
@@ -61,6 +62,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw);
 
   @protected
+  KnowledgeEntry dco_decode_box_autoadd_knowledge_entry(dynamic raw);
+
+  @protected
   SessionDetail dco_decode_box_autoadd_session_detail(dynamic raw);
 
   @protected
@@ -100,6 +104,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 dco_decode_i_64(dynamic raw);
 
   @protected
+  KnowledgeEntry dco_decode_knowledge_entry(dynamic raw);
+
+  @protected
+  KnowledgeStats dco_decode_knowledge_stats(dynamic raw);
+
+  @protected
   List<String> dco_decode_list_String(dynamic raw);
 
   @protected
@@ -113,6 +123,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<CronRunDto> dco_decode_list_cron_run_dto(dynamic raw);
+
+  @protected
+  List<KnowledgeEntry> dco_decode_list_knowledge_entry(dynamic raw);
 
   @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
@@ -152,6 +165,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw);
+
+  @protected
+  KnowledgeEntry? dco_decode_opt_box_autoadd_knowledge_entry(dynamic raw);
 
   @protected
   SessionDetail? dco_decode_opt_box_autoadd_session_detail(dynamic raw);
@@ -252,6 +268,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer);
 
   @protected
+  KnowledgeEntry sse_decode_box_autoadd_knowledge_entry(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   SessionDetail sse_decode_box_autoadd_session_detail(
     SseDeserializer deserializer,
   );
@@ -293,6 +314,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
 
   @protected
+  KnowledgeEntry sse_decode_knowledge_entry(SseDeserializer deserializer);
+
+  @protected
+  KnowledgeStats sse_decode_knowledge_stats(SseDeserializer deserializer);
+
+  @protected
   List<String> sse_decode_list_String(SseDeserializer deserializer);
 
   @protected
@@ -308,6 +335,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<CronRunDto> sse_decode_list_cron_run_dto(SseDeserializer deserializer);
+
+  @protected
+  List<KnowledgeEntry> sse_decode_list_knowledge_entry(
+    SseDeserializer deserializer,
+  );
 
   @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
@@ -355,6 +387,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer);
+
+  @protected
+  KnowledgeEntry? sse_decode_opt_box_autoadd_knowledge_entry(
+    SseDeserializer deserializer,
+  );
 
   @protected
   SessionDetail? sse_decode_opt_box_autoadd_session_detail(
@@ -473,6 +510,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_knowledge_entry(
+    KnowledgeEntry self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_session_detail(
     SessionDetail self,
     SseSerializer serializer,
@@ -524,6 +567,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
 
   @protected
+  void sse_encode_knowledge_entry(
+    KnowledgeEntry self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_knowledge_stats(
+    KnowledgeStats self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
 
   @protected
@@ -547,6 +602,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_cron_run_dto(
     List<CronRunDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_knowledge_entry(
+    List<KnowledgeEntry> self,
     SseSerializer serializer,
   );
 
@@ -610,6 +671,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_opt_box_autoadd_i_64(
     PlatformInt64? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_knowledge_entry(
+    KnowledgeEntry? self,
     SseSerializer serializer,
   );
 

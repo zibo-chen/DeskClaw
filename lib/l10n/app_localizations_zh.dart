@@ -848,4 +848,76 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pageEnvironments => '环境';
+
+  @override
+  String get navKnowledge => '知识库';
+
+  @override
+  String get pageKnowledge => '知识库管理';
+
+  @override
+  String get knowledgeOverview => '知识库概览';
+
+  @override
+  String get totalEntries => '总条目';
+
+  @override
+  String get healthy => '健康';
+
+  @override
+  String get unhealthy => '异常';
+
+  @override
+  String get searchKnowledge => '搜索知识条目…';
+
+  @override
+  String get addKnowledge => '添加条目';
+
+  @override
+  String get knowledgeEntries => '知识条目';
+
+  @override
+  String get noKnowledgeEntries => '暂无知识条目';
+
+  @override
+  String get noKnowledgeHint => '添加知识条目可以帮助 AI 助手记住重要信息、事实和上下文。';
+
+  @override
+  String get knowledgeEntryAdded => '知识条目已添加';
+
+  @override
+  String get knowledgeEntryDeleted => '知识条目已删除';
+
+  @override
+  String get deleteKnowledgeTitle => '删除条目';
+
+  @override
+  String get deleteKnowledgeConfirm => '确定删除此知识条目？此操作不可撤销。';
+
+  @override
+  String get knowledgeKeyLabel => '键 / 标题';
+
+  @override
+  String get knowledgeKeyHint => '例如: user-preferences, project-guidelines';
+
+  @override
+  String get knowledgeContentLabel => '内容';
+
+  @override
+  String get knowledgeContentHint => '输入知识内容…';
+
+  @override
+  String get knowledgeCategoryLabel => '分类';
+
+  @override
+  String get knowledgeCategoryAll => '全部分类';
+
+  @override
+  String get knowledgeCategoryCore => '核心';
+
+  @override
+  String get knowledgeCategoryDaily => '日常';
+
+  @override
+  String get knowledgeCategoryConversation => '对话';
 }

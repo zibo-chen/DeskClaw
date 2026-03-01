@@ -1681,6 +1681,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Environments'**
   String get pageEnvironments;
+
+  /// Knowledge base nav item
+  ///
+  /// In en, this message translates to:
+  /// **'Knowledge'**
+  String get navKnowledge;
+
+  /// Knowledge base page title
+  ///
+  /// In en, this message translates to:
+  /// **'Knowledge Base'**
+  String get pageKnowledge;
+
+  /// Knowledge stats section title
+  ///
+  /// In en, this message translates to:
+  /// **'Knowledge Base Overview'**
+  String get knowledgeOverview;
+
+  /// Total entries stat label
+  ///
+  /// In en, this message translates to:
+  /// **'Total Entries'**
+  String get totalEntries;
+
+  /// Health status healthy
+  ///
+  /// In en, this message translates to:
+  /// **'Healthy'**
+  String get healthy;
+
+  /// Health status unhealthy
+  ///
+  /// In en, this message translates to:
+  /// **'Unhealthy'**
+  String get unhealthy;
+
+  /// Search knowledge placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Search knowledge entries...'**
+  String get searchKnowledge;
+
+  /// Add knowledge button
+  ///
+  /// In en, this message translates to:
+  /// **'Add Entry'**
+  String get addKnowledge;
+
+  /// Knowledge entries list title
+  ///
+  /// In en, this message translates to:
+  /// **'Knowledge Entries'**
+  String get knowledgeEntries;
+
+  /// Empty knowledge list title
+  ///
+  /// In en, this message translates to:
+  /// **'No knowledge entries yet'**
+  String get noKnowledgeEntries;
+
+  /// Empty knowledge list hint
+  ///
+  /// In en, this message translates to:
+  /// **'Add knowledge entries to help your AI assistant remember important information, facts, and context.'**
+  String get noKnowledgeHint;
+
+  /// Knowledge entry added message
+  ///
+  /// In en, this message translates to:
+  /// **'Knowledge entry added'**
+  String get knowledgeEntryAdded;
+
+  /// Knowledge entry deleted message
+  ///
+  /// In en, this message translates to:
+  /// **'Knowledge entry deleted'**
+  String get knowledgeEntryDeleted;
+
+  /// Delete knowledge dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Entry'**
+  String get deleteKnowledgeTitle;
+
+  /// Delete knowledge confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this knowledge entry? This cannot be undone.'**
+  String get deleteKnowledgeConfirm;
+
+  /// Knowledge key input label
+  ///
+  /// In en, this message translates to:
+  /// **'Key / Title'**
+  String get knowledgeKeyLabel;
+
+  /// Knowledge key input hint
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. user-preferences, project-guidelines'**
+  String get knowledgeKeyHint;
+
+  /// Knowledge content input label
+  ///
+  /// In en, this message translates to:
+  /// **'Content'**
+  String get knowledgeContentLabel;
+
+  /// Knowledge content input hint
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the knowledge content...'**
+  String get knowledgeContentHint;
+
+  /// Knowledge category input label
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get knowledgeCategoryLabel;
+
+  /// All categories filter
+  ///
+  /// In en, this message translates to:
+  /// **'All Categories'**
+  String get knowledgeCategoryAll;
+
+  /// Core category
+  ///
+  /// In en, this message translates to:
+  /// **'Core'**
+  String get knowledgeCategoryCore;
+
+  /// Daily category
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get knowledgeCategoryDaily;
+
+  /// Conversation category
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation'**
+  String get knowledgeCategoryConversation;
 }
 
 class _AppLocalizationsDelegate

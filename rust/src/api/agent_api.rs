@@ -269,6 +269,126 @@ pub async fn save_config_to_disk() -> String {
         toml::Value::Float(config.default_temperature),
     );
 
+    // ── Persist feature toggles ──────────────────────────────
+    // [web_search]
+    let mut ws_table = table
+        .get("web_search")
+        .and_then(|v| v.as_table())
+        .cloned()
+        .unwrap_or_default();
+    ws_table.insert(
+        "enabled".into(),
+        toml::Value::Boolean(config.web_search.enabled),
+    );
+    table.insert("web_search".into(), toml::Value::Table(ws_table));
+
+    // [web_fetch]
+    let mut wf_table = table
+        .get("web_fetch")
+        .and_then(|v| v.as_table())
+        .cloned()
+        .unwrap_or_default();
+    wf_table.insert(
+        "enabled".into(),
+        toml::Value::Boolean(config.web_fetch.enabled),
+    );
+    table.insert("web_fetch".into(), toml::Value::Table(wf_table));
+
+    // [browser]
+    let mut br_table = table
+        .get("browser")
+        .and_then(|v| v.as_table())
+        .cloned()
+        .unwrap_or_default();
+    br_table.insert(
+        "enabled".into(),
+        toml::Value::Boolean(config.browser.enabled),
+    );
+    table.insert("browser".into(), toml::Value::Table(br_table));
+
+    // [http_request]
+    let mut hr_table = table
+        .get("http_request")
+        .and_then(|v| v.as_table())
+        .cloned()
+        .unwrap_or_default();
+    hr_table.insert(
+        "enabled".into(),
+        toml::Value::Boolean(config.http_request.enabled),
+    );
+    table.insert("http_request".into(), toml::Value::Table(hr_table));
+
+    // [memory]
+    let mut mem_table = table
+        .get("memory")
+        .and_then(|v| v.as_table())
+        .cloned()
+        .unwrap_or_default();
+    mem_table.insert(
+        "auto_save".into(),
+        toml::Value::Boolean(config.memory.auto_save),
+    );
+    table.insert("memory".into(), toml::Value::Table(mem_table));
+
+    // [cost]
+    let mut cost_table = table
+        .get("cost")
+        .and_then(|v| v.as_table())
+        .cloned()
+        .unwrap_or_default();
+    cost_table.insert("enabled".into(), toml::Value::Boolean(config.cost.enabled));
+    table.insert("cost".into(), toml::Value::Table(cost_table));
+
+    // [skills]
+    let mut skills_table = table
+        .get("skills")
+        .and_then(|v| v.as_table())
+        .cloned()
+        .unwrap_or_default();
+    skills_table.insert(
+        "open_skills_enabled".into(),
+        toml::Value::Boolean(config.skills.open_skills_enabled),
+    );
+    let injection_mode = match config.skills.prompt_injection_mode {
+        zeroclaw::config::SkillsPromptInjectionMode::Compact => "compact",
+        _ => "full",
+    };
+    skills_table.insert(
+        "prompt_injection_mode".into(),
+        toml::Value::String(injection_mode.into()),
+    );
+    table.insert("skills".into(), toml::Value::Table(skills_table));
+
+    // ── Persist autonomy / tool approval settings ────────────
+    let mut autonomy_table = table
+        .get("autonomy")
+        .and_then(|v| v.as_table())
+        .cloned()
+        .unwrap_or_default();
+    autonomy_table.insert(
+        "auto_approve".into(),
+        toml::Value::Array(
+            config
+                .autonomy
+                .auto_approve
+                .iter()
+                .map(|s| toml::Value::String(s.clone()))
+                .collect(),
+        ),
+    );
+    autonomy_table.insert(
+        "always_ask".into(),
+        toml::Value::Array(
+            config
+                .autonomy
+                .always_ask
+                .iter()
+                .map(|s| toml::Value::String(s.clone()))
+                .collect(),
+        ),
+    );
+    table.insert("autonomy".into(), toml::Value::Table(autonomy_table));
+
     let output = match toml::to_string_pretty(&table) {
         Ok(s) => s,
         Err(e) => return format!("error: serialize failed: {e}"),

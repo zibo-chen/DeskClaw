@@ -867,5 +867,77 @@
   },
 
   "pageEnvironments": "Environments",
-  "@pageEnvironments": { "description": "Environments page title" }
+  "@pageEnvironments": { "description": "Environments page title" },
+
+  "navKnowledge": "Knowledge",
+  "@navKnowledge": { "description": "Knowledge base nav item" },
+
+  "pageKnowledge": "Knowledge Base",
+  "@pageKnowledge": { "description": "Knowledge base page title" },
+
+  "knowledgeOverview": "Knowledge Base Overview",
+  "@knowledgeOverview": { "description": "Knowledge stats section title" },
+
+  "totalEntries": "Total Entries",
+  "@totalEntries": { "description": "Total entries stat label" },
+
+  "healthy": "Healthy",
+  "@healthy": { "description": "Health status healthy" },
+
+  "unhealthy": "Unhealthy",
+  "@unhealthy": { "description": "Health status unhealthy" },
+
+  "searchKnowledge": "Search knowledge entries...",
+  "@searchKnowledge": { "description": "Search knowledge placeholder" },
+
+  "addKnowledge": "Add Entry",
+  "@addKnowledge": { "description": "Add knowledge button" },
+
+  "knowledgeEntries": "Knowledge Entries",
+  "@knowledgeEntries": { "description": "Knowledge entries list title" },
+
+  "noKnowledgeEntries": "No knowledge entries yet",
+  "@noKnowledgeEntries": { "description": "Empty knowledge list title" },
+
+  "noKnowledgeHint": "Add knowledge entries to help your AI assistant remember important information, facts, and context.",
+  "@noKnowledgeHint": { "description": "Empty knowledge list hint" },
+
+  "knowledgeEntryAdded": "Knowledge entry added",
+  "@knowledgeEntryAdded": { "description": "Knowledge entry added message" },
+
+  "knowledgeEntryDeleted": "Knowledge entry deleted",
+  "@knowledgeEntryDeleted": { "description": "Knowledge entry deleted message" },
+
+  "deleteKnowledgeTitle": "Delete Entry",
+  "@deleteKnowledgeTitle": { "description": "Delete knowledge dialog title" },
+
+  "deleteKnowledgeConfirm": "Are you sure you want to delete this knowledge entry? This cannot be undone.",
+  "@deleteKnowledgeConfirm": { "description": "Delete knowledge confirmation" },
+
+  "knowledgeKeyLabel": "Key / Title",
+  "@knowledgeKeyLabel": { "description": "Knowledge key input label" },
+
+  "knowledgeKeyHint": "e.g. user-preferences, project-guidelines",
+  "@knowledgeKeyHint": { "description": "Knowledge key input hint" },
+
+  "knowledgeContentLabel": "Content",
+  "@knowledgeContentLabel": { "description": "Knowledge content input label" },
+
+  "knowledgeContentHint": "Enter the knowledge content...",
+  "@knowledgeContentHint": { "description": "Knowledge content input hint" },
+
+  "knowledgeCategoryLabel": "Category",
+  "@knowledgeCategoryLabel": { "description": "Knowledge category input label" },
+
+  "knowledgeCategoryAll": "All Categories",
+  "@knowledgeCategoryAll": { "description": "All categories filter" },
+
+  "knowledgeCategoryCore": "Core",
+  "@knowledgeCategoryCore": { "description": "Core category" },
+
+  "knowledgeCategoryDaily": "Daily",
+  "@knowledgeCategoryDaily": { "description": "Daily category" },
+
+  "knowledgeCategoryConversation": "Conversation",
+  "@knowledgeCategoryConversation": { "description": "Conversation category" }
 }

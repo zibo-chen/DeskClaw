@@ -131,7 +131,34 @@ pub async fn toggle_open_skills(enabled: bool) -> String {
     *super::agent_api::agent_handle().lock().await = None;
 
     // Persist to disk
-    super::agent_api::save_config_to_disk().await
+    let save_result = super::agent_api::save_config_to_disk().await;
+    if save_result != "ok" {
+        return save_result;
+    }
+
+    // If enabling, trigger open-skills repo sync in background
+    if enabled {
+        let cs = super::agent_api::config_state().read().await;
+        if let Some(config) = &cs.config {
+            let open_dir = config
+                .skills
+                .open_skills_dir
+                .as_deref()
+                .map(std::path::PathBuf::from)
+                .unwrap_or_else(|| dirs::home_dir().unwrap_or_default().join("open-skills"));
+            drop(cs);
+            // Clone the repo if it doesn't exist
+            if !open_dir.exists() {
+                tokio::task::spawn_blocking(move || {
+                    sync_open_skills_repo(&open_dir);
+                })
+                .await
+                .ok();
+            }
+        }
+    }
+
+    "ok".into()
 }
 
 /// Update prompt injection mode ("full" or "compact")
@@ -317,4 +344,44 @@ fn parse_skill_md(path: &std::path::Path, dir: &std::path::Path, source: &str) -
             .collect(),
         source: source.to_string(),
     })
+}
+
+/// Clone or pull the open-skills git repository
+fn sync_open_skills_repo(repo_dir: &std::path::Path) {
+    const OPEN_SKILLS_REPO_URL: &str = "https://github.com/besoeasy/open-skills";
+
+    if let Some(parent) = repo_dir.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+
+    if !repo_dir.exists() {
+        let output = std::process::Command::new("git")
+            .args(["clone", "--depth", "1", OPEN_SKILLS_REPO_URL])
+            .arg(repo_dir)
+            .output();
+        match output {
+            Ok(result) if result.status.success() => {
+                eprintln!("open-skills cloned to {}", repo_dir.display());
+            }
+            Ok(result) => {
+                let stderr = String::from_utf8_lossy(&result.stderr);
+                eprintln!("failed to clone open-skills: {stderr}");
+            }
+            Err(err) => {
+                eprintln!("failed to run git clone for open-skills: {err}");
+            }
+        }
+    } else if repo_dir.join(".git").exists() {
+        let output = std::process::Command::new("git")
+            .arg("-C")
+            .arg(repo_dir)
+            .args(["pull", "--ff-only"])
+            .output();
+        match output {
+            Ok(result) if result.status.success() => {}
+            _ => {
+                eprintln!("failed to pull open-skills updates");
+            }
+        }
+    }
 }
