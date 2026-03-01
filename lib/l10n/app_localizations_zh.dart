@@ -1087,4 +1087,72 @@ class AppLocalizationsZh extends AppLocalizations {
   String agentUpdated(String name) {
     return '子代理 \'$name\' 已更新';
   }
+
+  @override
+  String get navProxy => '网络代理';
+
+  @override
+  String get proxyPageTitle => '代理设置';
+
+  @override
+  String get proxyConfiguration => '代理配置';
+
+  @override
+  String get proxyDescription =>
+      '将出站 HTTP/HTTPS 流量路由到代理服务器。支持 HTTP、HTTPS、SOCKS5 和 SOCKS5H 协议。';
+
+  @override
+  String get proxyAllProxy => '统一代理 (回退)';
+
+  @override
+  String get proxyAllProxyHelp => '未设置单独代理时，所有协议使用此代理地址。';
+
+  @override
+  String get proxyHttpProxy => 'HTTP 代理';
+
+  @override
+  String get proxyHttpProxyHelp => 'HTTP 请求的代理地址，优先级高于统一代理。';
+
+  @override
+  String get proxyHttpsProxy => 'HTTPS 代理';
+
+  @override
+  String get proxyHttpsProxyHelp => 'HTTPS 请求的代理地址，优先级高于统一代理。';
+
+  @override
+  String get proxyNoProxy => '不代理列表';
+
+  @override
+  String get proxyNoProxyHelp => '逗号分隔的主机/域名列表，这些地址将绕过代理直连。';
+
+  @override
+  String get proxyScope => '代理范围';
+
+  @override
+  String get proxyScopeDescription => '选择哪些出站流量应通过代理路由。';
+
+  @override
+  String get proxyScopeZeroclaw => '全部流量';
+
+  @override
+  String get proxyScopeZeroclawDesc => '所有 ZeroClaw 管理的 HTTP 流量';
+
+  @override
+  String get proxyScopeServices => '指定服务';
+
+  @override
+  String get proxyScopeServicesDesc => '仅显式列出的服务';
+
+  @override
+  String get proxyScopeEnvironment => '系统环境变量';
+
+  @override
+  String get proxyScopeEnvironmentDesc => '设置进程环境变量 (HTTP_PROXY 等)';
+
+  @override
+  String get proxyServiceSelectors => '服务选择器';
+
+  @override
+  String get proxyServiceSelectorsHelp =>
+      '选择哪些服务应使用代理。可使用通配符如 provider.* 匹配所有供应商。';
 }

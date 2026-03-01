@@ -436,6 +436,69 @@ pub async fn save_config_to_disk() -> String {
         table.remove("agents");
     }
 
+    // [proxy]
+    let mut proxy_table = table
+        .get("proxy")
+        .and_then(|v| v.as_table())
+        .cloned()
+        .unwrap_or_default();
+    proxy_table.insert(
+        "enabled".into(),
+        toml::Value::Boolean(config.proxy.enabled),
+    );
+    if let Some(ref url) = config.proxy.http_proxy {
+        proxy_table.insert("http_proxy".into(), toml::Value::String(url.clone()));
+    } else {
+        proxy_table.remove("http_proxy");
+    }
+    if let Some(ref url) = config.proxy.https_proxy {
+        proxy_table.insert("https_proxy".into(), toml::Value::String(url.clone()));
+    } else {
+        proxy_table.remove("https_proxy");
+    }
+    if let Some(ref url) = config.proxy.all_proxy {
+        proxy_table.insert("all_proxy".into(), toml::Value::String(url.clone()));
+    } else {
+        proxy_table.remove("all_proxy");
+    }
+    if !config.proxy.no_proxy.is_empty() {
+        proxy_table.insert(
+            "no_proxy".into(),
+            toml::Value::Array(
+                config
+                    .proxy
+                    .no_proxy
+                    .iter()
+                    .map(|s| toml::Value::String(s.clone()))
+                    .collect(),
+            ),
+        );
+    } else {
+        proxy_table.remove("no_proxy");
+    }
+    let scope_str = match config.proxy.scope {
+        zeroclaw::config::ProxyScope::Environment => "environment",
+        zeroclaw::config::ProxyScope::Zeroclaw => "zeroclaw",
+        zeroclaw::config::ProxyScope::Services => "services",
+    };
+    proxy_table.insert("scope".into(), toml::Value::String(scope_str.into()));
+    if !config.proxy.services.is_empty() {
+        proxy_table.insert(
+            "services".into(),
+            toml::Value::Array(
+                config
+                    .proxy
+                    .services
+                    .iter()
+                    .map(|s| toml::Value::String(s.clone()))
+                    .collect(),
+            ),
+        );
+    } else {
+        proxy_table.remove("services");
+    }
+    table.insert("proxy".into(), toml::Value::Table(proxy_table));
+
     let output = match toml::to_string_pretty(&table) {
         Ok(s) => s,
         Err(e) => return format!("error: serialize failed: {e}"),

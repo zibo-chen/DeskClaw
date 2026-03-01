@@ -11,6 +11,7 @@ import 'api/agents_api.dart';
 import 'api/config_api.dart';
 import 'api/cron_api.dart';
 import 'api/knowledge_api.dart';
+import 'api/proxy_api.dart';
 import 'api/sessions_api.dart';
 import 'api/simple.dart';
 import 'api/skills_api.dart';
@@ -69,6 +70,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   KnowledgeEntry dco_decode_box_autoadd_knowledge_entry(dynamic raw);
+
+  @protected
+  ProxyConfigDto dco_decode_box_autoadd_proxy_config_dto(dynamic raw);
 
   @protected
   SessionDetail dco_decode_box_autoadd_session_detail(dynamic raw);
@@ -146,6 +150,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<ProviderInfo> dco_decode_list_provider_info(dynamic raw);
 
   @protected
+  List<ProxyServiceInfo> dco_decode_list_proxy_service_info(dynamic raw);
+
+  @protected
   List<SessionMessage> dco_decode_list_session_message(dynamic raw);
 
   @protected
@@ -198,6 +205,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ProviderType dco_decode_provider_type(dynamic raw);
+
+  @protected
+  ProxyConfigDto dco_decode_proxy_config_dto(dynamic raw);
+
+  @protected
+  ProxyScopeDto dco_decode_proxy_scope_dto(dynamic raw);
+
+  @protected
+  ProxyServiceInfo dco_decode_proxy_service_info(dynamic raw);
 
   @protected
   RuntimeStatus dco_decode_runtime_status(dynamic raw);
@@ -293,6 +309,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  ProxyConfigDto sse_decode_box_autoadd_proxy_config_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   SessionDetail sse_decode_box_autoadd_session_detail(
     SseDeserializer deserializer,
   );
@@ -378,6 +399,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<ProxyServiceInfo> sse_decode_list_proxy_service_info(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<SessionMessage> sse_decode_list_session_message(
     SseDeserializer deserializer,
   );
@@ -442,6 +468,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ProviderType sse_decode_provider_type(SseDeserializer deserializer);
+
+  @protected
+  ProxyConfigDto sse_decode_proxy_config_dto(SseDeserializer deserializer);
+
+  @protected
+  ProxyScopeDto sse_decode_proxy_scope_dto(SseDeserializer deserializer);
+
+  @protected
+  ProxyServiceInfo sse_decode_proxy_service_info(SseDeserializer deserializer);
 
   @protected
   RuntimeStatus sse_decode_runtime_status(SseDeserializer deserializer);
@@ -551,6 +586,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_knowledge_entry(
     KnowledgeEntry self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_proxy_config_dto(
+    ProxyConfigDto self,
     SseSerializer serializer,
   );
 
@@ -675,6 +716,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_proxy_service_info(
+    List<ProxyServiceInfo> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_session_message(
     List<SessionMessage> self,
     SseSerializer serializer,
@@ -754,6 +801,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_provider_type(ProviderType self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_proxy_config_dto(
+    ProxyConfigDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_proxy_scope_dto(ProxyScopeDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_proxy_service_info(
+    ProxyServiceInfo self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_runtime_status(RuntimeStatus self, SseSerializer serializer);

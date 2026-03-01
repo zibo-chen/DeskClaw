@@ -19,6 +19,7 @@ enum NavSection {
   agents,
   configuration,
   models,
+  proxy,
   environments,
 }
 

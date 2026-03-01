@@ -2119,6 +2119,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Agent \'\'{name}\'\' updated'**
   String agentUpdated(String name);
+
+  /// Proxy nav item
+  ///
+  /// In en, this message translates to:
+  /// **'Proxy'**
+  String get navProxy;
+
+  /// Proxy settings page title
+  ///
+  /// In en, this message translates to:
+  /// **'Proxy Settings'**
+  String get proxyPageTitle;
+
+  /// Proxy config section title
+  ///
+  /// In en, this message translates to:
+  /// **'Proxy Configuration'**
+  String get proxyConfiguration;
+
+  /// Proxy description
+  ///
+  /// In en, this message translates to:
+  /// **'Route outbound HTTP/HTTPS traffic through a proxy server. Supports HTTP, HTTPS, SOCKS5, and SOCKS5H protocols.'**
+  String get proxyDescription;
+
+  /// All proxy field label
+  ///
+  /// In en, this message translates to:
+  /// **'All Proxy (Fallback)'**
+  String get proxyAllProxy;
+
+  /// All proxy help text
+  ///
+  /// In en, this message translates to:
+  /// **'Fallback proxy URL used for all schemes when specific proxy is not set.'**
+  String get proxyAllProxyHelp;
+
+  /// HTTP proxy field label
+  ///
+  /// In en, this message translates to:
+  /// **'HTTP Proxy'**
+  String get proxyHttpProxy;
+
+  /// HTTP proxy help text
+  ///
+  /// In en, this message translates to:
+  /// **'Proxy URL for HTTP requests. Overrides all_proxy for HTTP.'**
+  String get proxyHttpProxyHelp;
+
+  /// HTTPS proxy field label
+  ///
+  /// In en, this message translates to:
+  /// **'HTTPS Proxy'**
+  String get proxyHttpsProxy;
+
+  /// HTTPS proxy help text
+  ///
+  /// In en, this message translates to:
+  /// **'Proxy URL for HTTPS requests. Overrides all_proxy for HTTPS.'**
+  String get proxyHttpsProxyHelp;
+
+  /// No proxy field label
+  ///
+  /// In en, this message translates to:
+  /// **'No Proxy (Bypass List)'**
+  String get proxyNoProxy;
+
+  /// No proxy help text
+  ///
+  /// In en, this message translates to:
+  /// **'Comma-separated list of hosts/domains that should bypass the proxy.'**
+  String get proxyNoProxyHelp;
+
+  /// Proxy scope section title
+  ///
+  /// In en, this message translates to:
+  /// **'Proxy Scope'**
+  String get proxyScope;
+
+  /// Proxy scope description
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which outbound traffic should be routed through the proxy.'**
+  String get proxyScopeDescription;
+
+  /// ZeroClaw scope label
+  ///
+  /// In en, this message translates to:
+  /// **'All Traffic'**
+  String get proxyScopeZeroclaw;
+
+  /// ZeroClaw scope description
+  ///
+  /// In en, this message translates to:
+  /// **'All ZeroClaw-managed HTTP traffic'**
+  String get proxyScopeZeroclawDesc;
+
+  /// Services scope label
+  ///
+  /// In en, this message translates to:
+  /// **'Selected Services'**
+  String get proxyScopeServices;
+
+  /// Services scope description
+  ///
+  /// In en, this message translates to:
+  /// **'Only explicitly listed services'**
+  String get proxyScopeServicesDesc;
+
+  /// Environment scope label
+  ///
+  /// In en, this message translates to:
+  /// **'System Env'**
+  String get proxyScopeEnvironment;
+
+  /// Environment scope description
+  ///
+  /// In en, this message translates to:
+  /// **'Set process env vars (HTTP_PROXY, etc.)'**
+  String get proxyScopeEnvironmentDesc;
+
+  /// Service selectors title
+  ///
+  /// In en, this message translates to:
+  /// **'Service Selectors'**
+  String get proxyServiceSelectors;
+
+  /// Service selectors help
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which services should use the proxy. Use wildcards like provider.* to match all providers.'**
+  String get proxyServiceSelectorsHelp;
 }
 
 class _AppLocalizationsDelegate

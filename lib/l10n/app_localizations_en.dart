@@ -1113,4 +1113,78 @@ class AppLocalizationsEn extends AppLocalizations {
   String agentUpdated(String name) {
     return 'Agent \'\'$name\'\' updated';
   }
+
+  @override
+  String get navProxy => 'Proxy';
+
+  @override
+  String get proxyPageTitle => 'Proxy Settings';
+
+  @override
+  String get proxyConfiguration => 'Proxy Configuration';
+
+  @override
+  String get proxyDescription =>
+      'Route outbound HTTP/HTTPS traffic through a proxy server. Supports HTTP, HTTPS, SOCKS5, and SOCKS5H protocols.';
+
+  @override
+  String get proxyAllProxy => 'All Proxy (Fallback)';
+
+  @override
+  String get proxyAllProxyHelp =>
+      'Fallback proxy URL used for all schemes when specific proxy is not set.';
+
+  @override
+  String get proxyHttpProxy => 'HTTP Proxy';
+
+  @override
+  String get proxyHttpProxyHelp =>
+      'Proxy URL for HTTP requests. Overrides all_proxy for HTTP.';
+
+  @override
+  String get proxyHttpsProxy => 'HTTPS Proxy';
+
+  @override
+  String get proxyHttpsProxyHelp =>
+      'Proxy URL for HTTPS requests. Overrides all_proxy for HTTPS.';
+
+  @override
+  String get proxyNoProxy => 'No Proxy (Bypass List)';
+
+  @override
+  String get proxyNoProxyHelp =>
+      'Comma-separated list of hosts/domains that should bypass the proxy.';
+
+  @override
+  String get proxyScope => 'Proxy Scope';
+
+  @override
+  String get proxyScopeDescription =>
+      'Choose which outbound traffic should be routed through the proxy.';
+
+  @override
+  String get proxyScopeZeroclaw => 'All Traffic';
+
+  @override
+  String get proxyScopeZeroclawDesc => 'All ZeroClaw-managed HTTP traffic';
+
+  @override
+  String get proxyScopeServices => 'Selected Services';
+
+  @override
+  String get proxyScopeServicesDesc => 'Only explicitly listed services';
+
+  @override
+  String get proxyScopeEnvironment => 'System Env';
+
+  @override
+  String get proxyScopeEnvironmentDesc =>
+      'Set process env vars (HTTP_PROXY, etc.)';
+
+  @override
+  String get proxyServiceSelectors => 'Service Selectors';
+
+  @override
+  String get proxyServiceSelectorsHelp =>
+      'Choose which services should use the proxy. Use wildcards like provider.* to match all providers.';
 }

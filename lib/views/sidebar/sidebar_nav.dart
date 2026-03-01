@@ -165,6 +165,14 @@ class SidebarNav extends ConsumerWidget {
                       _buildNavItem(
                         c,
                         ref: ref,
+                        icon: Icons.vpn_key,
+                        label: l10n.navProxy,
+                        section: NavSection.proxy,
+                        isActive: currentNav == NavSection.proxy,
+                      ),
+                      _buildNavItem(
+                        c,
+                        ref: ref,
                         icon: Icons.language,
                         label: l10n.navEnvironments,
                         section: NavSection.environments,

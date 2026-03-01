@@ -1116,5 +1116,71 @@
   "@agentUpdated": {
     "description": "Agent updated message",
     "placeholders": { "name": { "type": "String" } }
-  }
+  },
+
+  "navProxy": "Proxy",
+  "@navProxy": { "description": "Proxy nav item" },
+
+  "proxyPageTitle": "Proxy Settings",
+  "@proxyPageTitle": { "description": "Proxy settings page title" },
+
+  "proxyConfiguration": "Proxy Configuration",
+  "@proxyConfiguration": { "description": "Proxy config section title" },
+
+  "proxyDescription": "Route outbound HTTP/HTTPS traffic through a proxy server. Supports HTTP, HTTPS, SOCKS5, and SOCKS5H protocols.",
+  "@proxyDescription": { "description": "Proxy description" },
+
+  "proxyAllProxy": "All Proxy (Fallback)",
+  "@proxyAllProxy": { "description": "All proxy field label" },
+
+  "proxyAllProxyHelp": "Fallback proxy URL used for all schemes when specific proxy is not set.",
+  "@proxyAllProxyHelp": { "description": "All proxy help text" },
+
+  "proxyHttpProxy": "HTTP Proxy",
+  "@proxyHttpProxy": { "description": "HTTP proxy field label" },
+
+  "proxyHttpProxyHelp": "Proxy URL for HTTP requests. Overrides all_proxy for HTTP.",
+  "@proxyHttpProxyHelp": { "description": "HTTP proxy help text" },
+
+  "proxyHttpsProxy": "HTTPS Proxy",
+  "@proxyHttpsProxy": { "description": "HTTPS proxy field label" },
+
+  "proxyHttpsProxyHelp": "Proxy URL for HTTPS requests. Overrides all_proxy for HTTPS.",
+  "@proxyHttpsProxyHelp": { "description": "HTTPS proxy help text" },
+
+  "proxyNoProxy": "No Proxy (Bypass List)",
+  "@proxyNoProxy": { "description": "No proxy field label" },
+
+  "proxyNoProxyHelp": "Comma-separated list of hosts/domains that should bypass the proxy.",
+  "@proxyNoProxyHelp": { "description": "No proxy help text" },
+
+  "proxyScope": "Proxy Scope",
+  "@proxyScope": { "description": "Proxy scope section title" },
+
+  "proxyScopeDescription": "Choose which outbound traffic should be routed through the proxy.",
+  "@proxyScopeDescription": { "description": "Proxy scope description" },
+
+  "proxyScopeZeroclaw": "All Traffic",
+  "@proxyScopeZeroclaw": { "description": "ZeroClaw scope label" },
+
+  "proxyScopeZeroclawDesc": "All ZeroClaw-managed HTTP traffic",
+  "@proxyScopeZeroclawDesc": { "description": "ZeroClaw scope description" },
+
+  "proxyScopeServices": "Selected Services",
+  "@proxyScopeServices": { "description": "Services scope label" },
+
+  "proxyScopeServicesDesc": "Only explicitly listed services",
+  "@proxyScopeServicesDesc": { "description": "Services scope description" },
+
+  "proxyScopeEnvironment": "System Env",
+  "@proxyScopeEnvironment": { "description": "Environment scope label" },
+
+  "proxyScopeEnvironmentDesc": "Set process env vars (HTTP_PROXY, etc.)",
+  "@proxyScopeEnvironmentDesc": { "description": "Environment scope description" },
+
+  "proxyServiceSelectors": "Service Selectors",
+  "@proxyServiceSelectors": { "description": "Service selectors title" },
+
+  "proxyServiceSelectorsHelp": "Choose which services should use the proxy. Use wildcards like provider.* to match all providers.",
+  "@proxyServiceSelectorsHelp": { "description": "Service selectors help" }
 }
