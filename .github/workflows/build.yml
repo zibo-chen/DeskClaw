@@ -162,6 +162,11 @@ jobs:
         with:
           toolchain: ${{ env.RUST_VERSION }}
 
+      - name: Setup MSVC developer command prompt
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
       - name: Install Rust native build dependencies (Windows)
         run: |
           choco install nasm strawberryperl -y
@@ -186,6 +191,10 @@ jobs:
         env:
           CARGOKIT_VERBOSE: "1"
           RUST_BACKTRACE: full
+          CC: cl
+          CXX: cl
+          CC_x86_64_pc_windows_msvc: cl
+          CXX_x86_64_pc_windows_msvc: cl
         run: flutter build windows --release
 
       - name: Package Windows app
