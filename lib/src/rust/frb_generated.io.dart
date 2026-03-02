@@ -9,6 +9,7 @@ import 'api/config_api.dart';
 import 'api/cron_api.dart';
 import 'api/cron_notification_api.dart';
 import 'api/knowledge_api.dart';
+import 'api/mcp_api.dart';
 import 'api/proxy_api.dart';
 import 'api/routes_api.dart';
 import 'api/sessions_api.dart';
@@ -83,6 +84,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   KnowledgeEntry dco_decode_box_autoadd_knowledge_entry(dynamic raw);
 
   @protected
+  McpServerDto dco_decode_box_autoadd_mcp_server_dto(dynamic raw);
+
+  @protected
   ModelRouteDto dco_decode_box_autoadd_model_route_dto(dynamic raw);
 
   @protected
@@ -140,6 +144,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 dco_decode_i_64(dynamic raw);
 
   @protected
+  KeyValueDto dco_decode_key_value_dto(dynamic raw);
+
+  @protected
   KnowledgeEntry dco_decode_knowledge_entry(dynamic raw);
 
   @protected
@@ -167,7 +174,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<EmbeddingRouteDto> dco_decode_list_embedding_route_dto(dynamic raw);
 
   @protected
+  List<KeyValueDto> dco_decode_list_key_value_dto(dynamic raw);
+
+  @protected
   List<KnowledgeEntry> dco_decode_list_knowledge_entry(dynamic raw);
+
+  @protected
+  List<McpServerDto> dco_decode_list_mcp_server_dto(dynamic raw);
 
   @protected
   List<ModelRouteDto> dco_decode_list_model_route_dto(dynamic raw);
@@ -201,6 +214,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<ToolSpecDto> dco_decode_list_tool_spec_dto(dynamic raw);
+
+  @protected
+  McpConfigDto dco_decode_mcp_config_dto(dynamic raw);
+
+  @protected
+  McpServerDto dco_decode_mcp_server_dto(dynamic raw);
 
   @protected
   MemoryConfigDto dco_decode_memory_config_dto(dynamic raw);
@@ -362,6 +381,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  McpServerDto sse_decode_box_autoadd_mcp_server_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   ModelRouteDto sse_decode_box_autoadd_model_route_dto(
     SseDeserializer deserializer,
   );
@@ -429,6 +453,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
 
   @protected
+  KeyValueDto sse_decode_key_value_dto(SseDeserializer deserializer);
+
+  @protected
   KnowledgeEntry sse_decode_knowledge_entry(SseDeserializer deserializer);
 
   @protected
@@ -462,7 +489,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<KeyValueDto> sse_decode_list_key_value_dto(SseDeserializer deserializer);
+
+  @protected
   List<KnowledgeEntry> sse_decode_list_knowledge_entry(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<McpServerDto> sse_decode_list_mcp_server_dto(
     SseDeserializer deserializer,
   );
 
@@ -512,6 +547,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<ToolSpecDto> sse_decode_list_tool_spec_dto(SseDeserializer deserializer);
+
+  @protected
+  McpConfigDto sse_decode_mcp_config_dto(SseDeserializer deserializer);
+
+  @protected
+  McpServerDto sse_decode_mcp_server_dto(SseDeserializer deserializer);
 
   @protected
   MemoryConfigDto sse_decode_memory_config_dto(SseDeserializer deserializer);
@@ -700,6 +741,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_mcp_server_dto(
+    McpServerDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_model_route_dto(
     ModelRouteDto self,
     SseSerializer serializer,
@@ -787,6 +834,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
 
   @protected
+  void sse_encode_key_value_dto(KeyValueDto self, SseSerializer serializer);
+
+  @protected
   void sse_encode_knowledge_entry(
     KnowledgeEntry self,
     SseSerializer serializer,
@@ -838,8 +888,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_key_value_dto(
+    List<KeyValueDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_knowledge_entry(
     List<KnowledgeEntry> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_mcp_server_dto(
+    List<McpServerDto> self,
     SseSerializer serializer,
   );
 
@@ -902,6 +964,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     List<ToolSpecDto> self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_mcp_config_dto(McpConfigDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_mcp_server_dto(McpServerDto self, SseSerializer serializer);
 
   @protected
   void sse_encode_memory_config_dto(

@@ -69,12 +69,14 @@ pub async fn upsert_model_route(route: ModelRouteDto) -> String {
         hint: hint.clone(),
         provider: route.provider.trim().to_string(),
         model: route.model.trim().to_string(),
+        max_tokens: None,
         api_key: route
             .api_key
             .as_deref()
             .map(str::trim)
             .filter(|s| !s.is_empty())
             .map(String::from),
+        transport: None,
     };
 
     {

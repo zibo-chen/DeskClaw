@@ -11,7 +11,7 @@ import 'package:deskclaw/views/settings/workspace_page.dart';
 import 'package:deskclaw/views/settings/configuration_page.dart';
 import 'package:deskclaw/views/settings/channels_page.dart';
 import 'package:deskclaw/views/settings/skills_page.dart';
-import 'package:deskclaw/views/settings/tools_page.dart';
+import 'package:deskclaw/views/settings/mcp_page.dart';
 import 'package:deskclaw/views/settings/agents_page.dart';
 import 'package:deskclaw/views/settings/proxy_page.dart';
 import 'package:deskclaw/views/settings/sessions_page.dart';
@@ -138,7 +138,7 @@ class _AppShellState extends ConsumerState<AppShell> {
       NavSection.cronJobs => const CronJobsPage(),
       NavSection.knowledge => const KnowledgePage(),
       NavSection.skills => const SkillsPage(),
-      NavSection.mcp => const ToolsPage(),
+      NavSection.mcp => const McpPage(),
       NavSection.agents => const AgentsPage(),
       NavSection.proxy => const ProxyPage(),
       NavSection.environments => PlaceholderPage(

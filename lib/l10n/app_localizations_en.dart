@@ -1385,4 +1385,89 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get refreshFiles => 'Refresh';
+
+  @override
+  String get pageMcpServers => 'MCP Servers';
+
+  @override
+  String get mcpEnabled => 'MCP Enabled';
+
+  @override
+  String get mcpEnabledDesc =>
+      'Enable Model Context Protocol to connect external tool servers';
+
+  @override
+  String get mcpNoServers => 'No MCP servers configured';
+
+  @override
+  String get mcpNoServersHint =>
+      'Add an MCP server to extend your agent with external tools';
+
+  @override
+  String get mcpAddServer => 'Add Server';
+
+  @override
+  String get mcpEditServer => 'Edit Server';
+
+  @override
+  String get mcpDeleteServer => 'Delete Server';
+
+  @override
+  String mcpDeleteConfirm(String name) {
+    return 'Are you sure you want to delete server \"$name\"?';
+  }
+
+  @override
+  String get mcpServerName => 'Server Name';
+
+  @override
+  String get mcpTransport => 'Transport';
+
+  @override
+  String get mcpCommand => 'Command';
+
+  @override
+  String get mcpArgs => 'Arguments';
+
+  @override
+  String get mcpArgsHint => 'One argument per line';
+
+  @override
+  String get mcpUrl => 'URL';
+
+  @override
+  String get mcpTimeout => 'Timeout (seconds)';
+
+  @override
+  String get mcpEnvVars => 'Environment Variables';
+
+  @override
+  String get mcpHeaders => 'HTTP Headers';
+
+  @override
+  String get mcpAddKv => 'Add';
+
+  @override
+  String get mcpKeyPlaceholder => 'Key';
+
+  @override
+  String get mcpValuePlaceholder => 'Value';
+
+  @override
+  String get mcpServerAdded => 'MCP server added successfully';
+
+  @override
+  String get mcpServerUpdated => 'MCP server updated successfully';
+
+  @override
+  String get mcpServerDeleted => 'MCP server deleted';
+
+  @override
+  String get mcpTransportStdio => 'Standard I/O';
+
+  @override
+  String get mcpTransportHttp => 'HTTP';
+
+  @override
+  String get mcpTransportSse => 'Server-Sent Events';
 }

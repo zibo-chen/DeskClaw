@@ -816,6 +816,10 @@ pub async fn save_channel_config(channel_type: String, config_json: String) -> S
                         stream_mode: zeroclaw::config::StreamMode::default(),
                         draft_update_interval_ms: 1000,
                         interrupt_on_new_message: false,
+                        progress_mode: Default::default(),
+                        group_reply: None,
+                        base_url: None,
+                        ack_enabled: true,
                     });
                 }
             }
@@ -844,6 +848,7 @@ pub async fn save_channel_config(channel_type: String, config_json: String) -> S
                             .get("mention_only")
                             .and_then(|v| v.as_bool())
                             .unwrap_or(false),
+                        group_reply: None,
                     });
                 }
             }
@@ -868,7 +873,9 @@ pub async fn save_channel_config(channel_type: String, config_json: String) -> S
                             .and_then(|v| v.as_str())
                             .filter(|s| !s.is_empty())
                             .map(|s| s.to_string()),
+                        channel_ids: vec![],
                         allowed_users: json_str_array(&val, "allowed_users"),
+                        group_reply: None,
                     });
                 }
             }
@@ -955,9 +962,12 @@ pub async fn save_channel_config(channel_type: String, config_json: String) -> S
                             .get("mention_only")
                             .and_then(|v| v.as_bool())
                             .unwrap_or(false),
+                        group_reply: None,
                         use_feishu: false,
                         receive_mode: zeroclaw::config::schema::LarkReceiveMode::default(),
                         port: None,
+                        draft_update_interval_ms: 3000,
+                        max_draft_edits: 20,
                     });
                 }
             }
@@ -1010,6 +1020,7 @@ pub async fn save_channel_config(channel_type: String, config_json: String) -> S
                             .unwrap_or("")
                             .to_string(),
                         allowed_users: json_str_array(&val, "allowed_users"),
+                        mention_only: false,
                     });
                 }
             }

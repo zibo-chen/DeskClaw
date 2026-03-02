@@ -2605,6 +2605,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Refresh'**
   String get refreshFiles;
+
+  /// MCP servers management page title
+  ///
+  /// In en, this message translates to:
+  /// **'MCP Servers'**
+  String get pageMcpServers;
+
+  /// MCP enabled toggle label
+  ///
+  /// In en, this message translates to:
+  /// **'MCP Enabled'**
+  String get mcpEnabled;
+
+  /// MCP enabled description
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Model Context Protocol to connect external tool servers'**
+  String get mcpEnabledDesc;
+
+  /// Empty state for MCP servers
+  ///
+  /// In en, this message translates to:
+  /// **'No MCP servers configured'**
+  String get mcpNoServers;
+
+  /// Empty state hint
+  ///
+  /// In en, this message translates to:
+  /// **'Add an MCP server to extend your agent with external tools'**
+  String get mcpNoServersHint;
+
+  /// Add MCP server button
+  ///
+  /// In en, this message translates to:
+  /// **'Add Server'**
+  String get mcpAddServer;
+
+  /// Edit MCP server dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Server'**
+  String get mcpEditServer;
+
+  /// Delete MCP server
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Server'**
+  String get mcpDeleteServer;
+
+  /// Delete confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete server \"{name}\"?'**
+  String mcpDeleteConfirm(String name);
+
+  /// Server name field
+  ///
+  /// In en, this message translates to:
+  /// **'Server Name'**
+  String get mcpServerName;
+
+  /// Transport type field
+  ///
+  /// In en, this message translates to:
+  /// **'Transport'**
+  String get mcpTransport;
+
+  /// Command field for stdio transport
+  ///
+  /// In en, this message translates to:
+  /// **'Command'**
+  String get mcpCommand;
+
+  /// Arguments field
+  ///
+  /// In en, this message translates to:
+  /// **'Arguments'**
+  String get mcpArgs;
+
+  /// Arguments hint
+  ///
+  /// In en, this message translates to:
+  /// **'One argument per line'**
+  String get mcpArgsHint;
+
+  /// URL field for HTTP/SSE transport
+  ///
+  /// In en, this message translates to:
+  /// **'URL'**
+  String get mcpUrl;
+
+  /// Tool timeout field
+  ///
+  /// In en, this message translates to:
+  /// **'Timeout (seconds)'**
+  String get mcpTimeout;
+
+  /// Environment variables section
+  ///
+  /// In en, this message translates to:
+  /// **'Environment Variables'**
+  String get mcpEnvVars;
+
+  /// HTTP headers section
+  ///
+  /// In en, this message translates to:
+  /// **'HTTP Headers'**
+  String get mcpHeaders;
+
+  /// Add key-value pair
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get mcpAddKv;
+
+  /// Key placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Key'**
+  String get mcpKeyPlaceholder;
+
+  /// Value placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Value'**
+  String get mcpValuePlaceholder;
+
+  /// Server added success
+  ///
+  /// In en, this message translates to:
+  /// **'MCP server added successfully'**
+  String get mcpServerAdded;
+
+  /// Server updated success
+  ///
+  /// In en, this message translates to:
+  /// **'MCP server updated successfully'**
+  String get mcpServerUpdated;
+
+  /// Server deleted success
+  ///
+  /// In en, this message translates to:
+  /// **'MCP server deleted'**
+  String get mcpServerDeleted;
+
+  /// Stdio transport option
+  ///
+  /// In en, this message translates to:
+  /// **'Standard I/O'**
+  String get mcpTransportStdio;
+
+  /// HTTP transport option
+  ///
+  /// In en, this message translates to:
+  /// **'HTTP'**
+  String get mcpTransportHttp;
+
+  /// SSE transport option
+  ///
+  /// In en, this message translates to:
+  /// **'Server-Sent Events'**
+  String get mcpTransportSse;
 }
 
 class _AppLocalizationsDelegate

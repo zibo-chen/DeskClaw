@@ -22,7 +22,8 @@ Future<AutonomyConfig> getAutonomyConfig() =>
 Future<String> updateAutonomyLevel({required String level}) =>
     RustLib.instance.api.crateApiWorkspaceApiUpdateAutonomyLevel(level: level);
 
-/// Update trust_me mode
+/// Toggle trust-me mode. When enabled, all security checks are bypassed
+/// and tool calls are auto-approved without user confirmation.
 Future<String> updateTrustMe({required bool enabled}) =>
     RustLib.instance.api.crateApiWorkspaceApiUpdateTrustMe(enabled: enabled);
 

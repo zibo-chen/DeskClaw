@@ -1090,7 +1090,8 @@ pub async fn send_message_stream(
     } else {
         None
     };
-    let on_approval_ref = on_approval_fn.as_ref();
+    let on_approval_arc: Option<zeroclaw::agent::loop_::OnApprovalArc> =
+        on_approval_fn.map(std::sync::Arc::new);
 
     let turn_result = {
         let mut agent_guard = agent_handle().lock().await;
@@ -1105,7 +1106,7 @@ pub async fn send_message_stream(
         };
         timeout(
             Duration::from_secs(TURN_TIMEOUT_SECS),
-            agent.turn_streaming(&enriched_message, tx, on_approval_ref),
+            agent.turn_streaming(&enriched_message, tx, on_approval_arc),
         )
         .await
     };

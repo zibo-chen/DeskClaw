@@ -1346,4 +1346,87 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get refreshFiles => '刷新';
+
+  @override
+  String get pageMcpServers => 'MCP 服务器';
+
+  @override
+  String get mcpEnabled => '启用 MCP';
+
+  @override
+  String get mcpEnabledDesc => '启用模型上下文协议以连接外部工具服务器';
+
+  @override
+  String get mcpNoServers => '暂无 MCP 服务器';
+
+  @override
+  String get mcpNoServersHint => '添加 MCP 服务器以扩展 Agent 的外部工具能力';
+
+  @override
+  String get mcpAddServer => '添加服务器';
+
+  @override
+  String get mcpEditServer => '编辑服务器';
+
+  @override
+  String get mcpDeleteServer => '删除服务器';
+
+  @override
+  String mcpDeleteConfirm(String name) {
+    return '确定要删除服务器 \"$name\" 吗？';
+  }
+
+  @override
+  String get mcpServerName => '服务器名称';
+
+  @override
+  String get mcpTransport => '传输方式';
+
+  @override
+  String get mcpCommand => '命令';
+
+  @override
+  String get mcpArgs => '参数';
+
+  @override
+  String get mcpArgsHint => '每行一个参数';
+
+  @override
+  String get mcpUrl => 'URL';
+
+  @override
+  String get mcpTimeout => '超时时间（秒）';
+
+  @override
+  String get mcpEnvVars => '环境变量';
+
+  @override
+  String get mcpHeaders => 'HTTP Headers';
+
+  @override
+  String get mcpAddKv => '添加';
+
+  @override
+  String get mcpKeyPlaceholder => '键';
+
+  @override
+  String get mcpValuePlaceholder => '值';
+
+  @override
+  String get mcpServerAdded => 'MCP 服务器添加成功';
+
+  @override
+  String get mcpServerUpdated => 'MCP 服务器更新成功';
+
+  @override
+  String get mcpServerDeleted => 'MCP 服务器已删除';
+
+  @override
+  String get mcpTransportStdio => '标准 I/O';
+
+  @override
+  String get mcpTransportHttp => 'HTTP';
+
+  @override
+  String get mcpTransportSse => 'Server-Sent Events';
 }

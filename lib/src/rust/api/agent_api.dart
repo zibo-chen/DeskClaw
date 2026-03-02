@@ -9,9 +9,17 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'agent_api.freezed.dart';
 
-// These functions are ignored because they are not marked as `pub`: `agent_handle`, `config_state`, `ensure_agent`, `truncate_str`
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ChatMessageDto`, `ConfigState`, `ToolCallDto`
+// These functions are ignored because they are not marked as `pub`: `agent_handle`, `config_state`, `ensure_agent`, `pending_approval`, `truncate_str`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ChatMessageDto`, `ConfigState`, `PendingApproval`, `ToolCallDto`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
+
+/// Respond to a pending tool approval request from Flutter UI.
+///
+/// `approved` values: "yes", "no", "always"
+Future<String> respondToToolApproval({required String decision}) => RustLib
+    .instance
+    .api
+    .crateApiAgentApiRespondToToolApproval(decision: decision);
 
 /// Initialize the agent runtime: load zeroclaw config from ~/.zeroclaw/config.toml.
 /// Returns a status string describing what was loaded.
@@ -113,13 +121,6 @@ Future<String> openInSystem({required String path}) =>
 Future<String> copyFileTo({required String src, required String dst}) =>
     RustLib.instance.api.crateApiAgentApiCopyFileTo(src: src, dst: dst);
 
-/// Respond to a pending tool approval request from the UI.
-/// `decision` values: "yes", "no", "always"
-Future<String> respondToToolApproval({required String decision}) => RustLib
-    .instance
-    .api
-    .crateApiAgentApiRespondToToolApproval(decision: decision);
-
 @freezed
 sealed class AgentEvent with _$AgentEvent {
   const AgentEvent._();
@@ -144,7 +145,9 @@ sealed class AgentEvent with _$AgentEvent {
     required bool success,
   }) = AgentEvent_ToolCallEnd;
 
-  /// Tool requires user approval before execution
+  /// Tool requires user approval before execution.
+  /// Flutter should display a confirmation dialog and call
+  /// `respond_to_tool_approval()` with the request_id and decision.
   const factory AgentEvent.toolApprovalRequest({
     required String requestId,
     required String name,
