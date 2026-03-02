@@ -12,7 +12,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appTitle => 'DeskClaw';
 
   @override
-  String get appTagline => '为你而工作，与你共成长';
+  String get appTagline => '从桌面出发，驾驭 AI 新时代';
 
   @override
   String get navSectionChat => '聊天';

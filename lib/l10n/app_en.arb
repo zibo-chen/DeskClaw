@@ -4,7 +4,7 @@
   "appTitle": "DeskClaw",
   "@appTitle": { "description": "The application title" },
 
-  "appTagline": "Works for you, grows with you",
+  "appTagline": "From your desk, master the AI era",
   "@appTagline": { "description": "App tagline shown below input bar" },
 
   "navSectionChat": "Chat",

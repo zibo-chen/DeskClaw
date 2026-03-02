@@ -12,7 +12,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'DeskClaw';
 
   @override
-  String get appTagline => 'Works for you, grows with you';
+  String get appTagline => 'From your desk, master the AI era';
 
   @override
   String get navSectionChat => 'Chat';

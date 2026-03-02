@@ -954,6 +954,13 @@ pub async fn send_message_stream(
 
     // Spawn a relay task that converts zeroclaw's string-based delta protocol
     // into typed AgentEvent messages for Flutter.
+    //
+    // Zeroclaw sends progress deltas with sentinel prefixes:
+    //   - `\x00PROGRESS\x00`      — verbose-only progress line (thinking, tool counts, retries)
+    //   - `\x00PROGRESS_BLOCK\x00` — compact progress block (tool start/end lifecycle)
+    //   - `\x00CLEAR\x00`         — clear accumulated progress before final answer
+    //   - `\x01TOOL_RESULT\x02`   — structured tool result
+    //   - plain text              — final answer chunks
     let relay_handle = tokio::spawn(async move {
         while let Some(delta) = rx.recv().await {
             let trimmed = delta.trim();
@@ -987,9 +994,21 @@ pub async fn send_message_stream(
                 continue;
             }
 
+            // Strip sentinel prefixes added by zeroclaw v0.1.7+.
+            // \x00PROGRESS\x00 wraps verbose-only lines (🤔, 💬, ↻, ⚠️)
+            // \x00PROGRESS_BLOCK\x00 wraps compact tool lifecycle lines (⏳, ✅, ❌)
+            let effective = if let Some(inner) = trimmed
+                .strip_prefix("\x00PROGRESS_BLOCK\x00")
+                .or_else(|| trimmed.strip_prefix("\x00PROGRESS\x00"))
+            {
+                inner.trim()
+            } else {
+                trimmed
+            };
+
             // Tool start: "⏳ tool_name: args" or "⏳ tool_name"
-            if trimmed.starts_with('⏳') {
-                let rest = trimmed.trim_start_matches('⏳').trim();
+            if effective.starts_with('⏳') {
+                let rest = effective.trim_start_matches('⏳').trim();
                 let (name, args) = if let Some((n, a)) = rest.split_once(':') {
                     (n.trim().to_string(), a.trim().to_string())
                 } else {
@@ -1001,25 +1020,44 @@ pub async fn send_message_stream(
 
             // Tool success: "✅ tool_name (Ns)"
             // Status-only; the actual result follows in the TOOL_RESULT message.
-            if trimmed.starts_with('✅') {
+            if effective.starts_with('✅') {
                 continue;
             }
 
             // Tool failure: "❌ tool_name (Ns)"
             // Status-only; the actual result follows in the TOOL_RESULT message.
-            if trimmed.starts_with('❌') {
+            if effective.starts_with('❌') {
                 continue;
             }
 
             // Thinking progress: "🤔 Thinking..."
-            if trimmed.starts_with('🤔') {
+            if effective.starts_with('🤔') {
                 let _ = sink_clone.add(AgentEvent::Thinking);
                 continue;
             }
 
             // Tool call count: "💬 Got N tool call(s) ..."
-            if trimmed.starts_with('💬') {
+            if effective.starts_with('💬') {
                 // Informational — skip or treat as thinking
+                continue;
+            }
+
+            // Retry progress: "↻ Retrying: ..."
+            if effective.starts_with('↻') {
+                // Informational — skip
+                continue;
+            }
+
+            // Loop detection warning: "⚠️ Loop detected..."
+            if effective.starts_with('⚠') {
+                // Informational — skip
+                continue;
+            }
+
+            // If the original delta had a sentinel prefix, it was a progress
+            // line we didn't specifically handle above — skip it silently
+            // rather than leaking raw text to the UI.
+            if trimmed.starts_with('\x00') {
                 continue;
             }
 

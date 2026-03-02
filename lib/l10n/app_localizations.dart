@@ -107,7 +107,7 @@ abstract class AppLocalizations {
   /// App tagline shown below input bar
   ///
   /// In en, this message translates to:
-  /// **'Works for you, grows with you'**
+  /// **'From your desk, master the AI era'**
   String get appTagline;
 
   /// Chat section label in sidebar
