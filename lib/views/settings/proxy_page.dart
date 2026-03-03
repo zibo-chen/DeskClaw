@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:deskclaw/l10n/app_localizations.dart';
 import 'package:deskclaw/theme/app_theme.dart';
 import 'package:deskclaw/src/rust/api/proxy_api.dart' as proxy_api;
+import 'package:deskclaw/views/settings/widgets/settings_scaffold.dart';
 
 /// Proxy settings page — configure global outbound proxy
 class ProxyPage extends ConsumerStatefulWidget {
@@ -22,7 +25,8 @@ class _ProxyPageState extends ConsumerState<ProxyPage> {
   final TextEditingController _servicesController = TextEditingController();
   bool _isLoading = true;
   bool _isSaving = false;
-  String? _saveMessage;
+  bool _saveQueued = false;
+  Timer? _autoSaveTimer;
   String? _httpError;
   String? _httpsError;
   String? _allError;
@@ -36,6 +40,7 @@ class _ProxyPageState extends ConsumerState<ProxyPage> {
 
   @override
   void dispose() {
+    _autoSaveTimer?.cancel();
     _httpProxyController.dispose();
     _httpsProxyController.dispose();
     _allProxyController.dispose();
@@ -59,6 +64,20 @@ class _ProxyPageState extends ConsumerState<ProxyPage> {
     });
   }
 
+  void _scheduleAutoSave({bool immediate = false}) {
+    if (_isLoading) return;
+
+    _autoSaveTimer?.cancel();
+    if (immediate) {
+      unawaited(_saveConfig());
+      return;
+    }
+
+    _autoSaveTimer = Timer(const Duration(milliseconds: 600), () {
+      unawaited(_saveConfig());
+    });
+  }
+
   String? _validateUrl(String url) {
     if (url.trim().isEmpty) return null;
     final result = proxy_api.validateProxyUrl(url: url);
@@ -67,10 +86,15 @@ class _ProxyPageState extends ConsumerState<ProxyPage> {
   }
 
   Future<void> _saveConfig() async {
+    if (_isSaving) {
+      _saveQueued = true;
+      return;
+    }
+
     // Validate URLs first
-    final httpErr = _validateUrl(_httpProxyController.text);
-    final httpsErr = _validateUrl(_httpsProxyController.text);
-    final allErr = _validateUrl(_allProxyController.text);
+    final httpErr = _enabled ? _validateUrl(_httpProxyController.text) : null;
+    final httpsErr = _enabled ? _validateUrl(_httpsProxyController.text) : null;
+    final allErr = _enabled ? _validateUrl(_allProxyController.text) : null;
     setState(() {
       _httpError = httpErr;
       _httpsError = httpsErr;
@@ -80,7 +104,6 @@ class _ProxyPageState extends ConsumerState<ProxyPage> {
 
     setState(() {
       _isSaving = true;
-      _saveMessage = null;
     });
 
     final dto = proxy_api.ProxyConfigDto(
@@ -98,81 +121,46 @@ class _ProxyPageState extends ConsumerState<ProxyPage> {
     if (updateResult != 'ok') {
       setState(() {
         _isSaving = false;
-        _saveMessage = updateResult;
       });
+      if (_saveQueued) {
+        _saveQueued = false;
+        _scheduleAutoSave(immediate: true);
+      }
       return;
     }
 
     // Persist to disk
-    final diskResult = await proxy_api.saveProxyToDisk();
+    await proxy_api.saveProxyToDisk();
     setState(() {
       _isSaving = false;
-      _saveMessage = diskResult == 'ok'
-          ? AppLocalizations.of(context)!.configSaved
-          : AppLocalizations.of(context)!.configSaveFailed;
     });
 
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) setState(() => _saveMessage = null);
-    });
+    if (_saveQueued) {
+      _saveQueued = false;
+      _scheduleAutoSave(immediate: true);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    return Column(
-      children: [
-        _buildTopBar(l10n),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildMainSection(l10n),
-                const SizedBox(height: 24),
-                _buildScopeSection(l10n),
-                if (_scope == proxy_api.ProxyScopeDto.services) ...[
-                  const SizedBox(height: 24),
-                  _buildServicesSection(l10n),
-                ],
-                const SizedBox(height: 24),
-                _buildNoProxySection(l10n),
-                const SizedBox(height: 24),
-                _buildSaveButton(l10n),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTopBar(AppLocalizations l10n) {
-    return Container(
-      height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: BoxDecoration(
-        color: c.surfaceBg,
-        border: Border(bottom: BorderSide(color: c.chatListBorder, width: 1)),
-      ),
-      child: Row(
+    return SettingsScaffold(
+      title: l10n.proxyPageTitle,
+      icon: Icons.vpn_key,
+      isLoading: _isLoading,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.vpn_key, size: 20, color: AppColors.primary),
-          const SizedBox(width: 10),
-          Text(
-            l10n.proxyPageTitle,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: c.textPrimary,
-            ),
-          ),
+          _buildMainSection(l10n),
+          const SizedBox(height: 24),
+          _buildScopeSection(l10n),
+          if (_scope == proxy_api.ProxyScopeDto.services) ...[
+            const SizedBox(height: 24),
+            _buildServicesSection(l10n),
+          ],
+          const SizedBox(height: 24),
+          _buildNoProxySection(l10n),
         ],
       ),
     );
@@ -207,7 +195,10 @@ class _ProxyPageState extends ConsumerState<ProxyPage> {
               Switch(
                 value: _enabled,
                 activeTrackColor: AppColors.primary,
-                onChanged: (v) => setState(() => _enabled = v),
+                onChanged: (v) {
+                  setState(() => _enabled = v);
+                  _scheduleAutoSave(immediate: true);
+                },
               ),
             ],
           ),
@@ -225,6 +216,7 @@ class _ProxyPageState extends ConsumerState<ProxyPage> {
             controller: _allProxyController,
             error: _allError,
             helpText: l10n.proxyAllProxyHelp,
+            onChanged: (value) => _scheduleAutoSave(),
           ),
           const SizedBox(height: 16),
 
@@ -235,6 +227,7 @@ class _ProxyPageState extends ConsumerState<ProxyPage> {
             controller: _httpProxyController,
             error: _httpError,
             helpText: l10n.proxyHttpProxyHelp,
+            onChanged: (value) => _scheduleAutoSave(),
           ),
           const SizedBox(height: 16),
 
@@ -245,6 +238,7 @@ class _ProxyPageState extends ConsumerState<ProxyPage> {
             controller: _httpsProxyController,
             error: _httpsError,
             helpText: l10n.proxyHttpsProxyHelp,
+            onChanged: (value) => _scheduleAutoSave(),
           ),
         ],
       ),
@@ -257,6 +251,7 @@ class _ProxyPageState extends ConsumerState<ProxyPage> {
     required TextEditingController controller,
     String? error,
     String? helpText,
+    ValueChanged<String>? onChanged,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -297,7 +292,7 @@ class _ProxyPageState extends ConsumerState<ProxyPage> {
             errorText: error,
             errorMaxLines: 2,
           ),
-          onChanged: (_) {
+          onChanged: (value) {
             if (_httpError != null ||
                 _httpsError != null ||
                 _allError != null) {
@@ -307,6 +302,8 @@ class _ProxyPageState extends ConsumerState<ProxyPage> {
                 _allError = null;
               });
             }
+
+            onChanged?.call(value);
           },
         ),
       ],
@@ -377,7 +374,10 @@ class _ProxyPageState extends ConsumerState<ProxyPage> {
     final isSelected = _scope == value;
     return Expanded(
       child: InkWell(
-        onTap: () => setState(() => _scope = value),
+        onTap: () {
+          setState(() => _scope = value);
+          _scheduleAutoSave(immediate: true);
+        },
         borderRadius: BorderRadius.circular(8),
         child: Container(
           padding: const EdgeInsets.all(12),
@@ -482,6 +482,7 @@ class _ProxyPageState extends ConsumerState<ProxyPage> {
                 borderSide: BorderSide(color: c.chatListBorder),
               ),
             ),
+            onChanged: (_) => _scheduleAutoSave(),
           ),
           const SizedBox(height: 12),
           // Quick-select chips grouped by category
@@ -537,6 +538,7 @@ class _ProxyPageState extends ConsumerState<ProxyPage> {
                           setState(() {
                             _servicesController.text = items.join(', ');
                           });
+                          _scheduleAutoSave(immediate: true);
                         },
                       );
                     }).toList(),
@@ -597,57 +599,10 @@ class _ProxyPageState extends ConsumerState<ProxyPage> {
                 borderSide: BorderSide(color: c.chatListBorder),
               ),
             ),
+            onChanged: (_) => _scheduleAutoSave(),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildSaveButton(AppLocalizations l10n) {
-    return Row(
-      children: [
-        ElevatedButton.icon(
-          onPressed: _isSaving ? null : _saveConfig,
-          icon: _isSaving
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : const Icon(Icons.save, size: 18),
-          label: Text(_isSaving ? l10n.saving : l10n.save),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        ),
-        if (_saveMessage != null) ...[
-          const SizedBox(width: 16),
-          Flexible(
-            child: Text(
-              _saveMessage!,
-              style: TextStyle(
-                fontSize: 13,
-                color:
-                    _saveMessage!.contains('error') ||
-                        _saveMessage!.contains('Failed') ||
-                        _saveMessage!.contains('失败')
-                    ? AppColors.error
-                    : AppColors.success,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ],
     );
   }
 }

@@ -5,6 +5,7 @@ import 'package:deskclaw/theme/app_theme.dart';
 import 'package:deskclaw/src/rust/api/config_api.dart' as config_api;
 import 'package:deskclaw/src/rust/api/agent_api.dart' as agent_api;
 import 'package:deskclaw/src/rust/api/routes_api.dart' as routes_api;
+import 'package:deskclaw/views/settings/widgets/settings_scaffold.dart';
 
 /// Models settings page — default provider, model routes, embedding config
 class ModelsPage extends ConsumerStatefulWidget {
@@ -247,13 +248,10 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    return _SettingsPageScaffold(
+    return SettingsScaffold(
       title: l10n.pageModels,
-      child: Column(
+      isLoading: _isLoading,
+      body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ─── Section 1: Default Provider ───
@@ -1181,55 +1179,6 @@ class _RouteEditorDialogState extends State<_RouteEditorDialog> {
         FilledButton(
           onPressed: _submit,
           child: Text(_isEdit ? l10n.save : l10n.create),
-        ),
-      ],
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  Settings Page Scaffold
-// ═══════════════════════════════════════════════════════════════
-
-class _SettingsPageScaffold extends StatelessWidget {
-  final String title;
-  final Widget child;
-
-  const _SettingsPageScaffold({required this.title, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    final c = DeskClawColors.of(context);
-    return Column(
-      children: [
-        // Top bar
-        Container(
-          height: 56,
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          decoration: BoxDecoration(
-            color: c.surfaceBg,
-            border: Border(
-              bottom: BorderSide(color: c.chatListBorder, width: 1),
-            ),
-          ),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: c.textPrimary,
-              ),
-            ),
-          ),
-        ),
-        // Content
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: child,
-          ),
         ),
       ],
     );

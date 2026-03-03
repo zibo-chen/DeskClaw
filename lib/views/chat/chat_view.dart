@@ -14,7 +14,6 @@ import 'package:deskclaw/views/chat/input_bar.dart';
 import 'package:deskclaw/views/chat/file_attachment_bar.dart';
 import 'package:deskclaw/views/chat/workspace_files_panel.dart';
 import 'package:deskclaw/src/rust/api/agent_api.dart' as agent_api;
-import 'package:deskclaw/src/rust/api/sessions_api.dart' as sessions_api;
 
 /// Main chat view (right main area in reference)
 class ChatView extends ConsumerStatefulWidget {
@@ -57,12 +56,9 @@ class _ChatViewState extends ConsumerState<ChatView> {
         .toList();
     if (paths.isEmpty) return;
 
-    // Ensure there's an active session
+    final controller = ref.read(chatControllerProvider);
     var sessionId = ref.read(activeSessionIdProvider);
-    if (sessionId == null) {
-      sessionId = ref.read(sessionsProvider.notifier).createSession();
-      ref.read(activeSessionIdProvider.notifier).state = sessionId;
-    }
+    sessionId ??= controller.createSession();
 
     ref.read(sessionFilesProvider.notifier).addFiles(sessionId, paths);
   }
@@ -102,47 +98,12 @@ class _ChatViewState extends ConsumerState<ChatView> {
   void _handleSend(String text) {
     if (text.trim().isEmpty) return;
 
-    // Ensure there's an active session
-    var sessionId = ref.read(activeSessionIdProvider);
-    if (sessionId == null) {
-      sessionId = ref.read(sessionsProvider.notifier).createSession();
-      ref.read(activeSessionIdProvider.notifier).state = sessionId;
-    }
-
-    // Check if THIS session is already processing
-    final processingSessions = ref.read(processingSessionsProvider);
-    if (processingSessions.contains(sessionId)) return;
-
-    // Add user message
-    final userMsg = ChatMessage(
-      id: 'msg_${DateTime.now().millisecondsSinceEpoch}',
-      role: 'user',
-      content: text,
-      timestamp: DateTime.now(),
-    );
-    // Save current messages to cache before adding (ensures cache is in sync)
-    ref.read(messagesProvider.notifier).saveToCache(sessionId);
-    ref
-        .read(messagesProvider.notifier)
-        .addMessageForSession(
-          sessionId,
-          ref.read(activeSessionIdProvider) ?? '',
-          userMsg,
-        );
-    ref.read(sessionsProvider.notifier).incrementMessageCount(sessionId);
-
-    // Update session title from first user message
-    final sessions = ref.read(sessionsProvider);
-    final session = sessions.firstWhere((s) => s.id == sessionId);
-    if (session.messageCount <= 1) {
-      final title = text.length > 30 ? '${text.substring(0, 30)}...' : text;
-      ref.read(sessionsProvider.notifier).updateSessionTitle(sessionId, title);
-    }
+    final controller = ref.read(chatControllerProvider);
+    final result = controller.prepareAndSend(text);
+    if (result == null) return; // already processing
 
     _scrollToBottom();
-
-    // Call the real zeroclaw agent
-    _callAgent(sessionId);
+    _callAgent(result.sessionId, result.stream);
   }
 
   void _showToolApprovalDialog(
@@ -219,77 +180,34 @@ class _ChatViewState extends ConsumerState<ChatView> {
     );
   }
 
-  Future<void> _callAgent(String sessionId) async {
-    // Mark this session as processing
-    ref.read(processingSessionsProvider.notifier).state = {
-      ...ref.read(processingSessionsProvider),
-      sessionId,
-    };
-
-    // Add streaming placeholder to this session
-    final assistantMsg = ChatMessage(
-      id: 'msg_${DateTime.now().millisecondsSinceEpoch}_assistant',
-      role: 'assistant',
-      content: '',
-      timestamp: DateTime.now(),
-      isStreaming: true,
-    );
-    ref
-        .read(messagesProvider.notifier)
-        .addMessageForSession(
-          sessionId,
-          ref.read(activeSessionIdProvider) ?? '',
-          assistantMsg,
-        );
+  Future<void> _callAgent(
+    String sessionId,
+    Stream<agent_api.AgentEvent> stream,
+  ) async {
+    final controller = ref.read(chatControllerProvider);
     _scrollToBottomIfActive(sessionId);
 
+    final toolCalls = <ToolCallInfo>[];
+    final responseBuffer = StringBuffer();
+
     try {
-      // Get the last user message from this session's cache
-      final messagesNotifier = ref.read(messagesProvider.notifier);
-      final sessionMessages = messagesNotifier.getCachedMessages(sessionId);
-      final lastUserMsg = sessionMessages.lastWhere((m) => m.isUser);
-
-      // Helper to get current active session ID
-      String activeId() => ref.read(activeSessionIdProvider) ?? '';
-
-      // Use the streaming API for real-time updates
-      final toolCalls = <ToolCallInfo>[];
-      final responseBuffer = StringBuffer();
-
-      final stream = agent_api.sendMessageStream(
-        sessionId: sessionId,
-        message: lastUserMsg.content,
-      );
-
       await for (final event in stream) {
         if (!mounted) break;
         event.when(
           thinking: () {
             if (!mounted) return;
-            // Show thinking indicator
             final l10n = AppLocalizations.of(context)!;
-            ref
-                .read(messagesProvider.notifier)
-                .updateAssistantMessageForSession(
-                  sessionId,
-                  activeId(),
-                  l10n.thinking,
-                  isStreaming: true,
-                );
+            controller.updateStreamingContent(sessionId, l10n.thinking);
             _scrollToBottomIfActive(sessionId);
           },
           textDelta: (text) {
             responseBuffer.write(text);
             if (!mounted) return;
-            ref
-                .read(messagesProvider.notifier)
-                .updateAssistantMessageForSession(
-                  sessionId,
-                  activeId(),
-                  responseBuffer.toString(),
-                  isStreaming: true,
-                  toolCalls: toolCalls.isNotEmpty ? List.from(toolCalls) : null,
-                );
+            controller.updateStreamingContent(
+              sessionId,
+              responseBuffer.toString(),
+              toolCalls: toolCalls.isNotEmpty ? List.from(toolCalls) : null,
+            );
             _scrollToBottomIfActive(sessionId);
           },
           toolCallStart: (name, args) {
@@ -302,15 +220,11 @@ class _ChatViewState extends ConsumerState<ChatView> {
               ),
             );
             if (!mounted) return;
-            ref
-                .read(messagesProvider.notifier)
-                .updateAssistantMessageForSession(
-                  sessionId,
-                  activeId(),
-                  responseBuffer.toString(),
-                  isStreaming: true,
-                  toolCalls: List.from(toolCalls),
-                );
+            controller.updateStreamingContent(
+              sessionId,
+              responseBuffer.toString(),
+              toolCalls: List.from(toolCalls),
+            );
             _scrollToBottomIfActive(sessionId);
           },
           toolCallEnd: (name, result, success) {
@@ -325,20 +239,15 @@ class _ChatViewState extends ConsumerState<ChatView> {
               );
             }
             if (!mounted) return;
-            ref
-                .read(messagesProvider.notifier)
-                .updateAssistantMessageForSession(
-                  sessionId,
-                  activeId(),
-                  responseBuffer.toString(),
-                  isStreaming: true,
-                  toolCalls: List.from(toolCalls),
-                );
+            controller.updateStreamingContent(
+              sessionId,
+              responseBuffer.toString(),
+              toolCalls: List.from(toolCalls),
+            );
             _scrollToBottomIfActive(sessionId);
           },
           toolApprovalRequest: (requestId, name, args) {
             if (!mounted) return;
-            // Show approval dialog inline - add a pending approval tool call
             toolCalls.add(
               ToolCallInfo(
                 id: 'approval_$requestId',
@@ -348,17 +257,12 @@ class _ChatViewState extends ConsumerState<ChatView> {
                 result: '⏳ Waiting for approval...',
               ),
             );
-            ref
-                .read(messagesProvider.notifier)
-                .updateAssistantMessageForSession(
-                  sessionId,
-                  activeId(),
-                  responseBuffer.toString(),
-                  isStreaming: true,
-                  toolCalls: List.from(toolCalls),
-                );
+            controller.updateStreamingContent(
+              sessionId,
+              responseBuffer.toString(),
+              toolCalls: List.from(toolCalls),
+            );
             _scrollToBottomIfActive(sessionId);
-            // Show approval dialog
             _showToolApprovalDialog(requestId, name, args);
           },
           messageComplete: (inputTokens, outputTokens) {
@@ -375,38 +279,19 @@ class _ChatViewState extends ConsumerState<ChatView> {
 
       // Mark as complete
       if (mounted) {
-        ref
-            .read(messagesProvider.notifier)
-            .updateAssistantMessageForSession(
-              sessionId,
-              activeId(),
-              responseBuffer.toString(),
-              isStreaming: false,
-              toolCalls: toolCalls.isNotEmpty ? toolCalls : null,
-            );
-        ref.read(sessionsProvider.notifier).incrementMessageCount(sessionId);
+        controller.finishAgentTurn(
+          sessionId,
+          responseBuffer.toString(),
+          toolCalls: toolCalls.isNotEmpty ? toolCalls : null,
+        );
       }
     } catch (e) {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
-        ref
-            .read(messagesProvider.notifier)
-            .updateAssistantMessageForSession(
-              sessionId,
-              ref.read(activeSessionIdProvider) ?? '',
-              l10n.errorGeneric(e.toString()),
-              isStreaming: false,
-            );
+        controller.handleAgentError(sessionId, l10n.errorGeneric(e.toString()));
       }
     } finally {
-      if (mounted) {
-        // Remove this session from the processing set
-        final current = ref.read(processingSessionsProvider);
-        ref.read(processingSessionsProvider.notifier).state = {...current}
-          ..remove(sessionId);
-        _scrollToBottomIfActive(sessionId);
-      }
-      _persistCurrentSession(sessionId);
+      if (mounted) _scrollToBottomIfActive(sessionId);
     }
   }
 
@@ -414,43 +299,14 @@ class _ChatViewState extends ConsumerState<ChatView> {
     _handleSend(text);
   }
 
-  /// Persist the current session & messages to disk via Rust
-  Future<void> _persistCurrentSession(String sessionId) async {
-    if (!mounted) return;
-    try {
-      // Use cached messages for the specific session to support background persistence
-      final messagesNotifier = ref.read(messagesProvider.notifier);
-      final messages = messagesNotifier.getCachedMessages(sessionId);
-      final sessions = ref.read(sessionsProvider);
-      final session = sessions.firstWhere(
-        (s) => s.id == sessionId,
-        orElse: () => ChatSession(
-          id: sessionId,
-          title: 'Chat',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
-      );
+  /// Edit a user message: truncate everything after it, re-send with new text.
+  void _handleEditMessage(int index, String newText) {
+    final sessionId = ref.read(activeSessionIdProvider);
+    if (sessionId == null) return;
 
-      final sessionMessages = messages
-          .map(
-            (m) => sessions_api.SessionMessage(
-              id: m.id,
-              role: m.role,
-              content: m.content,
-              timestamp: m.timestamp.millisecondsSinceEpoch ~/ 1000,
-            ),
-          )
-          .toList();
-
-      await sessions_api.saveSession(
-        sessionId: sessionId,
-        title: session.title,
-        messages: sessionMessages,
-      );
-    } catch (e) {
-      debugPrint('Failed to persist session: $e');
-    }
+    final controller = ref.read(chatControllerProvider);
+    controller.truncateFrom(sessionId, index);
+    _handleSend(newText);
   }
 
   @override
@@ -783,20 +639,5 @@ class _ChatViewState extends ConsumerState<ChatView> {
         );
       },
     );
-  }
-
-  /// Edit a user message: truncate everything after it, re-send with new text.
-  void _handleEditMessage(int index, String newText) {
-    final sessionId = ref.read(activeSessionIdProvider);
-    if (sessionId == null) return;
-
-    // Truncate messages from [index] onward
-    final current = ref.read(messagesProvider);
-    final truncated = current.sublist(0, index);
-    ref.read(messagesProvider.notifier).setMessages(truncated);
-    ref.read(messagesProvider.notifier).saveToCache(sessionId);
-
-    // Send the edited text as a new user message
-    _handleSend(newText);
   }
 }

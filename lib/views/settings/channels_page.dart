@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:deskclaw/l10n/app_localizations.dart';
 import 'package:deskclaw/theme/app_theme.dart';
+import 'package:deskclaw/views/settings/widgets/settings_scaffold.dart';
 import 'package:deskclaw/src/rust/api/workspace_api.dart' as ws_api;
 
 /// Channels configuration page — shows all available communication channels
@@ -121,61 +122,33 @@ class _ChannelsPageState extends ConsumerState<ChannelsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _buildTopBar(),
-        Expanded(
-          child: _loading
-              ? const Center(child: CircularProgressIndicator())
-              : _buildContent(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTopBar() {
-    return Container(
-      height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: BoxDecoration(
-        color: c.surfaceBg,
-        border: Border(bottom: BorderSide(color: c.chatListBorder, width: 1)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.wifi, size: 20, color: AppColors.primary),
-          const SizedBox(width: 10),
-          Text(
-            AppLocalizations.of(context)!.pageChannels,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: c.textPrimary,
+    return SettingsScaffold(
+      title: AppLocalizations.of(context)!.pageChannels,
+      icon: Icons.wifi,
+      isLoading: _loading,
+      body: _buildContent(),
+      actions: [
+        if (_message != null)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.success.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              _message!,
+              style: const TextStyle(color: AppColors.success, fontSize: 13),
             ),
           ),
-          const Spacer(),
-          if (_message != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppColors.success.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                _message!,
-                style: const TextStyle(color: AppColors.success, fontSize: 13),
-              ),
-            ),
-          const SizedBox(width: 12),
-          if (_channels != null)
-            Text(
-              AppLocalizations.of(
-                context,
-              )!.activeCount(_channels!.where((c) => c.enabled).length),
-              style: TextStyle(fontSize: 13, color: c.textHint),
-            ),
-        ],
-      ),
+        const SizedBox(width: 12),
+        if (_channels != null)
+          Text(
+            AppLocalizations.of(
+              context,
+            )!.activeCount(_channels!.where((c) => c.enabled).length),
+            style: TextStyle(fontSize: 13, color: c.textHint),
+          ),
+      ],
     );
   }
 
@@ -191,24 +164,21 @@ class _ChannelsPageState extends ConsumerState<ChannelsPage> {
       );
     }
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Enabled channels
-          _buildSection(
-            AppLocalizations.of(context)!.activeChannels,
-            channels.where((c) => c.enabled).toList(),
-          ),
-          const SizedBox(height: 24),
-          // Available channels
-          _buildSection(
-            AppLocalizations.of(context)!.availableChannels,
-            channels.where((c) => !c.enabled).toList(),
-          ),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Enabled channels
+        _buildSection(
+          AppLocalizations.of(context)!.activeChannels,
+          channels.where((c) => c.enabled).toList(),
+        ),
+        const SizedBox(height: 24),
+        // Available channels
+        _buildSection(
+          AppLocalizations.of(context)!.availableChannels,
+          channels.where((c) => !c.enabled).toList(),
+        ),
+      ],
     );
   }
 

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:deskclaw/l10n/app_localizations.dart';
 import 'package:deskclaw/theme/app_theme.dart';
 import 'package:deskclaw/src/rust/api/mcp_api.dart' as mcp_api;
+import 'package:deskclaw/views/settings/widgets/settings_scaffold.dart';
 
 /// MCP servers management page — add, edit, remove MCP tool servers
 class McpPage extends ConsumerStatefulWidget {
@@ -100,74 +101,25 @@ class _McpPageState extends ConsumerState<McpPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _buildTopBar(),
-        Expanded(
-          child: _loading
-              ? const Center(child: CircularProgressIndicator())
-              : _buildContent(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTopBar() {
-    return Container(
-      height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: BoxDecoration(
-        color: c.surfaceBg,
-        border: Border(bottom: BorderSide(color: c.chatListBorder, width: 1)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.extension, size: 20, color: AppColors.primary),
-          const SizedBox(width: 10),
-          Text(
-            AppLocalizations.of(context)!.pageMcpServers,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: c.textPrimary,
-            ),
-          ),
-          const Spacer(),
-          if (_message != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: (_isError ? AppColors.error : AppColors.success)
-                    .withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                _message!,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: _isError ? AppColors.error : AppColors.success,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildContent() {
     final config = _config;
-    if (config == null) return const SizedBox.shrink();
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildEnableToggle(config),
-          const SizedBox(height: 24),
-          _buildServersList(config),
-        ],
-      ),
+    return SettingsScaffold(
+      title: AppLocalizations.of(context)!.pageMcpServers,
+      icon: Icons.extension,
+      isLoading: _loading,
+      actions: [
+        if (_message != null) StatusLabel(text: _message!, isError: _isError),
+      ],
+      body: config == null
+          ? const SizedBox.shrink()
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildEnableToggle(config),
+                const SizedBox(height: 24),
+                _buildServersList(config),
+              ],
+            ),
     );
   }
 

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:deskclaw/l10n/app_localizations.dart';
 import 'package:deskclaw/theme/app_theme.dart';
 import 'package:deskclaw/src/rust/api/skills_api.dart' as skills_api;
+import 'package:deskclaw/views/settings/widgets/settings_scaffold.dart';
 
 /// Skills management page - browse, install, remove, and configure skills
 class SkillsPage extends ConsumerStatefulWidget {
@@ -166,71 +167,17 @@ class _SkillsPageState extends ConsumerState<SkillsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _buildTopBar(),
-        Expanded(
-          child: _loading
-              ? const Center(child: CircularProgressIndicator())
-              : _buildContent(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTopBar() {
-    return Container(
-      height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: BoxDecoration(
-        color: c.surfaceBg,
-        border: Border(bottom: BorderSide(color: c.chatListBorder, width: 1)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.psychology, size: 20, color: AppColors.primary),
-          const SizedBox(width: 10),
-          Text(
-            AppLocalizations.of(context)!.pageSkills,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: c.textPrimary,
-            ),
+    return SettingsScaffold(
+      title: AppLocalizations.of(context)!.pageSkills,
+      icon: Icons.psychology,
+      isLoading: _loading,
+      actions: [
+        if (_message != null)
+          Flexible(
+            child: StatusLabel(text: _message!, isError: _isError),
           ),
-          const Spacer(),
-          if (_message != null)
-            Flexible(
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: _isError
-                      ? AppColors.error.withValues(alpha: 0.1)
-                      : AppColors.success.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  _message!,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: _isError ? AppColors.error : AppColors.success,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildContent() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
+      ],
+      body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildInstallSection(),

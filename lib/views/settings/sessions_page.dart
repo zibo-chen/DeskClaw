@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:deskclaw/l10n/app_localizations.dart';
 import 'package:deskclaw/theme/app_theme.dart';
 import 'package:deskclaw/src/rust/api/sessions_api.dart' as sessions_api;
+import 'package:deskclaw/views/settings/widgets/settings_scaffold.dart';
 
 /// Sessions management page - view, rename, delete persisted sessions
 class SessionsPage extends ConsumerStatefulWidget {
@@ -165,78 +166,51 @@ class _SessionsPageState extends ConsumerState<SessionsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _buildTopBar(),
-        Expanded(
-          child: _loading
-              ? const Center(child: CircularProgressIndicator())
-              : _buildContent(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTopBar() {
-    return Container(
-      height: 64,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: BoxDecoration(
-        color: c.surfaceBg,
-        border: Border(bottom: BorderSide(color: c.chatListBorder, width: 1)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.history, color: AppColors.primary, size: 22),
-          const SizedBox(width: 12),
-          Text(
-            AppLocalizations.of(context)!.pageSessions,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: c.textPrimary,
-            ),
+    return SettingsScaffold(
+      title: AppLocalizations.of(context)!.pageSessions,
+      icon: Icons.history,
+      isLoading: _loading,
+      topBarHeight: 64,
+      useScrollView: false,
+      actions: [
+        if (_stats != null) ...[
+          _statBadge(
+            '${_stats!.totalSessions}',
+            AppLocalizations.of(context)!.sessionCount,
           ),
-          const SizedBox(width: 16),
-          if (_stats != null) ...[
-            _statBadge(
-              '${_stats!.totalSessions}',
-              AppLocalizations.of(context)!.sessionCount,
-            ),
-            const SizedBox(width: 8),
-            _statBadge(
-              '${_stats!.totalMessages}',
-              AppLocalizations.of(context)!.messageCount,
-            ),
-          ],
-          const Spacer(),
-          if (_message != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppColors.success.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                _message!,
-                style: const TextStyle(color: AppColors.success, fontSize: 13),
-              ),
-            ),
-          const SizedBox(width: 12),
-          IconButton(
-            icon: const Icon(Icons.refresh, size: 20),
-            tooltip: AppLocalizations.of(context)!.refresh,
-            onPressed: _loadAll,
+          const SizedBox(width: 8),
+          _statBadge(
+            '${_stats!.totalMessages}',
+            AppLocalizations.of(context)!.messageCount,
           ),
-          if (_sessions.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.delete_sweep, size: 20),
-              tooltip: AppLocalizations.of(context)!.clearAllSessions,
-              color: AppColors.error,
-              onPressed: _clearAll,
-            ),
         ],
-      ),
+        if (_message != null)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.success.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              _message!,
+              style: const TextStyle(color: AppColors.success, fontSize: 13),
+            ),
+          ),
+        const SizedBox(width: 12),
+        IconButton(
+          icon: const Icon(Icons.refresh, size: 20),
+          tooltip: AppLocalizations.of(context)!.refresh,
+          onPressed: _loadAll,
+        ),
+        if (_sessions.isNotEmpty)
+          IconButton(
+            icon: const Icon(Icons.delete_sweep, size: 20),
+            tooltip: AppLocalizations.of(context)!.clearAllSessions,
+            color: AppColors.error,
+            onPressed: _clearAll,
+          ),
+      ],
+      body: _buildContent(),
     );
   }
 

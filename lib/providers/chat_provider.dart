@@ -6,6 +6,8 @@ import 'package:deskclaw/src/rust/api/agent_api.dart' as agent_api;
 import 'package:deskclaw/src/rust/api/config_api.dart' as config_api;
 import 'package:deskclaw/src/rust/api/sessions_api.dart' as sessions_api;
 
+// ── Navigation ───────────────────────────────────────────
+
 /// Navigation section for sidebar
 enum NavSection {
   chat,
@@ -28,6 +30,8 @@ final currentNavProvider = StateProvider<NavSection>((ref) => NavSection.chat);
 /// Current active session ID
 final activeSessionIdProvider = StateProvider<String?>((ref) => null);
 
+// ── Runtime / Config ─────────────────────────────────────
+
 /// Runtime status
 final runtimeStatusProvider = FutureProvider<agent_api.RuntimeStatus>((
   ref,
@@ -39,6 +43,8 @@ final runtimeStatusProvider = FutureProvider<agent_api.RuntimeStatus>((
 final configProvider = FutureProvider<config_api.AppConfig>((ref) async {
   return await config_api.loadConfig();
 });
+
+// ── Sessions ─────────────────────────────────────────────
 
 /// All chat sessions
 final sessionsProvider =
@@ -116,7 +122,14 @@ class SessionsNotifier extends StateNotifier<List<ChatSession>> {
   }
 }
 
-/// Messages for the active session
+// ── Messages (refactored — single source of truth) ──────
+
+/// Messages for the active session.
+///
+/// The notifier keeps an internal per-session cache so that background
+/// sessions retain their messages even when not visible.
+/// Callers should **not** manually save/load the cache — use
+/// [switchToSession] for atomic session switches.
 final messagesProvider =
     StateNotifierProvider<MessagesNotifier, List<ChatMessage>>((ref) {
       return MessagesNotifier();
@@ -125,113 +138,105 @@ final messagesProvider =
 class MessagesNotifier extends StateNotifier<List<ChatMessage>> {
   MessagesNotifier() : super([]);
 
-  /// In-memory cache of messages per session
-  final Map<String, List<ChatMessage>> _sessionMessages = {};
+  /// Per-session message cache.
+  final Map<String, List<ChatMessage>> _cache = {};
 
-  /// Get messages from the cache for a specific session
-  List<ChatMessage> getCachedMessages(String sessionId) {
-    return _sessionMessages[sessionId] ?? state;
-  }
+  /// The session whose messages are currently exposed as [state].
+  String? _activeSessionId;
 
-  void addMessage(ChatMessage message) {
-    state = [...state, message];
-  }
+  // ── Session switching (atomic) ──────────────────────────
 
-  void updateLastAssistantMessage(
-    String content, {
-    bool? isStreaming,
-    List<ToolCallInfo>? toolCalls,
-  }) {
-    if (state.isEmpty) return;
-    final last = state.last;
-    if (last.isAssistant) {
-      state = [
-        ...state.sublist(0, state.length - 1),
-        last.copyWith(
-          content: content,
-          isStreaming: isStreaming ?? last.isStreaming,
-          toolCalls: toolCalls ?? last.toolCalls,
-        ),
-      ];
-    }
-  }
-
-  /// Save current messages to memory cache for a session
-  void saveToCache(String sessionId) {
-    _sessionMessages[sessionId] = List.from(state);
-  }
-
-  /// Load messages from memory cache, or set from persisted data
-  void loadFromCache(String sessionId) {
-    final cached = _sessionMessages[sessionId];
-    if (cached != null) {
-      state = List.from(cached);
+  /// Atomically save the current session and load [sessionId].
+  void switchToSession(String? sessionId) {
+    // Save current
+    _flushActiveToCache();
+    _activeSessionId = sessionId;
+    // Load new
+    if (sessionId != null) {
+      state = List.from(_cache[sessionId] ?? []);
     } else {
       state = [];
     }
   }
 
-  /// Set messages directly (e.g. from persisted session)
-  void setMessages(List<ChatMessage> messages) {
-    state = messages;
+  /// Flush active session state into the cache (called internally and
+  /// before persistence).
+  void syncActiveToCache() => _flushActiveToCache();
+
+  void _flushActiveToCache() {
+    if (_activeSessionId != null) {
+      _cache[_activeSessionId!] = List.from(state);
+    }
   }
 
-  /// Remove cached messages for a session
-  void removeFromCache(String sessionId) {
-    _sessionMessages.remove(sessionId);
+  // ── Mutations (session-aware) ──────────────────────────
+
+  /// Add a message to a specific session.
+  void addMessageToSession(String sessionId, ChatMessage message) {
+    _cache.putIfAbsent(sessionId, () => []);
+    _cache[sessionId]!.add(message);
+    if (sessionId == _activeSessionId) {
+      state = List.from(_cache[sessionId]!);
+    }
   }
 
-  void clear() {
-    state = [];
-  }
-
-  /// Update the last assistant message in a specific session's cache.
-  /// If the session is currently active, also update the global state.
-  void updateAssistantMessageForSession(
+  /// Update the last assistant message in a specific session.
+  void updateAssistant(
     String sessionId,
-    String activeSessionId,
     String content, {
     bool? isStreaming,
     List<ToolCallInfo>? toolCalls,
   }) {
-    // Always update the cache
-    final cached = _sessionMessages[sessionId];
-    if (cached != null && cached.isNotEmpty) {
-      final last = cached.last;
-      if (last.isAssistant) {
-        cached[cached.length - 1] = last.copyWith(
-          content: content,
-          isStreaming: isStreaming ?? last.isStreaming,
-          toolCalls: toolCalls ?? last.toolCalls,
-        );
-      }
-    }
-    // If this session is the currently visible session, also update the UI state
-    if (sessionId == activeSessionId) {
-      updateLastAssistantMessage(
-        content,
-        isStreaming: isStreaming,
-        toolCalls: toolCalls,
+    final messages = _cache[sessionId];
+    if (messages != null && messages.isNotEmpty && messages.last.isAssistant) {
+      messages[messages.length - 1] = messages.last.copyWith(
+        content: content,
+        isStreaming: isStreaming ?? messages.last.isStreaming,
+        toolCalls: toolCalls ?? messages.last.toolCalls,
       );
+    }
+    if (sessionId == _activeSessionId) {
+      state = List.from(_cache[sessionId] ?? []);
     }
   }
 
-  /// Add a message to a specific session's cache.
-  /// If the session is currently active, also update the global state.
-  void addMessageForSession(
-    String sessionId,
-    String activeSessionId,
-    ChatMessage message,
-  ) {
-    // Always update the cache
-    _sessionMessages.putIfAbsent(sessionId, () => []);
-    _sessionMessages[sessionId]!.add(message);
-    // If this session is the currently visible session, also update the UI state
-    if (sessionId == activeSessionId) {
-      addMessage(message);
+  // ── Read helpers ───────────────────────────────────────
+
+  /// Get all messages for a session (used for persistence).
+  List<ChatMessage> getSessionMessages(String sessionId) {
+    if (sessionId == _activeSessionId) _flushActiveToCache();
+    return List.from(_cache[sessionId] ?? []);
+  }
+
+  // ── Direct setters (disk loads, edits) ─────────────────
+
+  /// Replace messages for a session (e.g. loaded from disk, or after edit).
+  void setSessionMessages(String sessionId, List<ChatMessage> messages) {
+    _cache[sessionId] = List.from(messages);
+    if (sessionId == _activeSessionId) {
+      state = List.from(messages);
     }
   }
+
+  /// Remove a session from the cache entirely.
+  void removeSession(String sessionId) {
+    _cache.remove(sessionId);
+    if (sessionId == _activeSessionId) {
+      _activeSessionId = null;
+      state = [];
+    }
+  }
+
+  /// Clear the active session's messages.
+  void clear() {
+    if (_activeSessionId != null) {
+      _cache[_activeSessionId!] = [];
+    }
+    state = [];
+  }
 }
+
+// ── Processing state ─────────────────────────────────────
 
 /// Set of session IDs that are currently processing
 final processingSessionsProvider = StateProvider<Set<String>>((ref) => {});
@@ -244,6 +249,8 @@ final isCurrentSessionProcessingProvider = Provider<bool>((ref) {
   return processing.contains(activeId);
 });
 
+// ── User preferences ─────────────────────────────────────
+
 /// Language / Locale setting — initialised from persisted preference
 final localeProvider = StateProvider<Locale>(
   (ref) => Locale(SettingsService.locale),
@@ -255,11 +262,15 @@ final themeModeProvider = StateProvider<ThemeMode>(
       SettingsService.themeMode == 'dark' ? ThemeMode.dark : ThemeMode.light,
 );
 
+// ── UI layout state ──────────────────────────────────────
+
 /// Whether the chat list panel is collapsed
 final chatListCollapsedProvider = StateProvider<bool>((ref) => false);
 
 /// Whether the left sidebar is collapsed to icon rail
 final sidebarCollapsedProvider = StateProvider<bool>((ref) => false);
+
+// ── Attached files ───────────────────────────────────────
 
 /// Attached files for the active session
 final sessionFilesProvider =

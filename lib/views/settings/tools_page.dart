@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:deskclaw/l10n/app_localizations.dart';
 import 'package:deskclaw/theme/app_theme.dart';
 import 'package:deskclaw/src/rust/api/workspace_api.dart' as ws_api;
+import 'package:deskclaw/views/settings/widgets/settings_scaffold.dart';
 
 /// Tools & MCP management page — enable/disable tools and features with one click
 class ToolsPage extends ConsumerStatefulWidget {
@@ -78,60 +79,12 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _buildTopBar(),
-        Expanded(
-          child: _loading
-              ? const Center(child: CircularProgressIndicator())
-              : _buildContent(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTopBar() {
-    return Container(
-      height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: BoxDecoration(
-        color: c.surfaceBg,
-        border: Border(bottom: BorderSide(color: c.chatListBorder, width: 1)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.extension, size: 20, color: AppColors.primary),
-          const SizedBox(width: 10),
-          Text(
-            AppLocalizations.of(context)!.pageTools,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: c.textPrimary,
-            ),
-          ),
-          const Spacer(),
-          if (_message != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppColors.success.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                _message!,
-                style: const TextStyle(fontSize: 12, color: AppColors.success),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildContent() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
+    return SettingsScaffold(
+      title: AppLocalizations.of(context)!.pageTools,
+      icon: Icons.extension,
+      isLoading: _loading,
+      actions: [if (_message != null) StatusLabel(text: _message!)],
+      body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildFeatureTogglesSection(),

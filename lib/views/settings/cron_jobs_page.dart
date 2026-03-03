@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:deskclaw/l10n/app_localizations.dart';
 import 'package:deskclaw/theme/app_theme.dart';
 import 'package:deskclaw/providers/chat_provider.dart';
+import 'package:deskclaw/views/settings/widgets/settings_scaffold.dart';
 import 'package:deskclaw/src/rust/api/cron_api.dart' as cron_api;
 
 /// Cron Jobs management page - list, add, edit, delete scheduled tasks
@@ -184,88 +185,61 @@ class _CronJobsPageState extends ConsumerState<CronJobsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _buildTopBar(),
-        Expanded(
-          child: _loading
-              ? const Center(child: CircularProgressIndicator())
-              : _buildContent(),
+    return SettingsScaffold(
+      title: AppLocalizations.of(context)!.pageCronJobs,
+      icon: Icons.schedule,
+      isLoading: _loading,
+      topBarHeight: 64,
+      useScrollView: false,
+      actions: [
+        if (_config != null) ...[
+          _statBadge(
+            '${_config!.totalJobs}',
+            AppLocalizations.of(context)!.totalCount,
+          ),
+          const SizedBox(width: 8),
+          _statBadge(
+            '${_config!.activeJobs}',
+            AppLocalizations.of(context)!.running,
+            color: AppColors.success,
+          ),
+          const SizedBox(width: 8),
+          if (_config!.pausedJobs > 0)
+            _statBadge(
+              '${_config!.pausedJobs}',
+              AppLocalizations.of(context)!.paused,
+              color: AppColors.warning,
+            ),
+        ],
+        if (_message != null)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.success.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              _message!,
+              style: const TextStyle(color: AppColors.success, fontSize: 13),
+            ),
+          ),
+        const SizedBox(width: 12),
+        IconButton(
+          icon: const Icon(Icons.refresh, size: 20),
+          tooltip: AppLocalizations.of(context)!.refresh,
+          onPressed: _loadAll,
+        ),
+        const SizedBox(width: 4),
+        ElevatedButton.icon(
+          onPressed: _showAddDialog,
+          icon: const Icon(Icons.add, size: 18),
+          label: Text(AppLocalizations.of(context)!.newTask),
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          ),
         ),
       ],
-    );
-  }
-
-  Widget _buildTopBar() {
-    return Container(
-      height: 64,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: BoxDecoration(
-        color: c.surfaceBg,
-        border: Border(bottom: BorderSide(color: c.chatListBorder, width: 1)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.schedule, color: AppColors.primary, size: 22),
-          const SizedBox(width: 12),
-          Text(
-            AppLocalizations.of(context)!.pageCronJobs,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: c.textPrimary,
-            ),
-          ),
-          const SizedBox(width: 16),
-          if (_config != null) ...[
-            _statBadge(
-              '${_config!.totalJobs}',
-              AppLocalizations.of(context)!.totalCount,
-            ),
-            const SizedBox(width: 8),
-            _statBadge(
-              '${_config!.activeJobs}',
-              AppLocalizations.of(context)!.running,
-              color: AppColors.success,
-            ),
-            const SizedBox(width: 8),
-            if (_config!.pausedJobs > 0)
-              _statBadge(
-                '${_config!.pausedJobs}',
-                AppLocalizations.of(context)!.paused,
-                color: AppColors.warning,
-              ),
-          ],
-          const Spacer(),
-          if (_message != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppColors.success.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                _message!,
-                style: const TextStyle(color: AppColors.success, fontSize: 13),
-              ),
-            ),
-          const SizedBox(width: 12),
-          IconButton(
-            icon: const Icon(Icons.refresh, size: 20),
-            tooltip: AppLocalizations.of(context)!.refresh,
-            onPressed: _loadAll,
-          ),
-          const SizedBox(width: 4),
-          ElevatedButton.icon(
-            onPressed: _showAddDialog,
-            icon: const Icon(Icons.add, size: 18),
-            label: Text(AppLocalizations.of(context)!.newTask),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            ),
-          ),
-        ],
-      ),
+      body: _buildContent(),
     );
   }
 

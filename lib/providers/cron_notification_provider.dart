@@ -136,7 +136,6 @@ class CronNotificationNotifier extends StateNotifier<CronNotificationState> {
   /// that was recorded when the cron job was created.
   void _injectIntoSession(CronNotificationItem item) {
     final targetSessionId = item.targetSessionId;
-    final activeSessionId = _ref.read(activeSessionIdProvider);
 
     final now = DateTime.now();
     final msgsNotifier = _ref.read(messagesProvider.notifier);
@@ -149,11 +148,7 @@ class CronNotificationNotifier extends StateNotifier<CronNotificationState> {
       content: '⏰ [${item.displayName}] ${item.prompt}',
       timestamp: now,
     );
-    msgsNotifier.addMessageForSession(
-      targetSessionId,
-      activeSessionId ?? '',
-      userMsg,
-    );
+    msgsNotifier.addMessageToSession(targetSessionId, userMsg);
     sessionsNotifier.incrementMessageCount(targetSessionId);
 
     // 2. Add the assistant response
@@ -164,11 +159,7 @@ class CronNotificationNotifier extends StateNotifier<CronNotificationState> {
       content: '$statusIcon [${item.displayName}]\n\n${item.output}',
       timestamp: now,
     );
-    msgsNotifier.addMessageForSession(
-      targetSessionId,
-      activeSessionId ?? '',
-      assistantMsg,
-    );
+    msgsNotifier.addMessageToSession(targetSessionId, assistantMsg);
     sessionsNotifier.incrementMessageCount(targetSessionId);
 
     // 3. Persist to session store
@@ -178,7 +169,7 @@ class CronNotificationNotifier extends StateNotifier<CronNotificationState> {
   Future<void> _persistSession(String sessionId) async {
     try {
       final msgsNotifier = _ref.read(messagesProvider.notifier);
-      final messages = msgsNotifier.getCachedMessages(sessionId);
+      final messages = msgsNotifier.getSessionMessages(sessionId);
       final sessions = _ref.read(sessionsProvider);
       final session = sessions.firstWhere(
         (s) => s.id == sessionId,

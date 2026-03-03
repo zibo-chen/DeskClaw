@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:deskclaw/l10n/app_localizations.dart';
 import 'package:deskclaw/theme/app_theme.dart';
 import 'package:deskclaw/src/rust/api/workspace_api.dart' as ws_api;
+import 'package:deskclaw/views/settings/widgets/settings_scaffold.dart';
 
 /// Configuration page showing autonomy settings and tool permissions
 class ConfigurationPage extends ConsumerStatefulWidget {
@@ -38,54 +39,22 @@ class _ConfigurationPageState extends ConsumerState<ConfigurationPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _buildTopBar(),
-        Expanded(
-          child: _loading
-              ? const Center(child: CircularProgressIndicator())
-              : _buildContent(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTopBar() {
-    return Container(
-      height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: BoxDecoration(
-        color: c.surfaceBg,
-        border: Border(bottom: BorderSide(color: c.chatListBorder, width: 1)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.settings, size: 20, color: AppColors.primary),
-          SizedBox(width: 10),
-          Text(
-            AppLocalizations.of(context)!.pageConfiguration,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: c.textPrimary,
-            ),
-          ),
-        ],
-      ),
+    return SettingsScaffold(
+      title: AppLocalizations.of(context)!.pageConfiguration,
+      icon: Icons.settings,
+      isLoading: _loading,
+      body: _buildContent(),
     );
   }
 
   Widget _buildContent() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildAutonomySection(),
-          const SizedBox(height: 24),
-          _buildToolsSection(),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildAutonomySection(),
+        const SizedBox(height: 24),
+        _buildToolsSection(),
+      ],
     );
   }
 

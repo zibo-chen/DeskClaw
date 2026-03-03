@@ -4,6 +4,7 @@ import 'package:deskclaw/l10n/app_localizations.dart';
 import 'package:deskclaw/theme/app_theme.dart';
 import 'package:deskclaw/src/rust/api/agents_api.dart' as agents_api;
 import 'package:deskclaw/src/rust/api/config_api.dart' as config_api;
+import 'package:deskclaw/views/settings/widgets/settings_scaffold.dart';
 
 /// Sub-agent management page: list, create, edit, delete delegate agents
 class AgentsPage extends ConsumerStatefulWidget {
@@ -108,107 +109,109 @@ class _AgentsPageState extends ConsumerState<AgentsPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return _SettingsPageScaffold(
-      title: l10n.pageAgents,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.refresh, size: 20),
-          tooltip: l10n.refresh,
-          onPressed: _loadAgents,
-        ),
-        const SizedBox(width: 4),
-        FilledButton.icon(
-          icon: const Icon(Icons.add, size: 18),
-          label: Text(l10n.agentNew),
-          onPressed: () => _openEditor(),
-        ),
-      ],
-      child: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Status message
-                if (_message != null)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: _isError
-                          ? Colors.red.withValues(alpha: 0.1)
-                          : Colors.green.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: _isError
-                            ? Colors.red.withValues(alpha: 0.3)
-                            : Colors.green.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Text(
-                      _message!,
-                      style: TextStyle(
-                        color: _isError ? Colors.red : Colors.green[700],
-                      ),
-                    ),
+    return Container(
+      color: c.surfaceBg,
+      child: SettingsScaffold(
+        title: l10n.pageAgents,
+        isLoading: _loading,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, size: 20),
+            tooltip: l10n.refresh,
+            onPressed: _loadAgents,
+          ),
+          const SizedBox(width: 4),
+          FilledButton.icon(
+            icon: const Icon(Icons.add, size: 18),
+            label: Text(l10n.agentNew),
+            onPressed: () => _openEditor(),
+          ),
+        ],
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Status message
+            if (_message != null)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: _isError
+                      ? Colors.red.withValues(alpha: 0.1)
+                      : Colors.green.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: _isError
+                        ? Colors.red.withValues(alpha: 0.3)
+                        : Colors.green.withValues(alpha: 0.3),
                   ),
+                ),
+                child: Text(
+                  _message!,
+                  style: TextStyle(
+                    color: _isError ? Colors.red : Colors.green[700],
+                  ),
+                ),
+              ),
 
-                // Overview
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: c.cardBg,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: c.chatListBorder),
+            // Overview
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: c.cardBg,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: c.chatListBorder),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.agentOverview,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: c.textPrimary,
+                    ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.agentOverviewDesc,
+                    style: TextStyle(fontSize: 13, color: c.textSecondary),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
                     children: [
-                      Text(
-                        l10n.agentOverview,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: c.textPrimary,
-                        ),
+                      _StatChip(
+                        label: l10n.totalCount,
+                        value: '${_agents.length}',
+                        color: AppColors.primary,
+                        c: c,
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        l10n.agentOverviewDesc,
-                        style: TextStyle(fontSize: 13, color: c.textSecondary),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          _StatChip(
-                            label: l10n.totalCount,
-                            value: '${_agents.length}',
-                            color: AppColors.primary,
-                            c: c,
-                          ),
-                          const SizedBox(width: 12),
-                          _StatChip(
-                            label: l10n.agentAgenticCount,
-                            value: '${_agents.where((a) => a.agentic).length}',
-                            color: Colors.orange,
-                            c: c,
-                          ),
-                        ],
+                      const SizedBox(width: 12),
+                      _StatChip(
+                        label: l10n.agentAgenticCount,
+                        value: '${_agents.where((a) => a.agentic).length}',
+                        color: Colors.orange,
+                        c: c,
                       ),
                     ],
                   ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Agent list or empty state
-                if (_agents.isEmpty)
-                  _buildEmptyState(l10n)
-                else
-                  ..._agents.map((agent) => _buildAgentCard(agent, l10n)),
-              ],
+                ],
+              ),
             ),
+
+            const SizedBox(height: 20),
+
+            // Agent list or empty state
+            if (_agents.isEmpty)
+              _buildEmptyState(l10n)
+            else
+              ..._agents.map((agent) => _buildAgentCard(agent, l10n)),
+          ],
+        ),
+      ),
     );
   }
 
@@ -701,60 +704,6 @@ class _AgentEditorDialogState extends State<_AgentEditorDialog> {
 // ═══════════════════════════════════════════════════════════════
 //  Shared widgets (same pattern as other settings pages)
 // ═══════════════════════════════════════════════════════════════
-
-class _SettingsPageScaffold extends StatelessWidget {
-  final String title;
-  final List<Widget> actions;
-  final Widget child;
-
-  const _SettingsPageScaffold({
-    required this.title,
-    this.actions = const [],
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final c = DeskClawColors.of(context);
-    return Container(
-      color: c.surfaceBg,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Title bar
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            decoration: BoxDecoration(
-              border: Border(bottom: BorderSide(color: c.chatListBorder)),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: c.textPrimary,
-                    ),
-                  ),
-                ),
-                ...actions,
-              ],
-            ),
-          ),
-          // Body
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: child,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _StatChip extends StatelessWidget {
   final String label;

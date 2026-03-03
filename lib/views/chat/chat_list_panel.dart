@@ -3,11 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:deskclaw/constants.dart';
 import 'package:deskclaw/l10n/app_localizations.dart';
-import 'package:deskclaw/models/chat_message.dart';
 import 'package:deskclaw/providers/providers.dart';
 import 'package:deskclaw/theme/app_theme.dart';
-import 'package:deskclaw/src/rust/api/agent_api.dart' as agent_api;
-import 'package:deskclaw/src/rust/api/sessions_api.dart' as sessions_api;
 
 /// Chat session list panel (middle panel in reference)
 class ChatListPanel extends ConsumerWidget {
@@ -74,16 +71,7 @@ class ChatListPanel extends ConsumerWidget {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () {
-                  // Save current session messages to cache
-                  final currentId = ref.read(activeSessionIdProvider);
-                  if (currentId != null) {
-                    ref.read(messagesProvider.notifier).saveToCache(currentId);
-                  }
-                  final id = ref
-                      .read(sessionsProvider.notifier)
-                      .createSession();
-                  ref.read(activeSessionIdProvider.notifier).state = id;
-                  ref.read(messagesProvider.notifier).clear();
+                  ref.read(chatControllerProvider).createSession();
                 },
                 icon: const Icon(Icons.add, size: 18),
                 label: Text(
@@ -117,64 +105,15 @@ class ChatListPanel extends ConsumerWidget {
                         session: session,
                         isActive: isActive,
                         onTap: () async {
-                          if (isActive) return; // already active
-                          // Save current session messages to cache
-                          final currentId = ref.read(activeSessionIdProvider);
-                          if (currentId != null) {
-                            ref
-                                .read(messagesProvider.notifier)
-                                .saveToCache(currentId);
-                          }
-                          // Switch active session
-                          ref.read(activeSessionIdProvider.notifier).state =
-                              session.id;
-                          // Switch Rust-side agent session
-                          agent_api.switchSession(sessionId: session.id);
-                          // Try loading from memory cache first
-                          ref
-                              .read(messagesProvider.notifier)
-                              .loadFromCache(session.id);
-                          // If cache was empty, try loading from persisted storage
-                          if (ref.read(messagesProvider).isEmpty) {
-                            try {
-                              final detail = await sessions_api
-                                  .getSessionDetail(sessionId: session.id);
-                              if (detail != null &&
-                                  detail.messages.isNotEmpty) {
-                                final messages = detail.messages.map((m) {
-                                  return ChatMessage(
-                                    id: m.id,
-                                    role: m.role,
-                                    content: m.content,
-                                    timestamp:
-                                        DateTime.fromMillisecondsSinceEpoch(
-                                          (m.timestamp * 1000).toInt(),
-                                        ),
-                                  );
-                                }).toList();
-                                ref
-                                    .read(messagesProvider.notifier)
-                                    .setMessages(messages);
-                              }
-                            } catch (_) {
-                              // If loading fails, just show empty
-                            }
-                          }
+                          if (isActive) return;
+                          await ref
+                              .read(chatControllerProvider)
+                              .switchSession(session.id);
                         },
                         onDelete: () {
                           ref
-                              .read(sessionsProvider.notifier)
+                              .read(chatControllerProvider)
                               .deleteSession(session.id);
-                          ref
-                              .read(messagesProvider.notifier)
-                              .removeFromCache(session.id);
-                          if (isActive) {
-                            ref.read(activeSessionIdProvider.notifier).state =
-                                null;
-                            ref.read(messagesProvider.notifier).clear();
-                            // Clear Rust-side agent session
-                            agent_api.clearSession();
-                          }
                         },
                       );
                     },

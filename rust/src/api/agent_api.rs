@@ -1061,7 +1061,7 @@ pub async fn send_message_stream(
                 continue;
             }
 
-            // Everything else is streamed text content
+            // Everything else is streamed text content.
             if !delta.is_empty() {
                 let _ = sink_clone.add(AgentEvent::TextDelta { text: delta });
             }

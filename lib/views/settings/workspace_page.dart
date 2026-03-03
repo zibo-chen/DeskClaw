@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:deskclaw/l10n/app_localizations.dart';
 import 'package:deskclaw/theme/app_theme.dart';
 import 'package:deskclaw/src/rust/api/workspace_api.dart' as ws_api;
+import 'package:deskclaw/views/settings/widgets/settings_scaffold.dart';
 
 /// Workspace & Agent Configuration page
 class WorkspacePage extends ConsumerStatefulWidget {
@@ -44,58 +45,26 @@ class _WorkspacePageState extends ConsumerState<WorkspacePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _buildTopBar(),
-        Expanded(
-          child: _loading
-              ? const Center(child: CircularProgressIndicator())
-              : _buildContent(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTopBar() {
-    return Container(
-      height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: BoxDecoration(
-        color: c.surfaceBg,
-        border: Border(bottom: BorderSide(color: c.chatListBorder, width: 1)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.business, size: 20, color: AppColors.primary),
-          SizedBox(width: 10),
-          Text(
-            AppLocalizations.of(context)!.pageWorkspace,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: c.textPrimary,
-            ),
-          ),
-        ],
-      ),
+    return SettingsScaffold(
+      title: AppLocalizations.of(context)!.pageWorkspace,
+      icon: Icons.business,
+      isLoading: _loading,
+      body: _buildContent(),
     );
   }
 
   Widget _buildContent() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildWorkspaceSection(),
-          const SizedBox(height: 24),
-          _buildAgentSection(),
-          const SizedBox(height: 24),
-          _buildMemorySection(),
-          const SizedBox(height: 24),
-          _buildCostSection(),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildWorkspaceSection(),
+        const SizedBox(height: 24),
+        _buildAgentSection(),
+        const SizedBox(height: 24),
+        _buildMemorySection(),
+        const SizedBox(height: 24),
+        _buildCostSection(),
+      ],
     );
   }
 

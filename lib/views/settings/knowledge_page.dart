@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:deskclaw/l10n/app_localizations.dart';
 import 'package:deskclaw/theme/app_theme.dart';
+import 'package:deskclaw/views/settings/widgets/settings_scaffold.dart';
 import 'package:deskclaw/src/rust/api/knowledge_api.dart' as kb_api;
 
 /// Knowledge Base management page — view, search, add, delete memory entries
@@ -148,84 +149,53 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _buildTopBar(),
-        Expanded(
-          child: _loading
-              ? const Center(child: CircularProgressIndicator())
-              : _buildContent(),
+    final l10n = AppLocalizations.of(context)!;
+    return SettingsScaffold(
+      title: l10n.pageKnowledge,
+      icon: Icons.menu_book,
+      isLoading: _loading,
+      body: _buildContent(),
+      actions: [
+        if (_message != null)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: _message!.contains('失败') || _message!.contains('error')
+                  ? AppColors.error.withValues(alpha: 0.1)
+                  : AppColors.success.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              _message!,
+              style: TextStyle(
+                fontSize: 12,
+                color: _message!.contains('失败') || _message!.contains('error')
+                    ? AppColors.error
+                    : AppColors.success,
+              ),
+            ),
+          ),
+        const SizedBox(width: 12),
+        IconButton(
+          icon: const Icon(Icons.refresh, size: 18),
+          color: c.textHint,
+          onPressed: _loadAll,
+          tooltip: l10n.refresh,
         ),
       ],
     );
   }
 
-  Widget _buildTopBar() {
-    final l10n = AppLocalizations.of(context)!;
-    return Container(
-      height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: BoxDecoration(
-        color: c.surfaceBg,
-        border: Border(bottom: BorderSide(color: c.chatListBorder, width: 1)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.menu_book, size: 20, color: AppColors.primary),
-          const SizedBox(width: 10),
-          Text(
-            l10n.pageKnowledge,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: c.textPrimary,
-            ),
-          ),
-          const Spacer(),
-          if (_message != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: _message!.contains('失败') || _message!.contains('error')
-                    ? AppColors.error.withValues(alpha: 0.1)
-                    : AppColors.success.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                _message!,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: _message!.contains('失败') || _message!.contains('error')
-                      ? AppColors.error
-                      : AppColors.success,
-                ),
-              ),
-            ),
-          const SizedBox(width: 12),
-          IconButton(
-            icon: const Icon(Icons.refresh, size: 18),
-            color: c.textHint,
-            onPressed: _loadAll,
-            tooltip: l10n.refresh,
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildContent() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildStatsSection(),
-          const SizedBox(height: 24),
-          _buildSearchAndActions(),
-          const SizedBox(height: 16),
-          _buildEntriesList(),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildStatsSection(),
+        const SizedBox(height: 24),
+        _buildSearchAndActions(),
+        const SizedBox(height: 16),
+        _buildEntriesList(),
+      ],
     );
   }
 
