@@ -12,7 +12,7 @@ env:
   FLUTTER_VERSION: "3.35.7"
   RUST_VERSION: "1.92.0"
   ZEROCLAW_REPO: "zibo-chen/zeroclaw"
-  ZEROCLAW_REF: "main-coraldesk"
+  ZEROCLAW_REF: "main-deskclaw"
 
 jobs:
   # ---------------------------------------------------------------------------
