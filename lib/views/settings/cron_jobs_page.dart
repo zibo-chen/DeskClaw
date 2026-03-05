@@ -4,6 +4,7 @@ import 'package:coraldesk/l10n/app_localizations.dart';
 import 'package:coraldesk/theme/app_theme.dart';
 import 'package:coraldesk/providers/chat_provider.dart';
 import 'package:coraldesk/views/settings/widgets/settings_scaffold.dart';
+import 'package:coraldesk/views/settings/widgets/desktop_dialog.dart';
 import 'package:coraldesk/src/rust/api/cron_api.dart' as cron_api;
 
 /// Cron Jobs management page - list, add, edit, delete scheduled tasks
@@ -712,178 +713,252 @@ class _AddJobDialogState extends State<_AddJobDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(AppLocalizations.of(context)!.newCronJob),
-      content: SizedBox(
-        width: 480,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return DesktopDialog(
+      title: AppLocalizations.of(context)!.newCronJob,
+      icon: Icons.schedule_outlined,
+      width: 700,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Basic ──
+          DialogSection(
+            title: 'BASIC',
+            icon: Icons.badge_outlined,
             children: [
-              // Name
-              TextField(
-                controller: _nameCtl,
-                decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.taskNameOptional,
-                  hintText: 'my-backup-task',
-                ),
-              ),
-              const SizedBox(height: 16),
-              // Job type
-              Text(
-                AppLocalizations.of(context)!.taskType,
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 8),
-              SegmentedButton<String>(
-                segments: [
-                  ButtonSegment(
-                    value: 'shell',
-                    label: Text(AppLocalizations.of(context)!.shellCommand),
-                    icon: const Icon(Icons.terminal, size: 18),
-                  ),
-                  ButtonSegment(
-                    value: 'agent',
-                    label: Text(AppLocalizations.of(context)!.aiAgent),
-                    icon: const Icon(Icons.smart_toy, size: 18),
-                  ),
-                ],
-                selected: {_jobType},
-                onSelectionChanged: (v) => setState(() => _jobType = v.first),
-              ),
-              const SizedBox(height: 16),
-              // Schedule type
-              Text(
-                AppLocalizations.of(context)!.scheduleType,
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 8),
-              SegmentedButton<String>(
-                segments: [
-                  const ButtonSegment(value: 'cron', label: Text('Cron')),
-                  ButtonSegment(
-                    value: 'every',
-                    label: Text(AppLocalizations.of(context)!.interval),
-                  ),
-                  ButtonSegment(
-                    value: 'at',
-                    label: Text(AppLocalizations.of(context)!.scheduled),
-                  ),
-                ],
-                selected: {_scheduleType},
-                onSelectionChanged: (v) {
-                  setState(() {
-                    _scheduleType = v.first;
-                    if (v.first == 'cron') {
-                      _exprCtl.text = '*/5 * * * *';
-                    } else if (v.first == 'every') {
-                      _exprCtl.text = '60000';
-                    } else {
-                      _exprCtl.text = '';
-                    }
-                  });
-                },
-              ),
-              const SizedBox(height: 12),
-              // Expression
-              TextField(
-                controller: _exprCtl,
-                decoration: InputDecoration(
-                  labelText: _scheduleType == 'cron'
-                      ? AppLocalizations.of(context)!.cronExpression
-                      : _scheduleType == 'every'
-                      ? AppLocalizations.of(context)!.intervalMs
-                      : AppLocalizations.of(context)!.executionTime,
-                  hintText: _scheduleType == 'cron'
-                      ? '*/5 * * * *'
-                      : _scheduleType == 'every'
-                      ? '60000'
-                      : '2025-12-31T23:59:00Z',
-                ),
-              ),
-              const SizedBox(height: 16),
-              // Shell-specific
-              if (_jobType == 'shell')
-                TextField(
-                  controller: _commandCtl,
-                  maxLines: 3,
-                  decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)!.shellCommandLabel,
-                    hintText: 'echo "hello world"',
-                  ),
-                ),
-              // Agent-specific
-              if (_jobType == 'agent') ...[
-                TextField(
-                  controller: _promptCtl,
-                  maxLines: 3,
-                  decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)!.aiPromptLabel,
-                    hintText: '检查系统日志并总结异常...',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _modelCtl,
-                  decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)!.modelOptional,
-                    hintText: AppLocalizations.of(context)!.useDefaultModel,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Text(
-                      AppLocalizations.of(context)!.sessionTarget,
-                      style: const TextStyle(fontSize: 13),
+              FieldRow(
+                children: [
+                  TextField(
+                    controller: _nameCtl,
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.taskNameOptional,
+                      hintText: 'my-backup-task',
                     ),
-                    const Spacer(),
-                    SegmentedButton<String>(
-                      segments: [
-                        ButtonSegment(
-                          value: 'isolated',
-                          label: Text(AppLocalizations.of(context)!.isolated),
+                  ),
+                  // Job type selector inline
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        AppLocalizations.of(context)!.taskType,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: CoralDeskColors.of(context).textSecondary,
                         ),
-                        ButtonSegment(
-                          value: 'main',
-                          label: Text(
-                            AppLocalizations.of(context)!.mainSession,
+                      ),
+                      const SizedBox(height: 6),
+                      SegmentedButton<String>(
+                        segments: [
+                          ButtonSegment(
+                            value: 'shell',
+                            label: Text(
+                              AppLocalizations.of(context)!.shellCommand,
+                            ),
+                            icon: const Icon(Icons.terminal, size: 18),
+                          ),
+                          ButtonSegment(
+                            value: 'agent',
+                            label: Text(AppLocalizations.of(context)!.aiAgent),
+                            icon: const Icon(Icons.smart_toy, size: 18),
+                          ),
+                        ],
+                        selected: {_jobType},
+                        onSelectionChanged: (v) =>
+                            setState(() => _jobType = v.first),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          // ── Schedule ──
+          DialogSection(
+            title: 'SCHEDULE',
+            icon: Icons.timer_outlined,
+            children: [
+              FieldRow(
+                children: [
+                  // Schedule type selector
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        AppLocalizations.of(context)!.scheduleType,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: CoralDeskColors.of(context).textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      SegmentedButton<String>(
+                        segments: [
+                          const ButtonSegment(
+                            value: 'cron',
+                            label: Text('Cron'),
+                          ),
+                          ButtonSegment(
+                            value: 'every',
+                            label: Text(AppLocalizations.of(context)!.interval),
+                          ),
+                          ButtonSegment(
+                            value: 'at',
+                            label: Text(
+                              AppLocalizations.of(context)!.scheduled,
+                            ),
+                          ),
+                        ],
+                        selected: {_scheduleType},
+                        onSelectionChanged: (v) {
+                          setState(() {
+                            _scheduleType = v.first;
+                            if (v.first == 'cron') {
+                              _exprCtl.text = '*/5 * * * *';
+                            } else if (v.first == 'every') {
+                              _exprCtl.text = '60000';
+                            } else {
+                              _exprCtl.text = '';
+                            }
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  // Expression
+                  TextField(
+                    controller: _exprCtl,
+                    decoration: InputDecoration(
+                      labelText: _scheduleType == 'cron'
+                          ? AppLocalizations.of(context)!.cronExpression
+                          : _scheduleType == 'every'
+                          ? AppLocalizations.of(context)!.intervalMs
+                          : AppLocalizations.of(context)!.executionTime,
+                      hintText: _scheduleType == 'cron'
+                          ? '*/5 * * * *'
+                          : _scheduleType == 'every'
+                          ? '60000'
+                          : '2025-12-31T23:59:00Z',
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          // ── Content ──
+          DialogSection(
+            title: _jobType == 'shell' ? 'SHELL COMMAND' : 'AI AGENT',
+            icon: _jobType == 'shell' ? Icons.terminal : Icons.smart_toy,
+            children: [
+              if (_jobType == 'shell')
+                FieldColumn(
+                  child: TextField(
+                    controller: _commandCtl,
+                    maxLines: 3,
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(
+                        context,
+                      )!.shellCommandLabel,
+                      hintText: 'echo "hello world"',
+                      alignLabelWithHint: true,
+                    ),
+                  ),
+                ),
+              if (_jobType == 'agent') ...[
+                FieldColumn(
+                  child: TextField(
+                    controller: _promptCtl,
+                    maxLines: 3,
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.aiPromptLabel,
+                      hintText: '检查系统日志并总结异常...',
+                      alignLabelWithHint: true,
+                    ),
+                  ),
+                ),
+                FieldRow(
+                  children: [
+                    TextField(
+                      controller: _modelCtl,
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context)!.modelOptional,
+                        hintText: AppLocalizations.of(context)!.useDefaultModel,
+                      ),
+                    ),
+                    // Session target
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppLocalizations.of(context)!.sessionTarget,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: CoralDeskColors.of(context).textSecondary,
                           ),
                         ),
+                        const SizedBox(height: 6),
+                        SegmentedButton<String>(
+                          segments: [
+                            ButtonSegment(
+                              value: 'isolated',
+                              label: Text(
+                                AppLocalizations.of(context)!.isolated,
+                              ),
+                            ),
+                            ButtonSegment(
+                              value: 'main',
+                              label: Text(
+                                AppLocalizations.of(context)!.mainSession,
+                              ),
+                            ),
+                          ],
+                          selected: {_sessionTarget},
+                          onSelectionChanged: (v) =>
+                              setState(() => _sessionTarget = v.first),
+                        ),
                       ],
-                      selected: {_sessionTarget},
-                      onSelectionChanged: (v) =>
-                          setState(() => _sessionTarget = v.first),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                SwitchListTile(
-                  title: Text(
-                    AppLocalizations.of(context)!.deleteAfterRun,
-                    style: const TextStyle(fontSize: 13),
+                FieldColumn(
+                  child: SwitchListTile(
+                    title: Text(
+                      AppLocalizations.of(context)!.deleteAfterRun,
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                    subtitle: Text(
+                      AppLocalizations.of(context)!.deleteAfterRunDesc,
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    value: _deleteAfterRun,
+                    activeTrackColor: AppColors.primary,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                    onChanged: (v) => setState(() => _deleteAfterRun = v),
+                    dense: true,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(
+                        color: CoralDeskColors.of(context).inputBorder,
+                      ),
+                    ),
+                    tileColor: CoralDeskColors.of(context).inputBg,
                   ),
-                  subtitle: Text(
-                    AppLocalizations.of(context)!.deleteAfterRunDesc,
-                    style: TextStyle(fontSize: 12),
-                  ),
-                  value: _deleteAfterRun,
-                  activeTrackColor: AppColors.primary,
-                  contentPadding: EdgeInsets.zero,
-                  onChanged: (v) => setState(() => _deleteAfterRun = v),
                 ),
               ],
             ],
           ),
-        ),
+        ],
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text(AppLocalizations.of(context)!.cancel),
         ),
-        ElevatedButton(
+        FilledButton(
           onPressed: _canSubmit() ? _submit : null,
           child: Text(AppLocalizations.of(context)!.create),
         ),

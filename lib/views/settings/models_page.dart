@@ -6,6 +6,7 @@ import 'package:coraldesk/src/rust/api/agent_api.dart' as agent_api;
 import 'package:coraldesk/src/rust/api/routes_api.dart' as routes_api;
 import 'package:coraldesk/src/rust/api/providers_api.dart' as providers_api;
 import 'package:coraldesk/views/settings/widgets/settings_scaffold.dart';
+import 'package:coraldesk/views/settings/widgets/desktop_dialog.dart';
 
 /// Models settings page — default provider, model routes, embedding config
 class ModelsPage extends ConsumerStatefulWidget {
@@ -898,90 +899,102 @@ class _ProfileEditorDialogState extends State<_ProfileEditorDialog> {
       ('responses', l10n.wireApiResponses),
     ];
 
-    return AlertDialog(
-      title: Text(_isEdit ? l10n.providerProfileEdit : l10n.providerProfileNew),
-      content: SizedBox(
-        width: 460,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+    return DesktopDialog(
+      title: _isEdit ? l10n.providerProfileEdit : l10n.providerProfileNew,
+      icon: Icons.dns_outlined,
+      width: 680,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Identity ──
+          DialogSection(
+            title: l10n.providerProfileId.toUpperCase(),
+            icon: Icons.badge_outlined,
             children: [
-              // Profile ID
-              TextField(
-                controller: _idCtrl,
-                enabled: !_isEdit,
-                decoration: InputDecoration(
-                  labelText: l10n.providerProfileId,
-                  hintText: l10n.providerProfileIdHint,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Provider Name
-              TextField(
-                controller: _nameCtrl,
-                decoration: InputDecoration(
-                  labelText: l10n.providerProfileName,
-                  hintText: l10n.providerProfileNameHint,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Base URL
-              TextField(
-                controller: _baseUrlCtrl,
-                decoration: InputDecoration(
-                  labelText: l10n.providerProfileBaseUrl,
-                  hintText: l10n.providerProfileBaseUrlHint,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Wire API Protocol dropdown
-              DropdownButtonFormField<String>(
-                initialValue: _wireApi,
-                decoration: InputDecoration(
-                  labelText: l10n.providerProfileWireApi,
-                  border: const OutlineInputBorder(),
-                ),
-                items: wireApiOptions
-                    .map(
-                      (o) => DropdownMenuItem(value: o.$1, child: Text(o.$2)),
-                    )
-                    .toList(),
-                onChanged: (v) {
-                  if (v != null) setState(() => _wireApi = v);
-                },
-              ),
-              const SizedBox(height: 12),
-
-              // Default Model
-              TextField(
-                controller: _modelCtrl,
-                decoration: InputDecoration(
-                  labelText: l10n.providerProfileModel,
-                  hintText: l10n.providerProfileModelHint,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // API Key
-              TextField(
-                controller: _apiKeyCtrl,
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: '${l10n.apiKeyLabel} (${l10n.agentOptional})',
-                  hintText: l10n.apiKeyHint,
-                  border: const OutlineInputBorder(),
-                ),
+              FieldRow(
+                children: [
+                  TextField(
+                    controller: _idCtrl,
+                    enabled: !_isEdit,
+                    decoration: InputDecoration(
+                      labelText: l10n.providerProfileId,
+                      hintText: l10n.providerProfileIdHint,
+                    ),
+                  ),
+                  TextField(
+                    controller: _nameCtrl,
+                    decoration: InputDecoration(
+                      labelText: l10n.providerProfileName,
+                      hintText: l10n.providerProfileNameHint,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ),
+
+          // ── Connection ──
+          DialogSection(
+            title: 'CONNECTION',
+            icon: Icons.link,
+            children: [
+              FieldRow(
+                children: [
+                  TextField(
+                    controller: _baseUrlCtrl,
+                    decoration: InputDecoration(
+                      labelText: l10n.providerProfileBaseUrl,
+                      hintText: l10n.providerProfileBaseUrlHint,
+                    ),
+                  ),
+                  DropdownButtonFormField<String>(
+                    initialValue: _wireApi,
+                    decoration: InputDecoration(
+                      labelText: l10n.providerProfileWireApi,
+                    ),
+                    items: wireApiOptions
+                        .map(
+                          (o) =>
+                              DropdownMenuItem(value: o.$1, child: Text(o.$2)),
+                        )
+                        .toList(),
+                    onChanged: (v) {
+                      if (v != null) setState(() => _wireApi = v);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          // ── Model & Auth ──
+          DialogSection(
+            title: 'MODEL & AUTH',
+            icon: Icons.vpn_key_outlined,
+            children: [
+              FieldRow(
+                children: [
+                  TextField(
+                    controller: _modelCtrl,
+                    decoration: InputDecoration(
+                      labelText: l10n.providerProfileModel,
+                      hintText: l10n.providerProfileModelHint,
+                    ),
+                  ),
+                  TextField(
+                    controller: _apiKeyCtrl,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      labelText: '${l10n.apiKeyLabel} (${l10n.agentOptional})',
+                      hintText: l10n.apiKeyHint,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
       ),
       actions: [
         TextButton(

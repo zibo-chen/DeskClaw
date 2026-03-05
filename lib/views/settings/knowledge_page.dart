@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:coraldesk/l10n/app_localizations.dart';
 import 'package:coraldesk/theme/app_theme.dart';
 import 'package:coraldesk/views/settings/widgets/settings_scaffold.dart';
+import 'package:coraldesk/views/settings/widgets/desktop_dialog.dart';
 import 'package:coraldesk/src/rust/api/knowledge_api.dart' as kb_api;
 
 /// Knowledge Base management page — view, search, add, delete memory entries
@@ -667,66 +668,73 @@ class _AddKnowledgeDialogState extends State<_AddKnowledgeDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return AlertDialog(
-      title: Text(l10n.addKnowledge),
-      content: SizedBox(
-        width: 480,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _keyController,
-              decoration: InputDecoration(
-                labelText: l10n.knowledgeKeyLabel,
-                hintText: l10n.knowledgeKeyHint,
-                border: const OutlineInputBorder(),
+    return DesktopDialog(
+      title: l10n.addKnowledge,
+      icon: Icons.lightbulb_outline,
+      width: 680,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DialogSection(
+            title: 'ENTRY',
+            icon: Icons.article_outlined,
+            children: [
+              FieldRow(
+                children: [
+                  TextField(
+                    controller: _keyController,
+                    decoration: InputDecoration(
+                      labelText: l10n.knowledgeKeyLabel,
+                      hintText: l10n.knowledgeKeyHint,
+                    ),
+                  ),
+                  DropdownButtonFormField<String>(
+                    initialValue: _category,
+                    decoration: InputDecoration(
+                      labelText: l10n.knowledgeCategoryLabel,
+                    ),
+                    items: [
+                      DropdownMenuItem(
+                        value: 'core',
+                        child: Text(l10n.knowledgeCategoryCore),
+                      ),
+                      DropdownMenuItem(
+                        value: 'daily',
+                        child: Text(l10n.knowledgeCategoryDaily),
+                      ),
+                      DropdownMenuItem(
+                        value: 'conversation',
+                        child: Text(l10n.knowledgeCategoryConversation),
+                      ),
+                    ],
+                    onChanged: (v) {
+                      setState(() => _category = v ?? 'core');
+                    },
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _contentController,
-              maxLines: 5,
-              decoration: InputDecoration(
-                labelText: l10n.knowledgeContentLabel,
-                hintText: l10n.knowledgeContentHint,
-                border: const OutlineInputBorder(),
-                alignLabelWithHint: true,
+              FieldColumn(
+                child: TextField(
+                  controller: _contentController,
+                  maxLines: 6,
+                  decoration: InputDecoration(
+                    labelText: l10n.knowledgeContentLabel,
+                    hintText: l10n.knowledgeContentHint,
+                    alignLabelWithHint: true,
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              initialValue: _category,
-              decoration: InputDecoration(
-                labelText: l10n.knowledgeCategoryLabel,
-                border: const OutlineInputBorder(),
-              ),
-              items: [
-                DropdownMenuItem(
-                  value: 'core',
-                  child: Text(l10n.knowledgeCategoryCore),
-                ),
-                DropdownMenuItem(
-                  value: 'daily',
-                  child: Text(l10n.knowledgeCategoryDaily),
-                ),
-                DropdownMenuItem(
-                  value: 'conversation',
-                  child: Text(l10n.knowledgeCategoryConversation),
-                ),
-              ],
-              onChanged: (v) {
-                setState(() => _category = v ?? 'core');
-              },
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text(l10n.cancel),
         ),
-        ElevatedButton(
+        FilledButton(
           onPressed: () {
             Navigator.pop(context, {
               'key': _keyController.text,
@@ -734,10 +742,6 @@ class _AddKnowledgeDialogState extends State<_AddKnowledgeDialog> {
               'category': _category,
             });
           },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-          ),
           child: Text(l10n.confirm),
         ),
       ],

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:coraldesk/l10n/app_localizations.dart';
 import 'package:coraldesk/theme/app_theme.dart';
 import 'package:coraldesk/views/settings/widgets/settings_scaffold.dart';
+import 'package:coraldesk/views/settings/widgets/desktop_dialog.dart';
 import 'package:coraldesk/src/rust/api/workspace_api.dart' as ws_api;
 import 'package:coraldesk/src/rust/api/channel_runtime_api.dart' as channel_rt;
 
@@ -424,32 +425,54 @@ class _ChannelConfigDialogState extends State<_ChannelConfigDialog> {
   Widget build(BuildContext context) {
     final fields = _getFieldDefinitions(widget.channel.channelType);
 
-    return AlertDialog(
-      title: Row(
+    // Split fields into groups for 2-column layout where sensible
+    final textFields = fields.where((f) => f.type != 'bool').toList();
+    final boolFields = fields.where((f) => f.type == 'bool').toList();
+
+    return DesktopDialog(
+      title: AppLocalizations.of(
+        context,
+      )!.configureChannel(widget.channel.name),
+      icon: Icons.settings_outlined,
+      width: 700,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.settings, size: 20, color: AppColors.primary),
-          const SizedBox(width: 8),
-          Text(
-            AppLocalizations.of(context)!.configureChannel(widget.channel.name),
-          ),
+          // ── Connection / credential fields in 2-col layout ──
+          if (textFields.isNotEmpty)
+            DialogSection(
+              title: 'CONFIGURATION',
+              icon: Icons.tune,
+              children: [
+                for (int i = 0; i < textFields.length; i += 2)
+                  if (i + 1 < textFields.length)
+                    FieldRow(
+                      children: [
+                        _buildField(textFields[i]),
+                        _buildField(textFields[i + 1]),
+                      ],
+                    )
+                  else
+                    FieldColumn(child: _buildField(textFields[i])),
+              ],
+            ),
+
+          // ── Boolean switches ──
+          if (boolFields.isNotEmpty)
+            DialogSection(
+              title: 'OPTIONS',
+              icon: Icons.toggle_on_outlined,
+              children: boolFields.map((field) => _buildField(field)).toList(),
+            ),
         ],
-      ),
-      content: SizedBox(
-        width: 500,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: fields.map((field) => _buildField(field)).toList(),
-          ),
-        ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text(AppLocalizations.of(context)!.cancel),
         ),
-        ElevatedButton(
+        FilledButton(
           onPressed: _submit,
           child: Text(AppLocalizations.of(context)!.save),
         ),

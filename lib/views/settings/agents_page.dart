@@ -6,6 +6,7 @@ import 'package:coraldesk/src/rust/api/agents_api.dart' as agents_api;
 import 'package:coraldesk/src/rust/api/config_api.dart' as config_api;
 import 'package:coraldesk/src/rust/api/providers_api.dart' as providers_api;
 import 'package:coraldesk/views/settings/widgets/settings_scaffold.dart';
+import 'package:coraldesk/views/settings/widgets/desktop_dialog.dart';
 
 /// Sub-agent management page: list, create, edit, delete delegate agents
 class AgentsPage extends ConsumerStatefulWidget {
@@ -600,265 +601,282 @@ class _AgentEditorDialogState extends State<_AgentEditorDialog> {
     final l10n = AppLocalizations.of(context)!;
     final c = CoralDeskColors.of(context);
 
-    return AlertDialog(
-      title: Text(_isEdit ? l10n.agentEdit : l10n.agentNew),
-      content: SizedBox(
-        width: 480,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+    return DesktopDialog(
+      title: _isEdit ? l10n.agentEdit : l10n.agentNew,
+      icon: _isEdit ? Icons.edit_outlined : Icons.hub_outlined,
+      width: 760,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ═══ Provider Source ═══
+          DialogSection(
+            title: 'PROVIDER SOURCE',
+            icon: Icons.dns_outlined,
             children: [
-              // Provider Profile Selection (choose from pre-configured profiles)
-              if (_providerProfiles.isNotEmpty) ...[
-                DropdownButtonFormField<String?>(
-                  value: _selectedProfileId,
-                  decoration: InputDecoration(
-                    labelText: l10n.providerProfile,
-                    hintText: l10n.providerProfileSelectHint,
-                    border: const OutlineInputBorder(),
-                  ),
-                  items: [
-                    DropdownMenuItem<String?>(
-                      value: null,
-                      child: Text(
-                        l10n.providerProfileManual,
-                        style: TextStyle(
-                          color: c.textSecondary,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
+              // Provider Profile dropdown (if profiles exist)
+              if (_providerProfiles.isNotEmpty)
+                FieldColumn(
+                  child: DropdownButtonFormField<String?>(
+                    initialValue: _selectedProfileId,
+                    decoration: InputDecoration(
+                      labelText: l10n.providerProfile,
+                      hintText: l10n.providerProfileSelectHint,
                     ),
-                    ..._providerProfiles.map(
-                      (p) => DropdownMenuItem<String?>(
-                        value: p.id,
+                    items: [
+                      DropdownMenuItem<String?>(
+                        value: null,
                         child: Text(
-                          '${p.id}${p.name != null ? ' (${p.name})' : ''}',
+                          l10n.providerProfileManual,
+                          style: TextStyle(
+                            color: c.textSecondary,
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                  onChanged: (profileId) {
-                    if (profileId == null) {
-                      setState(() {
-                        _selectedProfileId = null;
-                        _useDefault = false;
-                      });
-                    } else {
-                      final profile = _providerProfiles.firstWhere(
-                        (p) => p.id == profileId,
-                      );
-                      _applyProfile(profile);
-                      setState(() => _useDefault = true);
-                    }
-                  },
+                      ..._providerProfiles.map(
+                        (p) => DropdownMenuItem<String?>(
+                          value: p.id,
+                          child: Text(
+                            '${p.id}${p.name != null ? ' (${p.name})' : ''}',
+                          ),
+                        ),
+                      ),
+                    ],
+                    onChanged: (profileId) {
+                      if (profileId == null) {
+                        setState(() {
+                          _selectedProfileId = null;
+                          _useDefault = false;
+                        });
+                      } else {
+                        final profile = _providerProfiles.firstWhere(
+                          (p) => p.id == profileId,
+                        );
+                        _applyProfile(profile);
+                        setState(() => _useDefault = true);
+                      }
+                    },
+                  ),
                 ),
-                const SizedBox(height: 12),
-              ],
 
-              // Use default provider toggle (fallback when no profiles configured)
+              // Fallback: use default provider toggle
               if (_providerProfiles.isEmpty)
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
+                FieldColumn(
+                  child: SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(
+                      l10n.agentUseDefault,
+                      style: TextStyle(fontSize: 14, color: c.textPrimary),
+                    ),
+                    subtitle: Text(
+                      l10n.agentUseDefaultDesc,
+                      style: TextStyle(fontSize: 12, color: c.textSecondary),
+                    ),
+                    value: _useDefault,
+                    onChanged: (v) {
+                      setState(() {
+                        _useDefault = v;
+                        if (v) _applyDefaultConfig();
+                      });
+                    },
+                  ),
+                ),
+
+              // Provider + Model side by side
+              FieldRow(
+                children: [
+                  DropdownButtonFormField<String>(
+                    initialValue:
+                        _providers.any((p) => p.id == _selectedProvider)
+                        ? _selectedProvider
+                        : _providers.first.id,
+                    decoration: InputDecoration(labelText: l10n.providerLabel),
+                    items: _providers
+                        .map(
+                          (p) => DropdownMenuItem(
+                            value: p.id,
+                            child: Text(p.name),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: _selectedProfileId != null
+                        ? null
+                        : (v) {
+                            if (v != null) {
+                              setState(() => _selectedProvider = v);
+                            }
+                          },
+                  ),
+                  TextField(
+                    controller: _modelCtrl,
+                    enabled: _selectedProfileId == null,
+                    decoration: InputDecoration(
+                      labelText: l10n.modelLabel,
+                      hintText: l10n.modelNameHint,
+                    ),
+                  ),
+                ],
+              ),
+
+              // API Key (full width)
+              FieldColumn(
+                child: TextField(
+                  controller: _apiKeyCtrl,
+                  obscureText: true,
+                  enabled: _selectedProfileId == null,
+                  decoration: InputDecoration(
+                    labelText: '${l10n.apiKeyLabel} (${l10n.agentOptional})',
+                    hintText: l10n.apiKeyHint,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          // ═══ Basic Info ═══
+          DialogSection(
+            title: 'BASIC INFO',
+            icon: Icons.badge_outlined,
+            children: [
+              FieldRow(
+                children: [
+                  TextField(
+                    controller: _nameCtrl,
+                    enabled: !_isEdit,
+                    decoration: InputDecoration(
+                      labelText: l10n.agentNameLabel,
+                      hintText: 'researcher, coder, summarizer...',
+                    ),
+                  ),
+                  SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                    title: Text(
+                      l10n.agentEnabled,
+                      style: TextStyle(fontSize: 14, color: c.textPrimary),
+                    ),
+                    value: _enabled,
+                    onChanged: (v) => setState(() => _enabled = v),
+                    dense: true,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(color: c.inputBorder),
+                    ),
+                    tileColor: c.inputBg,
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          // ═══ Behavior ═══
+          DialogSection(
+            title: 'BEHAVIOR',
+            icon: Icons.tune,
+            children: [
+              FieldRow(
+                children: [
+                  TextField(
+                    controller: _tempCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText:
+                          '${l10n.temperatureLabel} (${l10n.agentOptional})',
+                      hintText: '0.7',
+                    ),
+                  ),
+                  TextField(
+                    controller: _maxDepthCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(labelText: l10n.agentMaxDepth),
+                  ),
+                  TextField(
+                    controller: _priorityCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: l10n.agentPriority,
+                      hintText: '0',
+                    ),
+                  ),
+                ],
+              ),
+
+              // System prompt (full width, taller)
+              FieldColumn(
+                child: TextField(
+                  controller: _systemPromptCtrl,
+                  maxLines: 4,
+                  decoration: InputDecoration(
+                    labelText: l10n.agentSystemPrompt,
+                    hintText: l10n.agentSystemPromptHint,
+                    alignLabelWithHint: true,
+                  ),
+                ),
+              ),
+
+              // Capabilities
+              FieldColumn(
+                child: TextField(
+                  controller: _capabilitiesCtrl,
+                  decoration: InputDecoration(
+                    labelText: l10n.agentCapabilities,
+                    hintText: l10n.agentCapabilitiesHint,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          // ═══ Agentic Mode ═══
+          DialogSection(
+            title: 'AGENTIC MODE',
+            icon: Icons.smart_toy_outlined,
+            children: [
+              FieldColumn(
+                child: SwitchListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                   title: Text(
-                    l10n.agentUseDefault,
+                    l10n.agentAgenticMode,
                     style: TextStyle(fontSize: 14, color: c.textPrimary),
                   ),
                   subtitle: Text(
-                    l10n.agentUseDefaultDesc,
+                    l10n.agentAgenticModeDesc,
                     style: TextStyle(fontSize: 12, color: c.textSecondary),
                   ),
-                  value: _useDefault,
-                  onChanged: (v) {
-                    setState(() {
-                      _useDefault = v;
-                      if (v) _applyDefaultConfig();
-                    });
-                  },
-                ),
-              if (_providerProfiles.isEmpty) const SizedBox(height: 8),
-
-              // Name
-              TextField(
-                controller: _nameCtrl,
-                enabled: !_isEdit,
-                decoration: InputDecoration(
-                  labelText: l10n.agentNameLabel,
-                  hintText: 'researcher, coder, summarizer...',
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Provider (manual selection, disabled when using profile)
-              DropdownButtonFormField<String>(
-                value: _providers.any((p) => p.id == _selectedProvider)
-                    ? _selectedProvider
-                    : _providers.first.id,
-                decoration: InputDecoration(
-                  labelText: l10n.providerLabel,
-                  border: const OutlineInputBorder(),
-                ),
-                items: _providers
-                    .map(
-                      (p) => DropdownMenuItem(value: p.id, child: Text(p.name)),
-                    )
-                    .toList(),
-                onChanged: _selectedProfileId != null
-                    ? null
-                    : (v) {
-                        if (v != null) setState(() => _selectedProvider = v);
-                      },
-              ),
-              const SizedBox(height: 12),
-
-              // Model
-              TextField(
-                controller: _modelCtrl,
-                enabled: _selectedProfileId == null,
-                decoration: InputDecoration(
-                  labelText: l10n.modelLabel,
-                  hintText: l10n.modelNameHint,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // API Key (optional)
-              TextField(
-                controller: _apiKeyCtrl,
-                obscureText: true,
-                enabled: _selectedProfileId == null,
-                decoration: InputDecoration(
-                  labelText: '${l10n.apiKeyLabel} (${l10n.agentOptional})',
-                  hintText: l10n.apiKeyHint,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Temperature + Max Depth row
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _tempCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText:
-                            '${l10n.temperatureLabel} (${l10n.agentOptional})',
-                        hintText: '0.7',
-                        border: const OutlineInputBorder(),
-                      ),
-                    ),
+                  value: _agentic,
+                  onChanged: (v) => setState(() => _agentic = v),
+                  dense: true,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(color: c.inputBorder),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextField(
-                      controller: _maxDepthCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: l10n.agentMaxDepth,
-                        border: const OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // System prompt
-              TextField(
-                controller: _systemPromptCtrl,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  labelText: l10n.agentSystemPrompt,
-                  hintText: l10n.agentSystemPromptHint,
-                  border: const OutlineInputBorder(),
-                  alignLabelWithHint: true,
+                  tileColor: c.inputBg,
                 ),
               ),
-              const SizedBox(height: 12),
 
-              // Capabilities (comma-separated tags)
-              TextField(
-                controller: _capabilitiesCtrl,
-                decoration: InputDecoration(
-                  labelText: l10n.agentCapabilities,
-                  hintText: l10n.agentCapabilitiesHint,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Priority + Enabled row
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _priorityCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: l10n.agentPriority,
-                        hintText: '0',
-                        border: const OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(
-                        l10n.agentEnabled,
-                        style: TextStyle(fontSize: 14, color: c.textPrimary),
-                      ),
-                      value: _enabled,
-                      onChanged: (v) => setState(() => _enabled = v),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Agentic toggle
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(
-                  l10n.agentAgenticMode,
-                  style: TextStyle(fontSize: 14, color: c.textPrimary),
-                ),
-                subtitle: Text(
-                  l10n.agentAgenticModeDesc,
-                  style: TextStyle(fontSize: 12, color: c.textSecondary),
-                ),
-                value: _agentic,
-                onChanged: (v) => setState(() => _agentic = v),
-              ),
-
-              // Agentic options
               if (_agentic) ...[
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _allowedToolsCtrl,
-                  decoration: InputDecoration(
-                    labelText: l10n.agentAllowedTools,
-                    hintText: 'web_search, file_read, shell',
-                    border: const OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _maxIterCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: l10n.agentMaxIterations,
-                    border: const OutlineInputBorder(),
-                  ),
+                FieldRow(
+                  children: [
+                    TextField(
+                      controller: _allowedToolsCtrl,
+                      decoration: InputDecoration(
+                        labelText: l10n.agentAllowedTools,
+                        hintText: 'web_search, file_read, shell',
+                      ),
+                    ),
+                    TextField(
+                      controller: _maxIterCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: l10n.agentMaxIterations,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ],
           ),
-        ),
+        ],
       ),
       actions: [
         TextButton(

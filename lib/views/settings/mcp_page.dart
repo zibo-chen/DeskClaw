@@ -4,6 +4,7 @@ import 'package:coraldesk/l10n/app_localizations.dart';
 import 'package:coraldesk/theme/app_theme.dart';
 import 'package:coraldesk/src/rust/api/mcp_api.dart' as mcp_api;
 import 'package:coraldesk/views/settings/widgets/settings_scaffold.dart';
+import 'package:coraldesk/views/settings/widgets/desktop_dialog.dart';
 
 /// MCP servers management page — add, edit, remove MCP tool servers
 class McpPage extends ConsumerStatefulWidget {
@@ -475,53 +476,73 @@ class _McpServerDialogState extends State<_McpServerDialog> {
     final l10n = AppLocalizations.of(context)!;
     final isEdit = widget.existing != null;
 
-    return AlertDialog(
-      backgroundColor: c.cardBg,
-      title: Text(
-        isEdit ? l10n.mcpEditServer : l10n.mcpAddServer,
-        style: TextStyle(color: c.textPrimary),
-      ),
-      content: SizedBox(
-        width: 500,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return DesktopDialog(
+      title: isEdit ? l10n.mcpEditServer : l10n.mcpAddServer,
+      icon: Icons.extension_outlined,
+      width: 700,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Identity ──
+          DialogSection(
+            title: 'SERVER',
+            icon: Icons.dns_outlined,
             children: [
-              _buildField(l10n.mcpServerName, _nameCtrl, enabled: !isEdit),
-              const SizedBox(height: 16),
-              _buildTransportSelector(l10n),
-              const SizedBox(height: 16),
+              FieldRow(
+                children: [
+                  _buildFieldWidget(
+                    l10n.mcpServerName,
+                    _nameCtrl,
+                    enabled: !isEdit,
+                  ),
+                  _buildFieldWidget(
+                    l10n.mcpTimeout,
+                    _timeoutCtrl,
+                    hint: '30',
+                    keyboardType: TextInputType.number,
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          // ── Transport ──
+          DialogSection(
+            title: 'TRANSPORT',
+            icon: Icons.swap_horiz,
+            children: [
+              FieldColumn(child: _buildTransportSelector(l10n)),
               if (_transport == 'stdio') ...[
-                _buildField(l10n.mcpCommand, _commandCtrl),
-                const SizedBox(height: 12),
-                _buildField(
-                  l10n.mcpArgs,
-                  _argsCtrl,
-                  maxLines: 3,
-                  hint: l10n.mcpArgsHint,
+                FieldRow(
+                  children: [
+                    _buildFieldWidget(l10n.mcpCommand, _commandCtrl),
+                    _buildFieldWidget(
+                      l10n.mcpArgs,
+                      _argsCtrl,
+                      maxLines: 3,
+                      hint: l10n.mcpArgsHint,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
                 _buildKvSection(l10n.mcpEnvVars, _env, () => _addKv(_env)),
               ] else ...[
-                _buildField(l10n.mcpUrl, _urlCtrl, hint: 'https://...'),
-                const SizedBox(height: 12),
+                FieldColumn(
+                  child: _buildFieldWidget(
+                    l10n.mcpUrl,
+                    _urlCtrl,
+                    hint: 'https://...',
+                  ),
+                ),
                 _buildKvSection(
                   l10n.mcpHeaders,
                   _headers,
                   () => _addKv(_headers),
                 ),
               ],
-              const SizedBox(height: 12),
-              _buildField(
-                l10n.mcpTimeout,
-                _timeoutCtrl,
-                hint: '30',
-                keyboardType: TextInputType.number,
-              ),
             ],
           ),
-        ),
+        ],
       ),
       actions: [
         TextButton(
@@ -537,7 +558,7 @@ class _McpServerDialogState extends State<_McpServerDialog> {
     );
   }
 
-  Widget _buildField(
+  Widget _buildFieldWidget(
     String label,
     TextEditingController ctrl, {
     bool enabled = true,
