@@ -1573,4 +1573,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String providerProfileSetDefault(String id) {
     return '配置 \'\'$id\'\' 已设为默认';
   }
+
+  @override
+  String get trayShow => '显示 CoralDesk';
+
+  @override
+  String get trayHide => '隐藏 CoralDesk';
+
+  @override
+  String get trayQuit => '退出 CoralDesk';
+
+  @override
+  String get trayTooltip => 'CoralDesk – 后台运行中';
 }

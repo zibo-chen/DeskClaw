@@ -1617,4 +1617,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String providerProfileSetDefault(String id) {
     return 'Profile \'\'$id\'\' set as default';
   }
+
+  @override
+  String get trayShow => 'Show CoralDesk';
+
+  @override
+  String get trayHide => 'Hide CoralDesk';
+
+  @override
+  String get trayQuit => 'Quit CoralDesk';
+
+  @override
+  String get trayTooltip => 'CoralDesk – Running in background';
 }

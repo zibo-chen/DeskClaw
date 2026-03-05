@@ -13,7 +13,7 @@ class AppConstants {
 
   // Sidebar widths
   static const double sidebarWidth = 220.0;
-  static const double sidebarCollapsedWidth = 58.0;
+  static const double sidebarCollapsedWidth = 72.0;
   static const double chatListWidth = 260.0;
 
   // Input limits

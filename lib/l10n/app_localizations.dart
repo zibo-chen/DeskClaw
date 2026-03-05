@@ -3037,6 +3037,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Profile \'\'{id}\'\' set as default'**
   String providerProfileSetDefault(String id);
+
+  /// Tray menu – show window
+  ///
+  /// In en, this message translates to:
+  /// **'Show CoralDesk'**
+  String get trayShow;
+
+  /// Tray menu – hide window
+  ///
+  /// In en, this message translates to:
+  /// **'Hide CoralDesk'**
+  String get trayHide;
+
+  /// Tray menu – quit app
+  ///
+  /// In en, this message translates to:
+  /// **'Quit CoralDesk'**
+  String get trayQuit;
+
+  /// Tray icon tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'CoralDesk – Running in background'**
+  String get trayTooltip;
 }
 
 class _AppLocalizationsDelegate

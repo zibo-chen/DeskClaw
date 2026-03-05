@@ -502,5 +502,9 @@
   "wireApiAuto": "自动",
   "defaultLabel": "默认",
   "setAsDefault": "设为默认",
-  "providerProfileSetDefault": "配置 ''{id}'' 已设为默认"
+  "providerProfileSetDefault": "配置 ''{id}'' 已设为默认",
+  "trayShow": "显示 CoralDesk",
+  "trayHide": "隐藏 CoralDesk",
+  "trayQuit": "退出 CoralDesk",
+  "trayTooltip": "CoralDesk – 后台运行中"
 }

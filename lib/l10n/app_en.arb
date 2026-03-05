@@ -1572,5 +1572,17 @@
   "@setAsDefault": { "description": "Set as default button tooltip" },
 
   "providerProfileSetDefault": "Profile ''{id}'' set as default",
-  "@providerProfileSetDefault": { "description": "Profile set as default message", "placeholders": { "id": { "type": "String" } } }
+  "@providerProfileSetDefault": { "description": "Profile set as default message", "placeholders": { "id": { "type": "String" } } },
+
+  "trayShow": "Show CoralDesk",
+  "@trayShow": { "description": "Tray menu – show window" },
+
+  "trayHide": "Hide CoralDesk",
+  "@trayHide": { "description": "Tray menu – hide window" },
+
+  "trayQuit": "Quit CoralDesk",
+  "@trayQuit": { "description": "Tray menu – quit app" },
+
+  "trayTooltip": "CoralDesk – Running in background",
+  "@trayTooltip": { "description": "Tray icon tooltip" }
 }

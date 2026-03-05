@@ -6,6 +6,7 @@ import 'package:coraldesk/src/rust/api/sessions_api.dart' as sessions_api;
 import 'package:coraldesk/src/rust/api/cron_api.dart' as cron_api;
 import 'package:coraldesk/src/rust/api/channel_runtime_api.dart' as channel_rt;
 import 'package:coraldesk/services/settings_service.dart';
+import 'package:coraldesk/services/tray_service.dart';
 import 'package:window_manager/window_manager.dart';
 
 /// Centralises all application startup logic.
@@ -42,6 +43,12 @@ class AppBootstrapper {
         await windowManager.show();
         await windowManager.focus();
       });
+
+      // Intercept the close button so the window hides instead of quitting.
+      await windowManager.setPreventClose(true);
+
+      // System-tray icon (menu bar on macOS, notification area on Win/Linux).
+      await TrayService.instance.init();
     }
 
     // Rust FFI bridge

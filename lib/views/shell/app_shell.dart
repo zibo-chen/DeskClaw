@@ -21,6 +21,7 @@ import 'package:coraldesk/views/settings/cron_jobs_page.dart';
 import 'package:coraldesk/views/settings/knowledge_page.dart';
 import 'package:coraldesk/views/notification/notification_panel.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:coraldesk/services/tray_service.dart';
 
 /// Root layout shell: Sidebar | Chat List (when in chat) | Main Content
 class AppShell extends ConsumerStatefulWidget {
@@ -75,6 +76,17 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
     setState(() {
       _isMaximized = false;
     });
+  }
+
+  @override
+  void onWindowClose() async {
+    // Instead of quitting, hide the window and keep running in the background.
+    // Route through TrayService so the macOS Dock icon is also hidden and the
+    // tray menu state is updated correctly.
+    final isPreventClose = await windowManager.isPreventClose();
+    if (isPreventClose) {
+      await TrayService.instance.hideWindow();
+    }
   }
 
   /// Show a SnackBar when a cron notification arrives
