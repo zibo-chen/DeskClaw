@@ -1350,6 +1350,15 @@ async fn ensure_session_agent(session_id: &str) -> Result<Arc<TokioMutex<Session
     //    instead of the provider's default URL (e.g. api.openai.com).
     resolve_delegate_providers(&mut config);
 
+    // 7a. In trust-me mode, allow all public domains for network-facing tools
+    // without mutating the persisted config. Private/local network guards still
+    // apply inside zeroclaw's URL validation layer.
+    if config.autonomy.trust_me {
+        config.browser.allowed_domains = vec!["*".to_string()];
+        config.http_request.allowed_domains = vec!["*".to_string()];
+        config.web_fetch.allowed_domains = vec!["*".to_string()];
+    }
+
     // 7b. Multi-agent mode: inject orchestrator identity when active.
     //     This writes orchestrator instructions to the session workspace's
     //     SOUL.md file so the agent's SystemPromptBuilder picks them up,

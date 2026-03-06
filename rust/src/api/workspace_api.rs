@@ -602,24 +602,30 @@ pub async fn get_feature_toggles() -> FeatureToggles {
 
 /// Update a single feature toggle
 pub async fn update_feature_toggle(feature: String, enabled: bool) -> String {
-    {
-        let mut cs = super::agent_api::config_state().write().await;
-        let config = match cs.config.as_mut() {
-            Some(c) => c,
-            None => return "error: not initialized".into(),
-        };
+    let mut gc = super::agent_api::global_config().write().await;
+    let mut cs = super::agent_api::config_state().write().await;
 
-        match feature.as_str() {
-            "web_search" => config.web_search.enabled = enabled,
-            "web_fetch" => config.web_fetch.enabled = enabled,
-            "browser" => config.browser.enabled = enabled,
-            "http_request" => config.http_request.enabled = enabled,
-            "memory_auto_save" => config.memory.auto_save = enabled,
-            "cost_tracking" => config.cost.enabled = enabled,
-            "skills_open" => config.skills.open_skills_enabled = enabled,
-            _ => return format!("error: unknown feature: {feature}"),
-        }
+    let config = match gc.config.as_mut() {
+        Some(c) => c,
+        None => return "error: not initialized".into(),
+    };
+
+    match feature.as_str() {
+        "web_search" => config.web_search.enabled = enabled,
+        "web_fetch" => config.web_fetch.enabled = enabled,
+        "browser" => config.browser.enabled = enabled,
+        "http_request" => config.http_request.enabled = enabled,
+        "memory_auto_save" => config.memory.auto_save = enabled,
+        "cost_tracking" => config.cost.enabled = enabled,
+        "skills_open" => config.skills.open_skills_enabled = enabled,
+        _ => return format!("error: unknown feature: {feature}"),
     }
+
+    cs.config = Some(config.clone());
+
+    drop(gc);
+    drop(cs);
+
     super::agent_api::invalidate_all_agents().await;
     super::agent_api::save_config_to_disk().await
 }
@@ -648,6 +654,208 @@ impl Default for FeatureToggles {
             skills_open_enabled: false,
         }
     }
+}
+
+// ──────────────────── Tool Config API ──────────────────────────
+
+/// Get tool configuration fields (returns JSON string for flexibility)
+pub async fn get_tool_config(tool_name: String) -> String {
+    let cs = super::agent_api::config_state().read().await;
+    let config = match &cs.config {
+        Some(c) => c,
+        None => return "{}".into(),
+    };
+
+    match tool_name.as_str() {
+        "web_search" => {
+            let cfg = &config.web_search;
+            let api_key = cfg.api_key.clone().or_else(|| match cfg.provider.as_str() {
+                "brave" => cfg.brave_api_key.clone(),
+                "perplexity" => cfg.perplexity_api_key.clone(),
+                "exa" => cfg.exa_api_key.clone(),
+                "jina" => cfg.jina_api_key.clone(),
+                _ => None,
+            });
+
+            serde_json::json!({
+                "enabled": cfg.enabled,
+                "provider": cfg.provider,
+                "api_key": api_key,
+                "api_url": cfg.api_url,
+            })
+        }
+        "web_fetch" => {
+            let cfg = &config.web_fetch;
+            serde_json::json!({
+                "enabled": cfg.enabled,
+                "provider": cfg.provider,
+                "api_key": cfg.api_key,
+                "api_url": cfg.api_url,
+                "allowed_domains": cfg.allowed_domains,
+                "blocked_domains": cfg.blocked_domains,
+            })
+        }
+        "browser" => {
+            let cfg = &config.browser;
+            serde_json::json!({
+                "enabled": cfg.enabled,
+                "backend": cfg.backend,
+                "agent_browser_command": cfg.agent_browser_command,
+                "allowed_domains": cfg.allowed_domains,
+            })
+        }
+        "http_request" => {
+            let cfg = &config.http_request;
+            serde_json::json!({
+                "enabled": cfg.enabled,
+                "allowed_domains": cfg.allowed_domains,
+            })
+        }
+        _ => serde_json::json!({}),
+    }
+    .to_string()
+}
+
+/// Save tool configuration from JSON string
+pub async fn save_tool_config(tool_name: String, config_json: String) -> String {
+    let val: serde_json::Value = match serde_json::from_str(&config_json) {
+        Ok(v) => v,
+        Err(e) => return format!("error: invalid JSON: {e}"),
+    };
+
+    let mut gc = super::agent_api::global_config().write().await;
+    let mut cs = super::agent_api::config_state().write().await;
+    let config = match gc.config.as_mut() {
+        Some(c) => c,
+        None => return "error: not initialized".into(),
+    };
+
+    match tool_name.as_str() {
+        "web_search" => {
+            let provider = val
+                .get("provider")
+                .and_then(|v| v.as_str())
+                .unwrap_or("duckduckgo")
+                .trim()
+                .to_ascii_lowercase();
+
+            let provider = match provider.as_str() {
+                "duckduckgo" | "ddg" => "duckduckgo",
+                "brave" => "brave",
+                "firecrawl" => "firecrawl",
+                "tavily" => "tavily",
+                "perplexity" => "perplexity",
+                "exa" => "exa",
+                "jina" => "jina",
+                _ => return format!("error: unsupported web_search provider: {provider}"),
+            };
+
+            let api_key = val
+                .get("api_key")
+                .and_then(|v| v.as_str())
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .map(|s| s.to_string());
+            let api_url = val
+                .get("api_url")
+                .and_then(|v| v.as_str())
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .map(|s| s.to_string());
+
+            config.web_search.enabled = val
+                .get("enabled")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(config.web_search.enabled);
+            config.web_search.provider = provider.to_string();
+            config.web_search.api_key = api_key.clone();
+            config.web_search.api_url = api_url;
+
+            match provider {
+                "brave" => config.web_search.brave_api_key = api_key,
+                "perplexity" => config.web_search.perplexity_api_key = api_key,
+                "exa" => config.web_search.exa_api_key = api_key,
+                "jina" => config.web_search.jina_api_key = api_key,
+                _ => {}
+            }
+        }
+        "web_fetch" => {
+            let provider = val
+                .get("provider")
+                .and_then(|v| v.as_str())
+                .unwrap_or("fast_html2md")
+                .trim()
+                .to_ascii_lowercase();
+
+            let provider = match provider.as_str() {
+                "fast_html2md" => "fast_html2md",
+                "nanohtml2text" => "nanohtml2text",
+                "firecrawl" => "firecrawl",
+                "tavily" => "tavily",
+                _ => return format!("error: unsupported web_fetch provider: {provider}"),
+            };
+
+            config.web_fetch.enabled = val
+                .get("enabled")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(config.web_fetch.enabled);
+            config.web_fetch.provider = provider.to_string();
+            config.web_fetch.api_key = val
+                .get("api_key")
+                .and_then(|v| v.as_str())
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .map(|s| s.to_string());
+            config.web_fetch.api_url = val
+                .get("api_url")
+                .and_then(|v| v.as_str())
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .map(|s| s.to_string());
+            if val.get("allowed_domains").is_some() {
+                config.web_fetch.allowed_domains = json_str_array(&val, "allowed_domains");
+            }
+            if val.get("blocked_domains").is_some() {
+                config.web_fetch.blocked_domains = json_str_array(&val, "blocked_domains");
+            }
+        }
+        "browser" => {
+            config.browser.enabled = val
+                .get("enabled")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(config.browser.enabled);
+            if let Some(backend) = val.get("backend").and_then(|v| v.as_str()) {
+                let trimmed = backend.trim();
+                if !trimmed.is_empty() {
+                    config.browser.backend = trimmed.to_string();
+                }
+            }
+            if let Some(command) = val.get("agent_browser_command").and_then(|v| v.as_str()) {
+                config.browser.agent_browser_command = command.trim().to_string();
+            }
+            if val.get("allowed_domains").is_some() {
+                config.browser.allowed_domains = json_str_array(&val, "allowed_domains");
+            }
+        }
+        "http_request" => {
+            config.http_request.enabled = val
+                .get("enabled")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(config.http_request.enabled);
+            if val.get("allowed_domains").is_some() {
+                config.http_request.allowed_domains = json_str_array(&val, "allowed_domains");
+            }
+        }
+        _ => return format!("error: unknown tool config: {tool_name}"),
+    }
+
+    cs.config = Some(config.clone());
+
+    drop(gc);
+    drop(cs);
+
+    super::agent_api::invalidate_all_agents().await;
+    save_tool_config_to_disk().await
 }
 
 // ──────────────────── Channel Config API ────────────────────────
@@ -1337,6 +1545,68 @@ async fn save_channel_config_to_disk() -> String {
     serialize_channel!(irc, "irc");
 
     table.insert("channels_config".into(), toml::Value::Table(ch_table));
+
+    let output = match toml::to_string_pretty(&table) {
+        Ok(s) => s,
+        Err(e) => return format!("error: serialize failed: {e}"),
+    };
+
+    match tokio::fs::write(config_path, output).await {
+        Ok(()) => "ok".into(),
+        Err(e) => format!("error: write failed: {e}"),
+    }
+}
+
+/// Persist tool config sections to disk
+async fn save_tool_config_to_disk() -> String {
+    let cs = super::agent_api::config_state().read().await;
+    let config = match &cs.config {
+        Some(c) => c,
+        None => return "error: no config loaded".into(),
+    };
+
+    let config_path = &config.config_path;
+    if config_path.as_os_str().is_empty() {
+        return "error: config_path not set".into();
+    }
+
+    let mut table: toml::Table = match tokio::fs::read_to_string(config_path).await {
+        Ok(content) => content.parse().unwrap_or_default(),
+        Err(_) => toml::Table::new(),
+    };
+
+    let sections = [
+        (
+            "browser",
+            serde_json::to_value(&config.browser).map_err(|e| e.to_string()),
+        ),
+        (
+            "http_request",
+            serde_json::to_value(&config.http_request).map_err(|e| e.to_string()),
+        ),
+        (
+            "web_search",
+            serde_json::to_value(&config.web_search).map_err(|e| e.to_string()),
+        ),
+        (
+            "web_fetch",
+            serde_json::to_value(&config.web_fetch).map_err(|e| e.to_string()),
+        ),
+    ];
+
+    for (section_name, value_result) in sections {
+        let value = match value_result {
+            Ok(value) => value,
+            Err(error) => return format!("error: serialize {section_name} failed: {error}"),
+        };
+
+        let toml_value = match json_value_to_toml(&value) {
+            Ok(value) => value,
+            Err(error) => return format!("error: serialize {section_name} failed: {error}"),
+        };
+
+        table.insert(section_name.into(), toml_value);
+    }
 
     let output = match toml::to_string_pretty(&table) {
         Ok(s) => s,

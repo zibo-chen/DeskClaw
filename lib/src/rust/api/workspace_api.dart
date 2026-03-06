@@ -6,7 +6,7 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `json_str_array`, `json_value_to_toml`, `save_channel_config_to_disk`
+// These functions are ignored because they are not marked as `pub`: `json_str_array`, `json_value_to_toml`, `save_channel_config_to_disk`, `save_tool_config_to_disk`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ChannelConfigField`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
@@ -107,6 +107,19 @@ Future<String> updateFeatureToggle({
 }) => RustLib.instance.api.crateApiWorkspaceApiUpdateFeatureToggle(
   feature: feature,
   enabled: enabled,
+);
+
+/// Get tool configuration fields (returns JSON string for flexibility)
+Future<String> getToolConfig({required String toolName}) =>
+    RustLib.instance.api.crateApiWorkspaceApiGetToolConfig(toolName: toolName);
+
+/// Save tool configuration from JSON string
+Future<String> saveToolConfig({
+  required String toolName,
+  required String configJson,
+}) => RustLib.instance.api.crateApiWorkspaceApiSaveToolConfig(
+  toolName: toolName,
+  configJson: configJson,
 );
 
 /// Get channel configuration fields (returns JSON string for flexibility)
