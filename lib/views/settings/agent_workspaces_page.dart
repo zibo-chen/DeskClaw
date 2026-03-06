@@ -5,9 +5,12 @@ import 'package:coraldesk/theme/app_theme.dart';
 import 'package:coraldesk/providers/providers.dart';
 import 'package:coraldesk/src/rust/api/agent_workspace_api.dart'
     as workspace_api;
+import 'package:coraldesk/src/rust/api/agent_api.dart' as agent_api;
+import 'package:coraldesk/views/settings/widgets/settings_scaffold.dart';
+import 'package:coraldesk/views/settings/widgets/desktop_dialog.dart';
 
-/// Agent Workspaces page — split-panel desktop layout
-/// Left: Workspace list | Right: Editor with code editor for identity files
+/// Agent Workspaces page — consistent with other settings pages
+/// Uses SettingsScaffold and modal dialogs for editing
 class AgentWorkspacesPage extends ConsumerStatefulWidget {
   const AgentWorkspacesPage({super.key});
 
@@ -20,8 +23,6 @@ class _AgentWorkspacesPageState extends ConsumerState<AgentWorkspacesPage> {
   bool _loading = true;
   String? _message;
   bool _isError = false;
-  workspace_api.AgentWorkspaceDto? _selectedWorkspace;
-  bool _isCreatingNew = false;
 
   CoralDeskColors get c => CoralDeskColors.of(context);
 
@@ -47,42 +48,24 @@ class _AgentWorkspacesPageState extends ConsumerState<AgentWorkspacesPage> {
     });
   }
 
-  Future<void> _selectWorkspace(workspace_api.AgentWorkspaceSummary ws) async {
-    final fullDto = await workspace_api.getAgentWorkspace(workspaceId: ws.id);
-    if (mounted) {
-      setState(() {
-        _selectedWorkspace = fullDto;
-        _isCreatingNew = false;
-      });
-    }
-  }
+  Future<void> _openEditor({workspace_api.AgentWorkspaceDto? existing}) async {
+    final result = await showDialog<workspace_api.AgentWorkspaceDto>(
+      context: context,
+      builder: (ctx) => _WorkspaceEditorDialog(existing: existing),
+    );
+    if (result == null || !mounted) return;
 
-  void _createNew() {
-    setState(() {
-      _selectedWorkspace = null;
-      _isCreatingNew = true;
-    });
-  }
-
-  Future<void> _saveWorkspace(workspace_api.AgentWorkspaceDto dto) async {
     final l10n = AppLocalizations.of(context)!;
-    final saveResult = await workspace_api.upsertAgentWorkspace(workspace: dto);
+    final saveResult = await workspace_api.upsertAgentWorkspace(workspace: result);
     if (!mounted) return;
-
+    
     if (saveResult == 'ok') {
       _showMessage(
-        _isCreatingNew
-            ? l10n.agentWorkspaceCreated(dto.name)
-            : l10n.agentWorkspaceSaved(dto.name),
+        existing == null
+            ? l10n.agentWorkspaceCreated(result.name)
+            : l10n.agentWorkspaceSaved(result.name),
       );
       await ref.read(agentWorkspacesProvider.notifier).refresh();
-      // Reload the saved workspace to get the generated ID
-      final workspaces = ref.read(agentWorkspacesProvider);
-      final saved = workspaces.firstWhere(
-        (w) => w.name == dto.name,
-        orElse: () => workspaces.first,
-      );
-      await _selectWorkspace(saved);
     } else {
       _showMessage('${l10n.operationFailed}: $saveResult', isError: true);
     }
@@ -115,13 +98,14 @@ class _AgentWorkspacesPageState extends ConsumerState<AgentWorkspacesPage> {
     if (result == 'ok') {
       _showMessage(l10n.agentWorkspaceDeleted(ws.name));
       await ref.read(agentWorkspacesProvider.notifier).refresh();
-      setState(() {
-        _selectedWorkspace = null;
-        _isCreatingNew = false;
-      });
     } else {
       _showMessage('${l10n.operationFailed}: $result', isError: true);
     }
+  }
+
+  Future<void> _openWorkspaceFolder(String workspaceId) async {
+    final dir = await workspace_api.getAgentWorkspaceDir(workspaceId: workspaceId);
+    await agent_api.openInSystem(path: dir);
   }
 
   @override
@@ -129,15 +113,31 @@ class _AgentWorkspacesPageState extends ConsumerState<AgentWorkspacesPage> {
     final l10n = AppLocalizations.of(context)!;
     final workspaces = ref.watch(agentWorkspacesProvider);
 
-    return Container(
-      color: c.surfaceBg,
-      child: Column(
+    return SettingsScaffold(
+      title: l10n.agentWorkspaces,
+      isLoading: _loading,
+      useScrollView: false,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh, size: 20),
+          tooltip: l10n.refresh,
+          onPressed: _loadWorkspaces,
+        ),
+        const SizedBox(width: 4),
+        FilledButton.icon(
+          icon: const Icon(Icons.add, size: 18),
+          label: Text(l10n.agentWorkspaceNew),
+          onPressed: () => _openEditor(),
+        ),
+      ],
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Status message bar
+          // Status message
           if (_message != null)
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               color: _isError
                   ? Colors.red.withValues(alpha: 0.1)
                   : Colors.green.withValues(alpha: 0.1),
@@ -160,103 +160,75 @@ class _AgentWorkspacesPageState extends ConsumerState<AgentWorkspacesPage> {
               ),
             ),
 
-          // Main split layout
+          // Main content
           Expanded(
-            child: Row(
-              children: [
-                // ═══════════════════════════════════════════════════
-                // LEFT PANEL: Workspace list (300px)
-                // ═══════════════════════════════════════════════════
-                Container(
-                  width: 300,
-                  decoration: BoxDecoration(
-                    color: c.cardBg,
-                    border: Border(right: BorderSide(color: c.chatListBorder)),
-                  ),
-                  child: Column(
-                    children: [
-                      // Header
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(color: c.chatListBorder),
-                          ),
-                        ),
-                        child: Row(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Overview card
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: c.cardBg,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: c.chatListBorder),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
                           children: [
-                            Icon(
-                              Icons.workspaces_outline,
-                              size: 20,
-                              color: AppColors.primary,
-                            ),
+                            Icon(Icons.workspaces_outline, size: 20, color: AppColors.primary),
                             const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                l10n.agentWorkspaces,
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: c.textPrimary,
-                                ),
+                            Text(
+                              l10n.agentWorkspaceOverview,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: c.textPrimary,
                               ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.refresh, size: 18),
-                              onPressed: _loadWorkspaces,
-                              tooltip: l10n.refresh,
-                              visualDensity: VisualDensity.compact,
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.add, size: 18),
-                              onPressed: _createNew,
-                              tooltip: l10n.agentWorkspaceNew,
-                              color: AppColors.primary,
-                              visualDensity: VisualDensity.compact,
                             ),
                           ],
                         ),
-                      ),
-
-                      // Workspace list
-                      Expanded(
-                        child: _loading
-                            ? const Center(
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : workspaces.isEmpty
-                            ? _buildEmptyList(l10n)
-                            : ListView.builder(
-                                padding: const EdgeInsets.all(8),
-                                itemCount: workspaces.length,
-                                itemBuilder: (ctx, i) =>
-                                    _buildWorkspaceItem(workspaces[i], l10n),
-                              ),
-                      ),
-                    ],
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.agentWorkspaceOverviewDesc,
+                          style: TextStyle(fontSize: 13, color: c.textSecondary),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            _StatChip(
+                              label: l10n.totalCount,
+                              value: '${workspaces.length}',
+                              color: AppColors.primary,
+                              c: c,
+                            ),
+                            const SizedBox(width: 12),
+                            _StatChip(
+                              label: l10n.enabled,
+                              value: '${workspaces.where((w) => w.enabled).length}',
+                              color: Colors.green,
+                              c: c,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 16),
 
-                // ═══════════════════════════════════════════════════
-                // RIGHT PANEL: Editor
-                // ═══════════════════════════════════════════════════
-                Expanded(
-                  child: _selectedWorkspace != null || _isCreatingNew
-                      ? _WorkspaceEditor(
-                          key: ValueKey(_selectedWorkspace?.id ?? 'new'),
-                          workspace: _selectedWorkspace,
-                          isNew: _isCreatingNew,
-                          onSave: _saveWorkspace,
-                          onCancel: () => setState(() {
-                            _selectedWorkspace = null;
-                            _isCreatingNew = false;
-                          }),
-                        )
-                      : _buildEmptyEditor(l10n),
-                ),
-              ],
+                  // Workspaces grid
+                  Expanded(
+                    child: workspaces.isEmpty
+                        ? _buildEmptyState(l10n)
+                        : _buildWorkspacesGrid(workspaces, l10n),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -264,169 +236,92 @@ class _AgentWorkspacesPageState extends ConsumerState<AgentWorkspacesPage> {
     );
   }
 
-  Widget _buildEmptyList(AppLocalizations l10n) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.workspaces_outline, size: 40, color: c.textHint),
-            const SizedBox(height: 12),
-            Text(
-              l10n.agentWorkspaceNoWorkspaces,
-              style: TextStyle(fontSize: 13, color: c.textHint),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            TextButton.icon(
-              icon: const Icon(Icons.add, size: 16),
-              label: Text(l10n.agentWorkspaceNew),
-              onPressed: _createNew,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildWorkspaceItem(
-    workspace_api.AgentWorkspaceSummary ws,
-    AppLocalizations l10n,
-  ) {
-    final isSelected = _selectedWorkspace?.id == ws.id;
-    final tagColor = _parseColor(ws.colorTag);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 4),
-      child: Material(
-        color: isSelected
-            ? AppColors.primary.withValues(alpha: 0.12)
-            : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
-        child: InkWell(
-          onTap: () => _selectWorkspace(ws),
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                // Avatar
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: (tagColor ?? AppColors.primary).withValues(
-                      alpha: 0.12,
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    ws.avatar.isNotEmpty ? ws.avatar : '🤖',
-                    style: const TextStyle(fontSize: 18),
-                  ),
-                ),
-                const SizedBox(width: 10),
-
-                // Info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              ws.name,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: ws.enabled ? c.textPrimary : c.textHint,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (!ws.enabled)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                                vertical: 1,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.grey.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(3),
-                              ),
-                              child: Text(
-                                'OFF',
-                                style: TextStyle(
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w600,
-                                  color: c.textHint,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      if (ws.description.isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          ws.description,
-                          style: TextStyle(fontSize: 11, color: c.textHint),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-
-                // Delete button
-                IconButton(
-                  icon: Icon(Icons.delete_outline, size: 16, color: c.textHint),
-                  onPressed: () => _deleteWorkspace(ws),
-                  tooltip: l10n.delete,
-                  visualDensity: VisualDensity.compact,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 28,
-                    minHeight: 28,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyEditor(AppLocalizations l10n) {
+  Widget _buildEmptyState(AppLocalizations l10n) {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.edit_note,
-            size: 64,
-            color: c.textHint.withValues(alpha: 0.5),
-          ),
+          Icon(Icons.workspaces_outline, size: 64, color: c.textHint.withValues(alpha: 0.5)),
           const SizedBox(height: 16),
           Text(
+            l10n.agentWorkspaceNoWorkspaces,
+            style: TextStyle(fontSize: 16, color: c.textSecondary),
+          ),
+          const SizedBox(height: 8),
+          Text(
             l10n.agentWorkspaceNoWorkspacesHint,
-            style: TextStyle(fontSize: 14, color: c.textHint),
+            style: TextStyle(fontSize: 13, color: c.textHint),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
           FilledButton.icon(
             icon: const Icon(Icons.add, size: 18),
             label: Text(l10n.agentWorkspaceNew),
-            onPressed: _createNew,
+            onPressed: () => _openEditor(),
           ),
         ],
       ),
     );
   }
+
+  Widget _buildWorkspacesGrid(
+    List<workspace_api.AgentWorkspaceSummary> workspaces,
+    AppLocalizations l10n,
+  ) {
+    return GridView.builder(
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 320,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        mainAxisExtent: 160,
+      ),
+      itemCount: workspaces.length,
+      itemBuilder: (ctx, i) => _WorkspaceCard(
+        workspace: workspaces[i],
+        onEdit: () async {
+          final fullDto = await workspace_api.getAgentWorkspace(
+            workspaceId: workspaces[i].id,
+          );
+          if (fullDto != null && mounted) {
+            _openEditor(existing: fullDto);
+          }
+        },
+        onDelete: () => _deleteWorkspace(workspaces[i]),
+        onOpenFolder: () => _openWorkspaceFolder(workspaces[i].id),
+        c: c,
+        l10n: l10n,
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Workspace Card
+// ═══════════════════════════════════════════════════════════════
+
+class _WorkspaceCard extends StatefulWidget {
+  final workspace_api.AgentWorkspaceSummary workspace;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  final VoidCallback onOpenFolder;
+  final CoralDeskColors c;
+  final AppLocalizations l10n;
+
+  const _WorkspaceCard({
+    required this.workspace,
+    required this.onEdit,
+    required this.onDelete,
+    required this.onOpenFolder,
+    required this.c,
+    required this.l10n,
+  });
+
+  @override
+  State<_WorkspaceCard> createState() => _WorkspaceCardState();
+}
+
+class _WorkspaceCardState extends State<_WorkspaceCard> {
+  bool _hovering = false;
 
   Color? _parseColor(String hex) {
     if (hex.isEmpty) return null;
@@ -438,31 +333,238 @@ class _AgentWorkspacesPageState extends ConsumerState<AgentWorkspacesPage> {
     } catch (_) {}
     return null;
   }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = widget.c;
+    final ws = widget.workspace;
+    final tagColor = _parseColor(ws.colorTag) ?? AppColors.primary;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovering = true),
+      onExit: (_) => setState(() => _hovering = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        decoration: BoxDecoration(
+          color: c.cardBg,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: _hovering ? tagColor.withValues(alpha: 0.5) : c.chatListBorder,
+            width: _hovering ? 1.5 : 1,
+          ),
+          boxShadow: _hovering
+              ? [
+                  BoxShadow(
+                    color: tagColor.withValues(alpha: 0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          child: InkWell(
+            onTap: widget.onEdit,
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header row
+                  Row(
+                    children: [
+                      // Avatar
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: tagColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          ws.avatar.isNotEmpty ? ws.avatar : '🤖',
+                          style: const TextStyle(fontSize: 20),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    ws.name,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: ws.enabled ? c.textPrimary : c.textHint,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                if (!ws.enabled)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      'OFF',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        color: c.textHint,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // Description
+                  if (ws.description.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: Text(
+                        ws.description,
+                        style: TextStyle(fontSize: 12, color: c.textSecondary),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ] else
+                    const Spacer(),
+
+                  // Actions
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      // Open folder button
+                      IconButton(
+                        icon: Icon(
+                          Icons.folder_open_outlined,
+                          size: 18,
+                          color: _hovering ? c.textSecondary : c.textHint,
+                        ),
+                        onPressed: widget.onOpenFolder,
+                        tooltip: widget.l10n.openWorkspaceFolder,
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                      ),
+                      // Edit button
+                      IconButton(
+                        icon: Icon(
+                          Icons.edit_outlined,
+                          size: 18,
+                          color: _hovering ? c.textSecondary : c.textHint,
+                        ),
+                        onPressed: widget.onEdit,
+                        tooltip: widget.l10n.editMessage,
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                      ),
+                      // Delete button
+                      IconButton(
+                        icon: Icon(
+                          Icons.delete_outline,
+                          size: 18,
+                          color: _hovering ? Colors.red.withValues(alpha: 0.7) : c.textHint,
+                        ),
+                        onPressed: widget.onDelete,
+                        tooltip: widget.l10n.delete,
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  Workspace Editor — right panel with code editor
+//  Stat Chip
 // ═══════════════════════════════════════════════════════════════
 
-class _WorkspaceEditor extends StatefulWidget {
-  final workspace_api.AgentWorkspaceDto? workspace;
-  final bool isNew;
-  final Function(workspace_api.AgentWorkspaceDto) onSave;
-  final VoidCallback onCancel;
+class _StatChip extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+  final CoralDeskColors c;
 
-  const _WorkspaceEditor({
-    super.key,
-    this.workspace,
-    required this.isNew,
-    required this.onSave,
-    required this.onCancel,
+  const _StatChip({
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.c,
   });
 
   @override
-  State<_WorkspaceEditor> createState() => _WorkspaceEditorState();
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(fontSize: 12, color: c.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-class _WorkspaceEditorState extends State<_WorkspaceEditor>
+// ═══════════════════════════════════════════════════════════════
+//  Workspace Editor Dialog — Modal dialog for editing workspaces
+// ═══════════════════════════════════════════════════════════════
+
+class _WorkspaceEditorDialog extends StatefulWidget {
+  final workspace_api.AgentWorkspaceDto? existing;
+
+  const _WorkspaceEditorDialog({this.existing});
+
+  @override
+  State<_WorkspaceEditorDialog> createState() => _WorkspaceEditorDialogState();
+}
+
+class _WorkspaceEditorDialogState extends State<_WorkspaceEditorDialog>
     with SingleTickerProviderStateMixin {
   late final TextEditingController _nameCtrl;
   late final TextEditingController _descCtrl;
@@ -477,45 +579,24 @@ class _WorkspaceEditorState extends State<_WorkspaceEditor>
 
   CoralDeskColors get c => CoralDeskColors.of(context);
 
+  bool get isNew => widget.existing == null;
+
   static const _defaultAvatarOptions = [
-    '🤖',
-    '👩‍💼',
-    '👨‍💻',
-    '🧑‍🔬',
-    '🎨',
-    '📝',
-    '🔧',
-    '🧠',
-    '🦊',
-    '🐙',
-    '🦉',
-    '🐬',
-    '🌟',
-    '💡',
-    '🎯',
-    '🔮',
+    '🤖', '👩‍💼', '👨‍💻', '🧑‍🔬', '🎨', '📝', '🔧', '🧠',
+    '🦊', '🐙', '🦉', '🐬', '🌟', '💡', '🎯', '🔮',
   ];
 
   static const _colorOptions = [
-    '#2196F3',
-    '#4CAF50',
-    '#FF9800',
-    '#E91E63',
-    '#9C27B0',
-    '#009688',
-    '#FF5722',
-    '#795548',
-    '#607D8B',
-    '#F44336',
-    '#3F51B5',
-    '#00BCD4',
+    '#2196F3', '#4CAF50', '#FF9800', '#E91E63',
+    '#9C27B0', '#009688', '#FF5722', '#795548',
+    '#607D8B', '#F44336', '#3F51B5', '#00BCD4',
   ];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-    final e = widget.workspace;
+    final e = widget.existing;
     _nameCtrl = TextEditingController(text: e?.name ?? '');
     _descCtrl = TextEditingController(text: e?.description ?? '');
     _soulMdCtrl = TextEditingController(text: e?.soulMd ?? '');
@@ -544,11 +625,11 @@ class _WorkspaceEditorState extends State<_WorkspaceEditor>
 
     final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
     final dto = workspace_api.AgentWorkspaceDto(
-      id: widget.workspace?.id ?? '',
+      id: widget.existing?.id ?? '',
       name: _nameCtrl.text.trim(),
       description: _descCtrl.text.trim(),
       avatar: _avatar,
-      workspaceDir: widget.workspace?.workspaceDir ?? '',
+      workspaceDir: widget.existing?.workspaceDir ?? '',
       enabled: _enabled,
       systemPrompt: '',
       soulMd: _soulMdCtrl.text,
@@ -556,297 +637,229 @@ class _WorkspaceEditorState extends State<_WorkspaceEditor>
       userMd: _userMdCtrl.text,
       identityMd: _identityMdCtrl.text,
       colorTag: _colorTag,
-      createdAt: widget.workspace?.createdAt ?? now,
+      createdAt: widget.existing?.createdAt ?? now,
       updatedAt: now,
     );
-    widget.onSave(dto);
+    Navigator.pop(context, dto);
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return Column(
-      children: [
-        // ── Header bar ──
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          decoration: BoxDecoration(
-            color: c.cardBg,
-            border: Border(bottom: BorderSide(color: c.chatListBorder)),
-          ),
-          child: Row(
-            children: [
-              Text(
-                widget.isNew ? l10n.agentWorkspaceNew : l10n.agentWorkspaceEdit,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: c.textPrimary,
-                ),
-              ),
-              const Spacer(),
-              TextButton(onPressed: widget.onCancel, child: Text(l10n.cancel)),
-              const SizedBox(width: 8),
-              FilledButton.icon(
-                icon: const Icon(Icons.save, size: 16),
-                label: Text(l10n.save),
-                onPressed: _save,
-              ),
-            ],
-          ),
-        ),
+    return DesktopDialog(
+      title: isNew ? l10n.agentWorkspaceNew : l10n.agentWorkspaceEdit,
+      icon: Icons.workspaces_outline,
+      width: 900,
+      maxHeight: MediaQuery.of(context).size.height * 0.9,
+      content: SizedBox(
+        height: 600,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ═══════════════════════════════════════════════════
+            // LEFT: Basic info (280px)
+            // ═══════════════════════════════════════════════════
+            SizedBox(
+              width: 260,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Name
+                    _buildLabel(l10n.agentWorkspaceNameLabel),
+                    const SizedBox(height: 6),
+                    _buildTextField(_nameCtrl, l10n.agentWorkspaceNameHint),
+                    const SizedBox(height: 16),
 
-        // ── Content: Left-Right split ──
-        Expanded(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ═══════════════════════════════════════════════════
-              // LEFT: Basic info panel (280px)
-              // ═══════════════════════════════════════════════════
-              Container(
-                width: 280,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border(right: BorderSide(color: c.chatListBorder)),
-                ),
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Name
-                      _buildLabel(l10n.agentWorkspaceNameLabel),
-                      const SizedBox(height: 6),
-                      TextField(
-                        controller: _nameCtrl,
-                        decoration: InputDecoration(
-                          hintText: l10n.agentWorkspaceNameHint,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
-                          ),
-                          isDense: true,
-                        ),
-                        style: TextStyle(fontSize: 13, color: c.textPrimary),
-                      ),
-                      const SizedBox(height: 16),
+                    // Description
+                    _buildLabel(l10n.agentWorkspaceDescLabel),
+                    const SizedBox(height: 6),
+                    _buildTextField(_descCtrl, l10n.agentWorkspaceDescHint, maxLines: 2),
+                    const SizedBox(height: 16),
 
-                      // Description
-                      _buildLabel(l10n.agentWorkspaceDescLabel),
-                      const SizedBox(height: 6),
-                      TextField(
-                        controller: _descCtrl,
-                        maxLines: 2,
-                        decoration: InputDecoration(
-                          hintText: l10n.agentWorkspaceDescHint,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          contentPadding: const EdgeInsets.all(12),
-                          isDense: true,
-                        ),
-                        style: TextStyle(fontSize: 13, color: c.textPrimary),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Avatar
-                      _buildLabel(l10n.agentWorkspaceAvatarLabel),
-                      const SizedBox(height: 6),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        children: _defaultAvatarOptions.map((emoji) {
-                          final selected = _avatar == emoji;
-                          return GestureDetector(
-                            onTap: () => setState(() => _avatar = emoji),
-                            child: Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                color: selected
-                                    ? AppColors.primary.withValues(alpha: 0.15)
-                                    : c.inputBg,
-                                borderRadius: BorderRadius.circular(6),
-                                border: selected
-                                    ? Border.all(
-                                        color: AppColors.primary,
-                                        width: 2,
-                                      )
-                                    : Border.all(color: c.chatListBorder),
-                              ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                emoji,
-                                style: const TextStyle(fontSize: 16),
-                              ),
+                    // Avatar
+                    _buildLabel(l10n.agentWorkspaceAvatarLabel),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: _defaultAvatarOptions.map((emoji) {
+                        final selected = _avatar == emoji;
+                        return GestureDetector(
+                          onTap: () => setState(() => _avatar = emoji),
+                          child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: selected
+                                  ? AppColors.primary.withValues(alpha: 0.15)
+                                  : c.inputBg,
+                              borderRadius: BorderRadius.circular(6),
+                              border: selected
+                                  ? Border.all(color: AppColors.primary, width: 2)
+                                  : Border.all(color: c.chatListBorder),
                             ),
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 16),
+                            alignment: Alignment.center,
+                            child: Text(emoji, style: const TextStyle(fontSize: 16)),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 16),
 
-                      // Color tag
-                      _buildLabel(l10n.agentWorkspaceColorLabel),
-                      const SizedBox(height: 6),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        children: _colorOptions.map((hex) {
-                          final color = Color(
-                            int.parse(
-                              'FF${hex.replaceFirst('#', '')}',
-                              radix: 16,
-                            ),
-                          );
-                          final selected = _colorTag == hex;
-                          return GestureDetector(
-                            onTap: () => setState(() => _colorTag = hex),
-                            child: Container(
-                              width: 26,
-                              height: 26,
-                              decoration: BoxDecoration(
-                                color: color,
-                                borderRadius: BorderRadius.circular(6),
-                                border: selected
-                                    ? Border.all(color: Colors.white, width: 2)
-                                    : null,
-                                boxShadow: selected
-                                    ? [
-                                        BoxShadow(
-                                          color: color.withValues(alpha: 0.5),
-                                          blurRadius: 6,
-                                        ),
-                                      ]
-                                    : null,
-                              ),
-                              child: selected
-                                  ? const Icon(
-                                      Icons.check,
-                                      size: 14,
-                                      color: Colors.white,
-                                    )
+                    // Color tag
+                    _buildLabel(l10n.agentWorkspaceColorLabel),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: _colorOptions.map((hex) {
+                        final color = Color(
+                          int.parse('FF${hex.replaceFirst('#', '')}', radix: 16),
+                        );
+                        final selected = _colorTag == hex;
+                        return GestureDetector(
+                          onTap: () => setState(() => _colorTag = hex),
+                          child: Container(
+                            width: 26,
+                            height: 26,
+                            decoration: BoxDecoration(
+                              color: color,
+                              borderRadius: BorderRadius.circular(6),
+                              border: selected
+                                  ? Border.all(color: Colors.white, width: 2)
+                                  : null,
+                              boxShadow: selected
+                                  ? [BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 6)]
                                   : null,
                             ),
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Enabled toggle
-                      Row(
-                        children: [
-                          Text(
-                            l10n.agentWorkspaceEnabled,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: c.textPrimary,
-                            ),
+                            child: selected
+                                ? const Icon(Icons.check, size: 14, color: Colors.white)
+                                : null,
                           ),
-                          const Spacer(),
-                          Transform.scale(
-                            scale: 0.8,
-                            child: Switch(
-                              value: _enabled,
-                              onChanged: (v) => setState(() => _enabled = v),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // ═══════════════════════════════════════════════════
-              // RIGHT: Code editor panel (flexible)
-              // ═══════════════════════════════════════════════════
-              Expanded(
-                child: Column(
-                  children: [
-                    // Tab bar
-                    Container(
-                      decoration: BoxDecoration(
-                        color: c.cardBg,
-                        border: Border(
-                          bottom: BorderSide(color: c.chatListBorder),
-                        ),
-                      ),
-                      child: TabBar(
-                        controller: _tabController,
-                        isScrollable: true,
-                        tabAlignment: TabAlignment.start,
-                        labelColor: AppColors.primary,
-                        unselectedLabelColor: c.textSecondary,
-                        indicatorColor: AppColors.primary,
-                        indicatorSize: TabBarIndicatorSize.label,
-                        dividerColor: Colors.transparent,
-                        labelStyle: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        tabs: const [
-                          Tab(text: 'SOUL.md'),
-                          Tab(text: 'AGENTS.md'),
-                          Tab(text: 'USER.md'),
-                          Tab(text: 'IDENTITY.md'),
-                        ],
-                      ),
+                        );
+                      }).toList(),
                     ),
+                    const SizedBox(height: 16),
 
-                    // Code editor views
-                    Expanded(
-                      child: TabBarView(
-                        controller: _tabController,
-                        children: [
-                          _CodeEditor(
-                            controller: _soulMdCtrl,
-                            hint: l10n.agentWorkspaceSoulMdHint,
-                            title: 'SOUL.md',
-                            subtitle: l10n.agentWorkspaceSoulMd
-                                .split('—')
-                                .last
-                                .trim(),
+                    // Enabled toggle
+                    Row(
+                      children: [
+                        Text(
+                          l10n.agentWorkspaceEnabled,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: c.textPrimary,
                           ),
-                          _CodeEditor(
-                            controller: _agentsMdCtrl,
-                            hint: l10n.agentWorkspaceAgentsMdHint,
-                            title: 'AGENTS.md',
-                            subtitle: l10n.agentWorkspaceAgentsMd
-                                .split('—')
-                                .last
-                                .trim(),
+                        ),
+                        const Spacer(),
+                        Transform.scale(
+                          scale: 0.8,
+                          child: Switch(
+                            value: _enabled,
+                            onChanged: (v) => setState(() => _enabled = v),
                           ),
-                          _CodeEditor(
-                            controller: _userMdCtrl,
-                            hint: l10n.agentWorkspaceUserMdHint,
-                            title: 'USER.md',
-                            subtitle: l10n.agentWorkspaceUserMd
-                                .split('—')
-                                .last
-                                .trim(),
-                          ),
-                          _CodeEditor(
-                            controller: _identityMdCtrl,
-                            hint: l10n.agentWorkspaceIdentityMdHint,
-                            title: 'IDENTITY.md',
-                            subtitle: l10n.agentWorkspaceIdentityMd
-                                .split('—')
-                                .last
-                                .trim(),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-            ],
-          ),
+            ),
+
+            const SizedBox(width: 20),
+
+            // Vertical divider
+            Container(
+              width: 1,
+              color: c.chatListBorder,
+            ),
+
+            const SizedBox(width: 20),
+
+            // ═══════════════════════════════════════════════════
+            // RIGHT: Code editor with tabs
+            // ═══════════════════════════════════════════════════
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Tab bar
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border(bottom: BorderSide(color: c.chatListBorder)),
+                    ),
+                    child: TabBar(
+                      controller: _tabController,
+                      isScrollable: true,
+                      tabAlignment: TabAlignment.start,
+                      labelColor: AppColors.primary,
+                      unselectedLabelColor: c.textSecondary,
+                      indicatorColor: AppColors.primary,
+                      indicatorSize: TabBarIndicatorSize.label,
+                      dividerColor: Colors.transparent,
+                      labelStyle: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      tabs: const [
+                        Tab(text: 'SOUL.md'),
+                        Tab(text: 'AGENTS.md'),
+                        Tab(text: 'USER.md'),
+                        Tab(text: 'IDENTITY.md'),
+                      ],
+                    ),
+                  ),
+
+                  // Tab content
+                  Expanded(
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _CodeEditor(
+                          controller: _soulMdCtrl,
+                          hint: l10n.agentWorkspaceSoulMdHint,
+                          title: 'SOUL.md',
+                          subtitle: l10n.agentWorkspaceSoulMd.split('—').last.trim(),
+                        ),
+                        _CodeEditor(
+                          controller: _agentsMdCtrl,
+                          hint: l10n.agentWorkspaceAgentsMdHint,
+                          title: 'AGENTS.md',
+                          subtitle: l10n.agentWorkspaceAgentsMd.split('—').last.trim(),
+                        ),
+                        _CodeEditor(
+                          controller: _userMdCtrl,
+                          hint: l10n.agentWorkspaceUserMdHint,
+                          title: 'USER.md',
+                          subtitle: l10n.agentWorkspaceUserMd.split('—').last.trim(),
+                        ),
+                        _CodeEditor(
+                          controller: _identityMdCtrl,
+                          hint: l10n.agentWorkspaceIdentityMdHint,
+                          title: 'IDENTITY.md',
+                          subtitle: l10n.agentWorkspaceIdentityMd.split('—').last.trim(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton.icon(
+          icon: const Icon(Icons.save, size: 16),
+          label: Text(l10n.save),
+          onPressed: _save,
         ),
       ],
     );
@@ -860,6 +873,37 @@ class _WorkspaceEditorState extends State<_WorkspaceEditor>
         fontWeight: FontWeight.w600,
         color: c.textPrimary,
       ),
+    );
+  }
+
+  Widget _buildTextField(
+    TextEditingController controller,
+    String hint, {
+    int maxLines = 1,
+  }) {
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        hintText: hint,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: c.chatListBorder),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: c.chatListBorder),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.primary, width: 1.5),
+        ),
+        filled: true,
+        fillColor: c.inputBg,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        isDense: true,
+      ),
+      style: TextStyle(fontSize: 13, color: c.textPrimary),
     );
   }
 }
@@ -897,7 +941,6 @@ class _CodeEditorState extends State<_CodeEditor> {
     super.initState();
     widget.controller.addListener(_updateLineCount);
     _updateLineCount();
-    // Synchronize scroll between line numbers and editor
     _editorScrollController.addListener(_syncScroll);
   }
 
@@ -936,9 +979,7 @@ class _CodeEditorState extends State<_CodeEditor> {
             decoration: BoxDecoration(
               color: c.inputBg.withValues(alpha: 0.5),
               border: Border(
-                bottom: BorderSide(
-                  color: c.chatListBorder.withValues(alpha: 0.5),
-                ),
+                bottom: BorderSide(color: c.chatListBorder.withValues(alpha: 0.5)),
               ),
             ),
             child: Row(
@@ -982,17 +1023,13 @@ class _CodeEditorState extends State<_CodeEditor> {
                     controller: _lineNumberScrollController,
                     physics: const NeverScrollableScrollPhysics(),
                     child: Padding(
-                      padding: const EdgeInsets.only(
-                        top: 12,
-                        right: 8,
-                        bottom: 12,
-                      ),
+                      padding: const EdgeInsets.only(top: 12, right: 8, bottom: 12),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: List.generate(
                           _lineCount.clamp(1, 9999),
                           (i) => SizedBox(
-                            height: 21, // Match line height (14 * 1.5)
+                            height: 21,
                             child: Text(
                               '${i + 1}',
                               style: TextStyle(
@@ -1016,7 +1053,7 @@ class _CodeEditorState extends State<_CodeEditor> {
                     child: TextField(
                       controller: widget.controller,
                       maxLines: null,
-                      minLines: 25,
+                      minLines: 20,
                       decoration: InputDecoration(
                         hintText: widget.hint,
                         hintStyle: TextStyle(

@@ -1049,7 +1049,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get navAgents => '子代理';
 
   @override
-  String get navAgentWorkspaces => '智能体工作区';
+  String get navAgentWorkspaces => '角色';
 
   @override
   String get pageAgents => '子代理管理';
@@ -1734,27 +1734,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get proxyResetSuccess => '代理设置已重置';
 
   @override
-  String get agentWorkspaces => '智能体工作区';
+  String get agentWorkspaces => '角色';
 
   @override
-  String get agentWorkspaceOverview => '智能体工作区概览';
+  String get agentWorkspaceOverview => '角色概览';
 
   @override
   String get agentWorkspaceOverviewDesc =>
-      '配置独立的智能体工作区。每个工作区都有自己的性格（SOUL.md）、行为规则（AGENTS.md）和身份。会话可以绑定到特定的智能体，提供个性化交互。';
+      '配置不同的角色，每个角色都有自己的性格（SOUL.md）、行为规则（AGENTS.md）和身份。会话可以绑定到特定的角色，提供个性化交互。';
 
   @override
-  String get agentWorkspaceNew => '新建工作区';
+  String get agentWorkspaceNew => '新建角色';
 
   @override
-  String get agentWorkspaceEdit => '编辑工作区';
+  String get agentWorkspaceEdit => '编辑角色';
 
   @override
-  String get agentWorkspaceNoWorkspaces => '暂无智能体工作区';
+  String get agentWorkspaceNoWorkspaces => '暂无角色';
 
   @override
   String get agentWorkspaceNoWorkspacesHint =>
-      '创建一个智能体工作区，为AI助手赋予独特的性格、风格和行为，以适应不同的任务场景。';
+      '创建一个角色，为AI助手赋予独特的性格、风格和行为，以适应不同的任务场景。';
 
   @override
   String get agentWorkspaceNameLabel => '名称';
@@ -1800,25 +1800,25 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String agentWorkspaceSaved(String name) {
-    return '工作区「$name」已保存';
+    return '角色「$name」已保存';
   }
 
   @override
   String agentWorkspaceCreated(String name) {
-    return '工作区「$name」已创建';
+    return '角色「$name」已创建';
   }
 
   @override
-  String get agentWorkspaceDeleteTitle => '删除工作区';
+  String get agentWorkspaceDeleteTitle => '删除角色';
 
   @override
   String agentWorkspaceDeleteConfirm(String name) {
-    return '删除工作区「$name」？这将移除所有身份文件。';
+    return '删除角色「$name」？这将移除所有身份文件。';
   }
 
   @override
   String agentWorkspaceDeleted(String name) {
-    return '工作区「$name」已删除';
+    return '角色「$name」已删除';
   }
 
   @override
