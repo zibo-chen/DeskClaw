@@ -187,7 +187,15 @@ pub async fn upsert_delegate_agent(agent: DelegateAgentDto) -> String {
             Some(c) => c,
             None => return "error: runtime not initialized".into(),
         };
-        config.agents.insert(name, delegate_config);
+        config.agents.insert(name.clone(), delegate_config.clone());
+    }
+
+    // Sync to global_config so ensure_session_agent picks up the new delegate agents
+    {
+        let mut gc = super::agent_api::global_config().write().await;
+        if let Some(config) = gc.config.as_mut() {
+            config.agents.insert(name, delegate_config);
+        }
     }
 
     // Invalidate agent so delegate tool picks up the new config
@@ -214,6 +222,14 @@ pub async fn remove_delegate_agent(name: String) -> String {
         }
         if config.agents.remove(&name).is_none() {
             return format!("error: agent '{}' not found", name);
+        }
+    }
+
+    // Sync removal to global_config
+    {
+        let mut gc = super::agent_api::global_config().write().await;
+        if let Some(config) = gc.config.as_mut() {
+            config.agents.remove(&name);
         }
     }
 
@@ -309,6 +325,19 @@ pub async fn seed_preset_roles() -> u32 {
                     }
                 }
             }
+            drop(cs);
+            // Also sync to global_config
+            let mut gc = super::agent_api::global_config().write().await;
+            if let Some(config) = gc.config.as_mut() {
+                if let Some(agent) = config.agents.get_mut(name) {
+                    if !agent.is_preset {
+                        agent.is_preset = true;
+                        agent.role_label = Some(name.to_string());
+                        agent.role_color = Some(color.to_string());
+                        agent.role_icon = Some(icon.to_string());
+                    }
+                }
+            }
             continue;
         }
 
@@ -359,13 +388,36 @@ pub async fn seed_preset_roles() -> u32 {
         {
             let mut cs = super::agent_api::config_state().write().await;
             if let Some(config) = cs.config.as_mut() {
-                config.agents.insert(name.to_string(), delegate_config);
+                config
+                    .agents
+                    .insert(name.to_string(), delegate_config.clone());
                 created += 1;
+            }
+        }
+        // Also insert into global_config immediately
+        {
+            let mut gc = super::agent_api::global_config().write().await;
+            if let Some(config) = gc.config.as_mut() {
+                config.agents.insert(name.to_string(), delegate_config);
             }
         }
     }
 
     if created > 0 {
+        // Sync all agents from config_state to global_config so ensure_session_agent
+        // can see the preset roles and register the delegate tool.
+        {
+            let cs = super::agent_api::config_state().read().await;
+            if let Some(cs_config) = &cs.config {
+                let agents_clone = cs_config.agents.clone();
+                drop(cs);
+                let mut gc = super::agent_api::global_config().write().await;
+                if let Some(gc_config) = gc.config.as_mut() {
+                    gc_config.agents = agents_clone;
+                }
+            }
+        }
+
         super::agent_api::invalidate_all_agents().await;
         let _ = super::agent_api::save_config_to_disk().await;
     }
@@ -388,14 +440,48 @@ pub async fn set_session_multi_agent_mode(
         return "error: must specify at least one role when enabling multi-agent mode".into();
     }
 
-    // Store the multi-agent config for this session
-    {
-        let mut sessions = multi_agent_sessions().write().await;
-        if enabled {
-            sessions.insert(session_id.clone(), role_names);
-        } else {
-            sessions.remove(&session_id);
+    if enabled {
+        // Map workspace IDs (e.g. "preset_architect") to delegate agent config
+        // names (e.g. "architect") so ensure_session_agent can look them up in
+        // config.agents.
+        let agent_names: Vec<String> = role_names
+            .iter()
+            .map(|id| {
+                id.strip_prefix("preset_")
+                    .unwrap_or(id.as_str())
+                    .to_string()
+            })
+            .collect();
+
+        // Ensure delegate agent configs exist for the selected roles.
+        // If config.agents is empty, seed preset roles so the delegate tool
+        // is registered when the agent is created.
+        {
+            let needs_seed = {
+                let gc = super::agent_api::global_config().read().await;
+                gc.config
+                    .as_ref()
+                    .map(|c| c.agents.is_empty())
+                    .unwrap_or(true)
+            };
+            if needs_seed {
+                let created = seed_preset_roles().await;
+                if created > 0 {
+                    tracing::info!(
+                        "Auto-seeded {created} preset delegate agents for team mode activation"
+                    );
+                }
+            }
         }
+
+        // Store the mapped agent names (not workspace IDs)
+        {
+            let mut sessions = multi_agent_sessions().write().await;
+            sessions.insert(session_id.clone(), agent_names);
+        }
+    } else {
+        let mut sessions = multi_agent_sessions().write().await;
+        sessions.remove(&session_id);
     }
 
     // Invalidate this session's agent so it gets recreated with/without orchestrator prompt

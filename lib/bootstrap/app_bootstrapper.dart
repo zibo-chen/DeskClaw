@@ -7,6 +7,7 @@ import 'package:coraldesk/src/rust/api/agent_workspace_api.dart'
     as workspace_api;
 import 'package:coraldesk/src/rust/api/cron_api.dart' as cron_api;
 import 'package:coraldesk/src/rust/api/channel_runtime_api.dart' as channel_rt;
+import 'package:coraldesk/src/rust/api/agents_api.dart' as agents_api;
 import 'package:coraldesk/services/settings_service.dart';
 import 'package:coraldesk/services/tray_service.dart';
 import 'package:window_manager/window_manager.dart';
@@ -83,6 +84,16 @@ class AppBootstrapper {
       }
     } catch (e) {
       debugPrint('CoralDesk preset workspace seeding failed: $e');
+    }
+
+    // Seed built-in preset delegate agent configs (required for delegate tool)
+    try {
+      final seededRoles = await agents_api.seedPresetRoles();
+      if (seededRoles > 0) {
+        debugPrint('CoralDesk seeded $seededRoles preset delegate agents');
+      }
+    } catch (e) {
+      debugPrint('CoralDesk preset role seeding failed: $e');
     }
 
     // Cron scheduler (non-critical — failure should not block startup)

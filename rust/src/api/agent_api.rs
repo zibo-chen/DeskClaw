@@ -974,6 +974,22 @@ pub async fn save_config_to_disk() -> String {
                 toml::Value::Integer(agent_cfg.max_iterations as i64),
             );
         }
+        // Persist role metadata for multi-agent UI and collaboration
+        if let Some(ref label) = agent_cfg.role_label {
+            entry.insert("role_label".into(), toml::Value::String(label.clone()));
+        }
+        if let Some(ref color) = agent_cfg.role_color {
+            entry.insert("role_color".into(), toml::Value::String(color.clone()));
+        }
+        if let Some(ref icon) = agent_cfg.role_icon {
+            entry.insert("role_icon".into(), toml::Value::String(icon.clone()));
+        }
+        if agent_cfg.is_preset {
+            entry.insert("is_preset".into(), toml::Value::Boolean(true));
+        }
+        if agent_cfg.allow_nested_delegate {
+            entry.insert("allow_nested_delegate".into(), toml::Value::Boolean(true));
+        }
         agents_table.insert(name.clone(), toml::Value::Table(entry));
     }
     if !agents_table.is_empty() {
@@ -1833,8 +1849,11 @@ pub async fn send_message_stream(
                                             .trim_start_matches("**Next:**")
                                             .trim();
                                         if let Some((role, _task)) = next_text.split_once(':') {
-                                            to_role = role.trim().to_lowercase()
-                                                .replace("**", "").replace('*', "");
+                                            to_role = role
+                                                .trim()
+                                                .to_lowercase()
+                                                .replace("**", "")
+                                                .replace('*', "");
                                         }
                                     }
                                 }
