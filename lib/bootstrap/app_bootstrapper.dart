@@ -75,6 +75,16 @@ class AppBootstrapper {
       debugPrint('CoralDesk agent workspaces failed: $e');
     }
 
+    // Seed built-in preset agent workspaces (role-based team members)
+    try {
+      final seeded = await workspace_api.seedPresetWorkspaces();
+      if (seeded > 0) {
+        debugPrint('CoralDesk seeded $seeded preset agent workspaces');
+      }
+    } catch (e) {
+      debugPrint('CoralDesk preset workspace seeding failed: $e');
+    }
+
     // Cron scheduler (non-critical — failure should not block startup)
     try {
       final cronStatus = await cron_api.startCronScheduler();

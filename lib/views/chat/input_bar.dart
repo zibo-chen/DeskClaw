@@ -156,6 +156,9 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
                       const SizedBox(width: 4),
                       // Agent selector button
                       _AgentSelectorButton(),
+                      const SizedBox(width: 4),
+                      // Multi-agent toggle
+                      _MultiAgentToggleButton(),
                       const Spacer(),
                       // Character count
                       Text(
@@ -613,6 +616,265 @@ class _AgentSelectorButtonState extends ConsumerState<_AgentSelectorButton> {
     }
 
     return items;
+  }
+}
+
+/// Multi-agent mode toggle button.
+/// Shows a team icon and lets the user enable/disable multi-agent mode
+/// with role selection.
+class _MultiAgentToggleButton extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final c = CoralDeskColors.of(context);
+    final isMulti = ref.watch(isMultiAgentProvider);
+
+    return Tooltip(
+      message: isMulti ? 'Multi-agent ON' : 'Multi-agent',
+      child: InkWell(
+        borderRadius: BorderRadius.circular(6),
+        onTap: () => _showRoleSheet(context, ref),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(6),
+            color: isMulti
+                ? AppColors.primary.withValues(alpha: 0.12)
+                : c.inputBg,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.groups_outlined,
+                size: 16,
+                color: isMulti ? AppColors.primary : c.textSecondary,
+              ),
+              if (isMulti) ...[
+                const SizedBox(width: 4),
+                Text(
+                  'Team',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showRoleSheet(BuildContext context, WidgetRef ref) async {
+    var activeId = ref.read(activeSessionIdProvider);
+    // Create a session if none exists
+    if (activeId == null) {
+      activeId = ref.read(chatControllerProvider).createSession();
+    }
+
+    final sessions = ref.read(sessionsProvider);
+    final session = sessions.where((s) => s.id == activeId).firstOrNull;
+    final currentRoles = List<String>.from(session?.activeRoles ?? []);
+    final isMulti = session?.isMultiAgent ?? false;
+
+    // Fetch preset workspaces from Rust
+    final workspaces = await workspace_api.listAgentWorkspaces();
+    final presetWorkspaces = workspaces
+        .where((w) => w.isPreset && w.enabled)
+        .toList();
+
+    if (!context.mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return _MultiAgentDialog(
+          workspaces: presetWorkspaces,
+          initialRoles: currentRoles,
+          initialEnabled: isMulti,
+          onConfirm: (enabled, roleIds) {
+            ref
+                .read(sessionsProvider.notifier)
+                .setMultiAgent(activeId!, enabled, roleIds);
+          },
+        );
+      },
+    );
+  }
+}
+
+/// Dialog for toggling multi-agent mode and selecting role workspaces.
+class _MultiAgentDialog extends StatefulWidget {
+  final List<workspace_api.AgentWorkspaceSummary> workspaces;
+  final List<String> initialRoles;
+  final bool initialEnabled;
+  final void Function(bool enabled, List<String> roles) onConfirm;
+
+  const _MultiAgentDialog({
+    required this.workspaces,
+    required this.initialRoles,
+    required this.initialEnabled,
+    required this.onConfirm,
+  });
+
+  @override
+  State<_MultiAgentDialog> createState() => _MultiAgentDialogState();
+}
+
+class _MultiAgentDialogState extends State<_MultiAgentDialog> {
+  late bool _enabled;
+  late Set<String> _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    _enabled = widget.initialEnabled;
+    _selected = widget.initialRoles.isNotEmpty
+        ? widget.initialRoles.toSet()
+        : widget.workspaces.map((w) => w.id).toSet(); // default: all presets
+  }
+
+  Color _parseColor(String? hex) {
+    if (hex == null || hex.isEmpty) return const Color(0xFF6C757D);
+    final cleaned = hex.replaceAll('#', '');
+    if (cleaned.length == 6) return Color(int.parse('FF$cleaned', radix: 16));
+    if (cleaned.length == 8) return Color(int.parse(cleaned, radix: 16));
+    return const Color(0xFF6C757D);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = CoralDeskColors.of(context);
+    return AlertDialog(
+      title: Row(
+        children: [
+          const Icon(Icons.groups, size: 22),
+          const SizedBox(width: 8),
+          const Text('Multi-Agent Mode', style: TextStyle(fontSize: 16)),
+          const Spacer(),
+          Switch(
+            value: _enabled,
+            onChanged: (v) => setState(() => _enabled = v),
+            activeTrackColor: AppColors.primary.withValues(alpha: 0.5),
+            thumbColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected))
+                return AppColors.primary;
+              return null;
+            }),
+          ),
+        ],
+      ),
+      content: SizedBox(
+        width: 400,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Select which agent workspaces participate in this session. '
+              'Each workspace has its own skills, tools, and MCP servers.',
+              style: TextStyle(fontSize: 12, color: c.textSecondary),
+            ),
+            const SizedBox(height: 12),
+            if (widget.workspaces.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  'No preset workspaces found. They will be created on next app restart.',
+                  style: TextStyle(color: c.textHint),
+                ),
+              )
+            else
+              ...widget.workspaces.map((ws) {
+                final isChecked = _selected.contains(ws.id);
+                final color = _parseColor(ws.colorTag);
+                return CheckboxListTile(
+                  value: isChecked,
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  activeColor: color,
+                  title: Row(
+                    children: [
+                      Text(ws.avatar, style: const TextStyle(fontSize: 16)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          ws.name,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: c.textPrimary,
+                          ),
+                        ),
+                      ),
+                      // Capability counts
+                      if (ws.allowedSkillsCount > 0 ||
+                          ws.allowedToolsCount > 0 ||
+                          ws.allowedMcpServersCount > 0)
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (ws.allowedSkillsCount > 0)
+                              _badge('S:${ws.allowedSkillsCount}', c),
+                            if (ws.allowedToolsCount > 0)
+                              _badge('T:${ws.allowedToolsCount}', c),
+                            if (ws.allowedMcpServersCount > 0)
+                              _badge('M:${ws.allowedMcpServersCount}', c),
+                          ],
+                        ),
+                    ],
+                  ),
+                  subtitle: Text(
+                    ws.description,
+                    style: TextStyle(fontSize: 11, color: c.textHint),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  onChanged: _enabled
+                      ? (v) {
+                          setState(() {
+                            if (v == true) {
+                              _selected.add(ws.id);
+                            } else {
+                              _selected.remove(ws.id);
+                            }
+                          });
+                        }
+                      : null,
+                );
+              }),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text('Cancel', style: TextStyle(color: c.textSecondary)),
+        ),
+        FilledButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+            widget.onConfirm(_enabled, _selected.toList());
+          },
+          child: const Text('Apply'),
+        ),
+      ],
+    );
+  }
+
+  Widget _badge(String text, CoralDeskColors c) {
+    return Container(
+      margin: const EdgeInsets.only(left: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+      decoration: BoxDecoration(
+        color: c.inputBg,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(text, style: TextStyle(fontSize: 9, color: c.textHint)),
+    );
   }
 }
 

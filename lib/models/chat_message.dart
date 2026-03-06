@@ -15,6 +15,18 @@ class ToolCallPart extends MessagePart {
   const ToolCallPart(this.toolCall);
 }
 
+/// A role header segment — marks a role switch in a multi-agent conversation.
+class RoleHeaderPart extends MessagePart {
+  final String roleName;
+  final String roleColor;
+  final String roleIcon;
+  const RoleHeaderPart({
+    required this.roleName,
+    required this.roleColor,
+    required this.roleIcon,
+  });
+}
+
 /// Represents a single chat message
 class ChatMessage {
   final String id;
@@ -29,6 +41,15 @@ class ChatMessage {
   /// [toolCalls] + [content] layout.
   final List<MessagePart>? parts;
 
+  /// The agent role name (e.g. 'architect', 'coder') for multi-agent sessions.
+  final String? agentRole;
+
+  /// Hex color for the agent role (e.g. '#4A90D9').
+  final String? agentColor;
+
+  /// Emoji icon for the agent role (e.g. '🏗️').
+  final String? agentIcon;
+
   const ChatMessage({
     required this.id,
     required this.role,
@@ -37,6 +58,9 @@ class ChatMessage {
     this.toolCalls,
     this.isStreaming = false,
     this.parts,
+    this.agentRole,
+    this.agentColor,
+    this.agentIcon,
   });
 
   ChatMessage copyWith({
@@ -47,6 +71,9 @@ class ChatMessage {
     List<ToolCallInfo>? toolCalls,
     bool? isStreaming,
     List<MessagePart>? parts,
+    String? agentRole,
+    String? agentColor,
+    String? agentIcon,
   }) {
     return ChatMessage(
       id: id ?? this.id,
@@ -56,6 +83,9 @@ class ChatMessage {
       toolCalls: toolCalls ?? this.toolCalls,
       isStreaming: isStreaming ?? this.isStreaming,
       parts: parts ?? this.parts,
+      agentRole: agentRole ?? this.agentRole,
+      agentColor: agentColor ?? this.agentColor,
+      agentIcon: agentIcon ?? this.agentIcon,
     );
   }
 

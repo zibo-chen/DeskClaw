@@ -317,7 +317,7 @@ class _MessageBubbleState extends State<MessageBubble> {
 
   // ── Parts rendering ────────────────────────────────────
 
-  /// Render an ordered list of TextPart / ToolCallPart widgets.
+  /// Render an ordered list of TextPart / ToolCallPart / RoleHeaderPart widgets.
   List<Widget> _buildPartsWidgets(CoralDeskColors c) {
     final widgets = <Widget>[];
     for (final part in message.parts!) {
@@ -336,6 +336,15 @@ class _MessageBubbleState extends State<MessageBubble> {
         case ToolCallPart(:final toolCall):
           if (widgets.isNotEmpty) widgets.add(const SizedBox(height: 4));
           widgets.add(_ToolCallCard(toolCall: toolCall));
+        case RoleHeaderPart(:final roleName, :final roleColor, :final roleIcon):
+          if (widgets.isNotEmpty) widgets.add(const SizedBox(height: 8));
+          widgets.add(
+            _RoleHeaderWidget(
+              roleName: roleName,
+              roleColor: roleColor,
+              roleIcon: roleIcon,
+            ),
+          );
       }
     }
     return widgets;
@@ -786,5 +795,59 @@ class _FileActionButtons extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+/// A visual header indicating which agent role is producing the following content.
+class _RoleHeaderWidget extends StatelessWidget {
+  final String roleName;
+  final String roleColor;
+  final String roleIcon;
+
+  const _RoleHeaderWidget({
+    required this.roleName,
+    required this.roleColor,
+    required this.roleIcon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _parseHexColor(roleColor);
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.30)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(roleIcon, style: const TextStyle(fontSize: 14)),
+          const SizedBox(width: 6),
+          Text(
+            roleName,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
+              letterSpacing: 0.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Color _parseHexColor(String hex) {
+    final cleaned = hex.replaceAll('#', '');
+    if (cleaned.length == 6) {
+      return Color(int.parse('FF$cleaned', radix: 16));
+    }
+    if (cleaned.length == 8) {
+      return Color(int.parse(cleaned, radix: 16));
+    }
+    return const Color(0xFF6C757D); // fallback grey
   }
 }

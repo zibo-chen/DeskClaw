@@ -272,10 +272,14 @@ class ChatController {
         s.parts.add(TextPart(s.currentTextBuffer.toString()));
         _pushStreamState(s);
       },
-      textDelta: (text) {
+      textDelta: (text, roleName) {
         s.clearThinkingIfNeeded();
         s.currentTextBuffer.write(text);
         s.ensureTextPart();
+        // Track the current role for multi-agent sessions
+        if (roleName != null) {
+          s.currentRole = roleName;
+        }
         _pushStreamState(s);
       },
       clearStreamedContent: () {
@@ -293,7 +297,7 @@ class ChatController {
         }
         _pushStreamState(s);
       },
-      toolCallStart: (name, args) {
+      toolCallStart: (name, args, roleName) {
         s.clearThinkingIfNeeded();
         s.finalizeCurrentTextSegment();
         final tc = ToolCallInfo(
@@ -346,6 +350,19 @@ class ChatController {
           toolName: name,
           toolArgs: args,
         );
+      },
+      roleSwitch: (roleName, roleColor, roleIcon) {
+        // Finalize any pending text before inserting the role header
+        s.finalizeCurrentTextSegment();
+        s.currentRole = roleName;
+        s.parts.add(
+          RoleHeaderPart(
+            roleName: roleName,
+            roleColor: roleColor,
+            roleIcon: roleIcon,
+          ),
+        );
+        _pushStreamState(s);
       },
       messageComplete: (inputTokens, outputTokens) {
         // Message is complete — onDone will finalise.
@@ -518,6 +535,9 @@ class _SessionStreamState {
   final List<MessagePart> parts = [];
   StringBuffer currentTextBuffer = StringBuffer();
   bool isThinking = false;
+
+  /// The current delegate agent role name (null = main agent).
+  String? currentRole;
 
   _SessionStreamState({
     required this.sessionId,

@@ -21,6 +21,14 @@ pub struct DelegateAgentDto {
     pub priority: i32,
     /// Whether this agent profile is enabled
     pub enabled: bool,
+    /// Optional display label for multi-agent role UI
+    pub role_label: Option<String>,
+    /// Optional hex color for multi-agent role UI (e.g. "#4A90D9")
+    pub role_color: Option<String>,
+    /// Optional emoji icon for multi-agent role UI (e.g. "🏗️")
+    pub role_icon: Option<String>,
+    /// Whether this is a built-in preset role
+    pub is_preset: bool,
 }
 
 // ──────────────────── API Functions ──────────────────────────
@@ -50,6 +58,10 @@ pub async fn list_delegate_agents() -> Vec<DelegateAgentDto> {
             capabilities: cfg.capabilities.clone(),
             priority: cfg.priority,
             enabled: cfg.enabled,
+            role_label: cfg.role_label.clone(),
+            role_color: cfg.role_color.clone(),
+            role_icon: cfg.role_icon.clone(),
+            is_preset: cfg.is_preset,
         })
         .collect();
 
@@ -79,6 +91,10 @@ pub async fn get_delegate_agent(name: String) -> Option<DelegateAgentDto> {
         capabilities: cfg.capabilities.clone(),
         priority: cfg.priority,
         enabled: cfg.enabled,
+        role_label: cfg.role_label.clone(),
+        role_color: cfg.role_color.clone(),
+        role_icon: cfg.role_icon.clone(),
+        is_preset: cfg.is_preset,
     })
 }
 
@@ -139,6 +155,25 @@ pub async fn upsert_delegate_agent(agent: DelegateAgentDto) -> String {
             .filter(|s| !s.is_empty())
             .collect(),
         max_iterations: agent.max_iterations.max(1) as usize,
+        role_label: agent
+            .role_label
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .map(String::from),
+        role_color: agent
+            .role_color
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .map(String::from),
+        role_icon: agent
+            .role_icon
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .map(String::from),
+        is_preset: agent.is_preset,
     };
 
     {
@@ -158,6 +193,7 @@ pub async fn upsert_delegate_agent(agent: DelegateAgentDto) -> String {
 }
 
 /// Remove a delegate agent by name. Returns "ok" on success, error string otherwise.
+/// Preset roles (is_preset = true) cannot be deleted.
 pub async fn remove_delegate_agent(name: String) -> String {
     {
         let mut cs = super::agent_api::config_state().write().await;
@@ -165,6 +201,12 @@ pub async fn remove_delegate_agent(name: String) -> String {
             Some(c) => c,
             None => return "error: runtime not initialized".into(),
         };
+        // Check if it's a preset role
+        if let Some(agent) = config.agents.get(&name) {
+            if agent.is_preset {
+                return format!("error: cannot delete built-in preset role '{}'", name);
+            }
+        }
         if config.agents.remove(&name).is_none() {
             return format!("error: agent '{}' not found", name);
         }
@@ -186,4 +228,197 @@ pub fn delegate_agent_count() -> u32 {
         }
     }
     0
+}
+
+/// Seed the 6 built-in preset roles if they don't already exist.
+/// Called during app initialization to ensure preset agents are available.
+/// Returns the number of presets created (0–6).
+pub async fn seed_preset_roles() -> u32 {
+    let presets: Vec<(&str, &str, &str, &str, Vec<&str>)> = vec![
+        (
+            "architect",
+            "🏗️",
+            "#4A90D9",
+            "You are the **Architect** agent. Make architecture decisions, technology selections, define module boundaries and component interfaces. Evaluate trade-offs. Be concise but thorough.",
+            vec!["architecture", "design", "planning", "decision"],
+        ),
+        (
+            "coder",
+            "✍️",
+            "#50C878",
+            "You are the **Coder** agent. Generate high-quality, production-ready code. Implement features, refactor for clarity and performance. Produce complete working code with no placeholders.",
+            vec!["coding", "implementation", "refactoring", "debugging"],
+        ),
+        (
+            "critic",
+            "🔍",
+            "#E74C3C",
+            "You are the **Critic** agent. Review code for bugs, security issues, and design problems. Classify issues: 🔴 Fatal, 🟠 Critical, 🟡 Suggestion. Provide constructive feedback with specific fixes.",
+            vec!["review", "analysis", "quality", "security"],
+        ),
+        (
+            "validator",
+            "🧪",
+            "#F39C12",
+            "You are the **Validator** agent. Generate comprehensive test cases. Verify specification conformance. Design unit and integration tests covering happy paths, error paths, and edge cases.",
+            vec!["testing", "validation", "verification", "coverage"],
+        ),
+        (
+            "context_keeper",
+            "📚",
+            "#9B59B6",
+            "You are the **Context Keeper** agent. Maintain summaries of architectural decisions, track design rationale and trade-offs, record requirements and constraints. Provide relevant context on request.",
+            vec!["context", "memory", "documentation", "history"],
+        ),
+        (
+            "integrator",
+            "🔗",
+            "#1ABC9C",
+            "You are the **Integrator** agent. Ensure multi-module changes work together. Verify interface contracts, check data flows across module boundaries, identify integration gaps.",
+            vec!["integration", "api", "contracts", "compatibility"],
+        ),
+    ];
+
+    let mut created = 0u32;
+
+    // Read current config to check which presets already exist
+    let existing_names: Vec<String> = {
+        let cs = super::agent_api::config_state().read().await;
+        match &cs.config {
+            Some(c) => c.agents.keys().cloned().collect(),
+            None => return 0,
+        }
+    };
+
+    for (name, icon, color, system_prompt, capabilities) in presets {
+        if existing_names.contains(&name.to_string()) {
+            // Already exists — update is_preset flag if needed
+            let mut cs = super::agent_api::config_state().write().await;
+            if let Some(config) = cs.config.as_mut() {
+                if let Some(agent) = config.agents.get_mut(name) {
+                    if !agent.is_preset {
+                        agent.is_preset = true;
+                        agent.role_label = Some(name.to_string());
+                        agent.role_color = Some(color.to_string());
+                        agent.role_icon = Some(icon.to_string());
+                    }
+                }
+            }
+            continue;
+        }
+
+        // Read main provider/model from config to use for presets
+        let (provider, model) = {
+            let cs = super::agent_api::config_state().read().await;
+            match &cs.config {
+                Some(c) => (
+                    c.default_provider
+                        .clone()
+                        .unwrap_or_else(|| "openrouter".to_string()),
+                    c.default_model
+                        .clone()
+                        .unwrap_or_else(|| "anthropic/claude-sonnet-4-20250514".to_string()),
+                ),
+                None => continue,
+            }
+        };
+
+        let delegate_config = zeroclaw::config::DelegateAgentConfig {
+            provider,
+            model,
+            system_prompt: Some(system_prompt.to_string()),
+            api_key: None,
+            enabled: true,
+            capabilities: capabilities.iter().map(|s| s.to_string()).collect(),
+            priority: 0,
+            temperature: None,
+            max_depth: 3,
+            agentic: true,
+            allowed_tools: vec![
+                "shell".to_string(),
+                "file_read".to_string(),
+                "file_write".to_string(),
+                "file_edit".to_string(),
+                "glob".to_string(),
+                "grep".to_string(),
+            ],
+            max_iterations: 10,
+            role_label: Some(name.to_string()),
+            role_color: Some(color.to_string()),
+            role_icon: Some(icon.to_string()),
+            is_preset: true,
+        };
+
+        {
+            let mut cs = super::agent_api::config_state().write().await;
+            if let Some(config) = cs.config.as_mut() {
+                config.agents.insert(name.to_string(), delegate_config);
+                created += 1;
+            }
+        }
+    }
+
+    if created > 0 {
+        super::agent_api::invalidate_all_agents().await;
+        let _ = super::agent_api::save_config_to_disk().await;
+    }
+
+    created
+}
+
+/// Set the multi-agent orchestrator system prompt for a session.
+/// When enabled, the main agent's system prompt is augmented with
+/// orchestrator instructions that direct it to use the delegate tool
+/// to coordinate the preset roles.
+///
+/// Returns "ok" on success, error string otherwise.
+pub async fn set_session_multi_agent_mode(
+    session_id: String,
+    enabled: bool,
+    role_names: Vec<String>,
+) -> String {
+    if enabled && role_names.is_empty() {
+        return "error: must specify at least one role when enabling multi-agent mode".into();
+    }
+
+    // Store the multi-agent config for this session
+    {
+        let mut sessions = multi_agent_sessions().write().await;
+        if enabled {
+            sessions.insert(session_id.clone(), role_names);
+        } else {
+            sessions.remove(&session_id);
+        }
+    }
+
+    // Invalidate this session's agent so it gets recreated with/without orchestrator prompt
+    super::agent_api::invalidate_session_agent(&session_id).await;
+
+    "ok".into()
+}
+
+/// Check if a session has multi-agent mode enabled
+pub async fn is_session_multi_agent(session_id: String) -> bool {
+    let sessions = multi_agent_sessions().read().await;
+    sessions.contains_key(&session_id)
+}
+
+/// Get the active roles for a multi-agent session
+pub async fn get_session_active_roles(session_id: String) -> Vec<String> {
+    let sessions = multi_agent_sessions().read().await;
+    sessions.get(&session_id).cloned().unwrap_or_default()
+}
+
+// ── Multi-agent session state ────────────────────────────
+
+use std::collections::HashMap;
+use std::sync::OnceLock;
+use tokio::sync::RwLock;
+
+/// Maps session_id → list of active role names for multi-agent sessions
+type MultiAgentSessionMap = HashMap<String, Vec<String>>;
+
+pub(crate) fn multi_agent_sessions() -> &'static RwLock<MultiAgentSessionMap> {
+    static STATE: OnceLock<RwLock<MultiAgentSessionMap>> = OnceLock::new();
+    STATE.get_or_init(|| RwLock::new(HashMap::new()))
 }

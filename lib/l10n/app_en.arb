@@ -1796,6 +1796,36 @@
   "agentWorkspaceIdentityMdHint": "Agent name, creature type, vibe, emoji — the agent's self-description...",
   "@agentWorkspaceIdentityMdHint": { "description": "IDENTITY.md hint" },
 
+  "agentWorkspaceCapabilities": "Capabilities",
+  "@agentWorkspaceCapabilities": { "description": "Capabilities tab label" },
+
+  "agentWorkspaceCapabilitiesDesc": "Control which skills, tools, and MCP servers this agent can use. Leave empty to allow all.",
+  "@agentWorkspaceCapabilitiesDesc": { "description": "Capabilities section description" },
+
+  "agentWorkspaceAllowedSkills": "Allowed Skills",
+  "@agentWorkspaceAllowedSkills": { "description": "Allowed skills section title" },
+
+  "agentWorkspaceAllowedTools": "Allowed Tools",
+  "@agentWorkspaceAllowedTools": { "description": "Allowed tools section title" },
+
+  "agentWorkspaceAllowedMcp": "Allowed MCP Servers",
+  "@agentWorkspaceAllowedMcp": { "description": "Allowed MCP servers section title" },
+
+  "agentWorkspaceAllAllowed": "All (no restriction)",
+  "@agentWorkspaceAllAllowed": { "description": "Label when all items are allowed" },
+
+  "agentWorkspaceNSelected": "{count} selected",
+  "@agentWorkspaceNSelected": { "description": "N items selected label", "placeholders": { "count": { "type": "int" } } },
+
+  "agentWorkspaceSkillsCount": "Skills",
+  "@agentWorkspaceSkillsCount": { "description": "Skills count label on card" },
+
+  "agentWorkspaceToolsCount": "Tools",
+  "@agentWorkspaceToolsCount": { "description": "Tools count label on card" },
+
+  "agentWorkspaceMcpCount": "MCP",
+  "@agentWorkspaceMcpCount": { "description": "MCP count label on card" },
+
   "agentWorkspaceSaved": "Workspace ''{name}'' saved",
   "@agentWorkspaceSaved": { "description": "Workspace saved message", "placeholders": { "name": { "type": "String" } } },
 
@@ -1824,5 +1854,29 @@
   "@agentSelectorDefault": { "description": "Default option in agent selector" },
 
   "agentSelectorCurrentAgent": "Current: {name}",
-  "@agentSelectorCurrentAgent": { "description": "Current agent label", "placeholders": { "name": { "type": "String" } } }
+  "@agentSelectorCurrentAgent": { "description": "Current agent label", "placeholders": { "name": { "type": "String" } } },
+
+  "multiAgentMode": "Multi-Agent Mode",
+  "@multiAgentMode": { "description": "Multi-agent mode toggle label" },
+
+  "multiAgentTeam": "Team",
+  "@multiAgentTeam": { "description": "Short label for multi-agent team badge" },
+
+  "multiAgentOn": "Multi-agent ON",
+  "@multiAgentOn": { "description": "Tooltip when multi-agent is enabled" },
+
+  "multiAgentOff": "Multi-agent",
+  "@multiAgentOff": { "description": "Tooltip when multi-agent is disabled" },
+
+  "multiAgentDesc": "Select which agent roles participate in this session. The orchestrator will automatically delegate tasks to them.",
+  "@multiAgentDesc": { "description": "Multi-agent dialog description" },
+
+  "multiAgentCancel": "Cancel",
+  "@multiAgentCancel": { "description": "Cancel button in multi-agent dialog" },
+
+  "multiAgentApply": "Apply",
+  "@multiAgentApply": { "description": "Apply button in multi-agent dialog" },
+
+  "presetBadge": "Preset",
+  "@presetBadge": { "description": "Badge label for built-in preset agents" }
 }

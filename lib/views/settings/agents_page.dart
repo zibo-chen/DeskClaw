@@ -258,6 +258,14 @@ class _AgentsPageState extends ConsumerState<AgentsPage> {
     );
   }
 
+  static Color _parseRoleColor(String? hex) {
+    if (hex == null || hex.isEmpty) return const Color(0xFF6C757D);
+    final cleaned = hex.replaceAll('#', '');
+    if (cleaned.length == 6) return Color(int.parse('FF$cleaned', radix: 16));
+    if (cleaned.length == 8) return Color(int.parse(cleaned, radix: 16));
+    return const Color(0xFF6C757D);
+  }
+
   Widget _buildAgentCard(
     agents_api.DelegateAgentDto agent,
     AppLocalizations l10n,
@@ -277,17 +285,21 @@ class _AgentsPageState extends ConsumerState<AgentsPage> {
           // Header row: name + badges + actions
           Row(
             children: [
-              Icon(
-                agent.agentic ? Icons.smart_toy : Icons.assistant,
-                size: 20,
-                color: agent.enabled
-                    ? (agent.agentic ? Colors.orange : AppColors.primary)
-                    : c.textHint,
-              ),
+              // Role icon/emoji or default icon
+              if (agent.roleIcon != null && agent.roleIcon!.isNotEmpty)
+                Text(agent.roleIcon!, style: const TextStyle(fontSize: 18))
+              else
+                Icon(
+                  agent.agentic ? Icons.smart_toy : Icons.assistant,
+                  size: 20,
+                  color: agent.enabled
+                      ? (agent.agentic ? Colors.orange : AppColors.primary)
+                      : c.textHint,
+                ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  agent.name,
+                  agent.roleLabel ?? agent.name,
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -295,6 +307,28 @@ class _AgentsPageState extends ConsumerState<AgentsPage> {
                   ),
                 ),
               ),
+              if (agent.isPreset)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  margin: const EdgeInsets.only(right: 4),
+                  decoration: BoxDecoration(
+                    color: _parseRoleColor(
+                      agent.roleColor,
+                    ).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    'Preset',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: _parseRoleColor(agent.roleColor),
+                    ),
+                  ),
+                ),
               if (!agent.enabled)
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -594,6 +628,10 @@ class _AgentEditorDialogState extends State<_AgentEditorDialog> {
       capabilities: capabilities,
       priority: int.tryParse(_priorityCtrl.text.trim()) ?? 0,
       enabled: _enabled,
+      isPreset: widget.existing?.isPreset ?? false,
+      roleLabel: widget.existing?.roleLabel,
+      roleColor: widget.existing?.roleColor,
+      roleIcon: widget.existing?.roleIcon,
     );
 
     Navigator.pop(context, dto);

@@ -28,6 +28,8 @@ pub struct AgentWorkspaceDto {
     pub workspace_dir: String,
     /// Whether this workspace is active/enabled
     pub enabled: bool,
+    /// Whether this is a built-in preset workspace
+    pub is_preset: bool,
     /// Custom system prompt override (if any)
     pub system_prompt: String,
     /// Contents of SOUL.md
@@ -40,6 +42,12 @@ pub struct AgentWorkspaceDto {
     pub identity_md: String,
     /// Optional color tag (hex string like "#FF5722")
     pub color_tag: String,
+    /// Allowed skill names (empty = all allowed)
+    pub allowed_skills: Vec<String>,
+    /// Allowed tool names (empty = all allowed)
+    pub allowed_tools: Vec<String>,
+    /// Allowed MCP server names (empty = all allowed)
+    pub allowed_mcp_servers: Vec<String>,
     /// Created timestamp (epoch seconds)
     pub created_at: i64,
     /// Updated timestamp (epoch seconds)
@@ -54,7 +62,14 @@ pub struct AgentWorkspaceSummary {
     pub description: String,
     pub avatar: String,
     pub enabled: bool,
+    pub is_preset: bool,
     pub color_tag: String,
+    /// Number of allowed skills (0 = all)
+    pub allowed_skills_count: u32,
+    /// Number of allowed tools (0 = all)
+    pub allowed_tools_count: u32,
+    /// Number of allowed MCP servers (0 = all)
+    pub allowed_mcp_servers_count: u32,
 }
 
 // ──────────────────── Persistence State ──────────────────────
@@ -67,12 +82,20 @@ struct PersistedAgentWorkspace {
     description: String,
     avatar: String,
     enabled: bool,
+    #[serde(default)]
+    is_preset: bool,
     system_prompt: String,
     soul_md: String,
     agents_md: String,
     user_md: String,
     identity_md: String,
     color_tag: String,
+    #[serde(default)]
+    allowed_skills: Vec<String>,
+    #[serde(default)]
+    allowed_tools: Vec<String>,
+    #[serde(default)]
+    allowed_mcp_servers: Vec<String>,
     created_at: i64,
     updated_at: i64,
 }
@@ -138,7 +161,11 @@ pub async fn list_agent_workspaces() -> Vec<AgentWorkspaceSummary> {
             description: w.description.clone(),
             avatar: w.avatar.clone(),
             enabled: w.enabled,
+            is_preset: w.is_preset,
             color_tag: w.color_tag.clone(),
+            allowed_skills_count: w.allowed_skills.len() as u32,
+            allowed_tools_count: w.allowed_tools.len() as u32,
+            allowed_mcp_servers_count: w.allowed_mcp_servers.len() as u32,
         })
         .collect()
 }
@@ -157,6 +184,7 @@ pub async fn get_agent_workspace(workspace_id: String) -> Option<AgentWorkspaceD
                 name: w.name.clone(),
                 description: w.description.clone(),
                 avatar: w.avatar.clone(),
+                is_preset: w.is_preset,
                 workspace_dir: ws_dir.to_string_lossy().to_string(),
                 enabled: w.enabled,
                 system_prompt: w.system_prompt.clone(),
@@ -165,6 +193,9 @@ pub async fn get_agent_workspace(workspace_id: String) -> Option<AgentWorkspaceD
                 user_md: w.user_md.clone(),
                 identity_md: w.identity_md.clone(),
                 color_tag: w.color_tag.clone(),
+                allowed_skills: w.allowed_skills.clone(),
+                allowed_tools: w.allowed_tools.clone(),
+                allowed_mcp_servers: w.allowed_mcp_servers.clone(),
                 created_at: w.created_at,
                 updated_at: w.updated_at,
             }
@@ -209,6 +240,9 @@ pub async fn upsert_agent_workspace(workspace: AgentWorkspaceDto) -> String {
         existing.user_md = workspace.user_md;
         existing.identity_md = workspace.identity_md;
         existing.color_tag = workspace.color_tag;
+        existing.allowed_skills = workspace.allowed_skills;
+        existing.allowed_tools = workspace.allowed_tools;
+        existing.allowed_mcp_servers = workspace.allowed_mcp_servers;
         existing.updated_at = now;
     } else {
         store.workspaces.push(PersistedAgentWorkspace {
@@ -217,12 +251,16 @@ pub async fn upsert_agent_workspace(workspace: AgentWorkspaceDto) -> String {
             description: workspace.description,
             avatar: workspace.avatar,
             enabled: workspace.enabled,
+            is_preset: workspace.is_preset,
             system_prompt: workspace.system_prompt,
             soul_md: workspace.soul_md,
             agents_md: workspace.agents_md,
             user_md: workspace.user_md,
             identity_md: workspace.identity_md,
             color_tag: workspace.color_tag,
+            allowed_skills: workspace.allowed_skills,
+            allowed_tools: workspace.allowed_tools,
+            allowed_mcp_servers: workspace.allowed_mcp_servers,
             created_at: now,
             updated_at: now,
         });
@@ -232,9 +270,17 @@ pub async fn upsert_agent_workspace(workspace: AgentWorkspaceDto) -> String {
     persist_store().await
 }
 
-/// Delete an agent workspace
+/// Delete an agent workspace (preset workspaces cannot be deleted)
 pub async fn delete_agent_workspace(workspace_id: String) -> String {
     let mut store = workspace_store().lock().await;
+    // Check if it's a preset
+    if store
+        .workspaces
+        .iter()
+        .any(|w| w.id == workspace_id && w.is_preset)
+    {
+        return "error: cannot delete preset workspace".into();
+    }
     store.workspaces.retain(|w| w.id != workspace_id);
     drop(store);
 
@@ -245,6 +291,100 @@ pub async fn delete_agent_workspace(workspace_id: String) -> String {
     }
 
     persist_store().await
+}
+
+/// Seed 6 built-in preset agent workspaces (role-based team members).
+/// Returns the number of presets created (0-6).
+pub async fn seed_preset_workspaces() -> u32 {
+    let presets = vec![
+        (
+            "preset_architect",
+            "🏗️",
+            "Architect",
+            "#4A90D9",
+            "Architecture decisions, technology selection, module boundary definition",
+            include_str!("preset_souls/architect.md"),
+        ),
+        (
+            "preset_coder",
+            "✍️",
+            "Coder",
+            "#50C878",
+            "Code generation, feature implementation, refactoring",
+            include_str!("preset_souls/coder.md"),
+        ),
+        (
+            "preset_critic",
+            "🔍",
+            "Critic",
+            "#E74C3C",
+            "Code review, issue reporting (fatal / critical / suggestion)",
+            include_str!("preset_souls/critic.md"),
+        ),
+        (
+            "preset_validator",
+            "🧪",
+            "Validator",
+            "#F39C12",
+            "Test generation, specification conformance verification",
+            include_str!("preset_souls/validator.md"),
+        ),
+        (
+            "preset_context_keeper",
+            "📚",
+            "Context Keeper",
+            "#9B59B6",
+            "Context management, historical decision storage",
+            include_str!("preset_souls/context_keeper.md"),
+        ),
+        (
+            "preset_integrator",
+            "🔗",
+            "Integrator",
+            "#1ABC9C",
+            "Multi-module integration, interface contract alignment",
+            include_str!("preset_souls/integrator.md"),
+        ),
+    ];
+
+    let mut store = workspace_store().lock().await;
+    let now = chrono::Utc::now().timestamp();
+    let mut created = 0u32;
+
+    for (id, avatar, name, color, desc, soul) in presets {
+        if store.workspaces.iter().any(|w| w.id == id) {
+            continue;
+        }
+        // Create workspace directory and identity files
+        let ws_dir = agent_workspace_base_dir().join(id);
+        let _ = std::fs::create_dir_all(&ws_dir);
+        write_identity_file(&ws_dir, "SOUL.md", soul);
+
+        store.workspaces.push(PersistedAgentWorkspace {
+            id: id.to_string(),
+            name: name.to_string(),
+            description: desc.to_string(),
+            avatar: avatar.to_string(),
+            enabled: true,
+            is_preset: true,
+            system_prompt: String::new(),
+            soul_md: soul.to_string(),
+            agents_md: String::new(),
+            user_md: String::new(),
+            identity_md: String::new(),
+            color_tag: color.to_string(),
+            allowed_skills: vec![],
+            allowed_tools: vec![],
+            allowed_mcp_servers: vec![],
+            created_at: now,
+            updated_at: now,
+        });
+        created += 1;
+    }
+
+    drop(store);
+    let _ = persist_store().await;
+    created
 }
 
 /// Get the workspace directory path for an agent workspace
@@ -283,10 +423,34 @@ pub(crate) async fn resolve_workspace_config(
     write_identity_file(&ws_dir, "IDENTITY.md", &ws.identity_md);
 
     // Override workspace dir
-    config.workspace_dir = ws_dir;
+    config.workspace_dir = ws_dir.clone();
 
-    // If there's a custom system prompt, configure it
-    // (the identity files already provide the main personality override)
+    // ── Capability filtering ──────────────────────────────────
+
+    // 1. Tool filtering: if allowed_tools is non-empty, restrict agent tools
+    if !ws.allowed_tools.is_empty() {
+        config.agent.allowed_tools = ws.allowed_tools.clone();
+    }
+
+    // 2. MCP server filtering: if allowed_mcp_servers is non-empty, keep only named servers
+    if !ws.allowed_mcp_servers.is_empty() {
+        config
+            .mcp
+            .servers
+            .retain(|s| ws.allowed_mcp_servers.contains(&s.name));
+    }
+
+    // 3. Skills filtering: write allowed list to workspace; skill loader can pick it up
+    if !ws.allowed_skills.is_empty() {
+        let skills_filter_path = ws_dir.join("allowed_skills.json");
+        if let Ok(json) = serde_json::to_string_pretty(&ws.allowed_skills) {
+            let _ = std::fs::write(&skills_filter_path, json);
+        }
+    } else {
+        // Remove filter file so all skills are allowed
+        let skills_filter_path = ws_dir.join("allowed_skills.json");
+        let _ = std::fs::remove_file(&skills_filter_path);
+    }
 
     Ok(())
 }

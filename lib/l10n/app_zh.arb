@@ -585,6 +585,18 @@
   "agentWorkspaceUserMdHint": "描述该智能体服务的用户——偏好、背景、工作风格...",
   "agentWorkspaceIdentityMd": "IDENTITY.md — 身份卡",
   "agentWorkspaceIdentityMdHint": "智能体名称、类型、氛围、emoji——智能体的自我描述...",
+
+  "agentWorkspaceCapabilities": "能力权限",
+  "agentWorkspaceCapabilitiesDesc": "控制此角色可以使用哪些技能、工具和 MCP 服务器。留空表示允许全部。",
+  "agentWorkspaceAllowedSkills": "允许的技能",
+  "agentWorkspaceAllowedTools": "允许的工具",
+  "agentWorkspaceAllowedMcp": "允许的 MCP 服务器",
+  "agentWorkspaceAllAllowed": "全部（无限制）",
+  "agentWorkspaceNSelected": "已选 {count} 个",
+  "agentWorkspaceSkillsCount": "技能",
+  "agentWorkspaceToolsCount": "工具",
+  "agentWorkspaceMcpCount": "MCP",
+
   "agentWorkspaceSaved": "角色「{name}」已保存",
   "agentWorkspaceCreated": "角色「{name}」已创建",
   "agentWorkspaceDeleteTitle": "删除角色",
@@ -594,5 +606,14 @@
   "agentWorkspaceIdentityFiles": "身份文件",
   "agentSelectorTitle": "选择智能体",
   "agentSelectorDefault": "默认（无智能体）",
-  "agentSelectorCurrentAgent": "当前：{name}"
+  "agentSelectorCurrentAgent": "当前：{name}",
+
+  "multiAgentMode": "多智能体模式",
+  "multiAgentTeam": "团队",
+  "multiAgentOn": "多智能体已开启",
+  "multiAgentOff": "多智能体",
+  "multiAgentDesc": "选择参与本次会话的智能体角色。协调者将自动分配任务给对应的角色。",
+  "multiAgentCancel": "取消",
+  "multiAgentApply": "应用",
+  "presetBadge": "内置"
 }

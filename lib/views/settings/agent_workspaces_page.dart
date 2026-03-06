@@ -6,6 +6,9 @@ import 'package:coraldesk/providers/providers.dart';
 import 'package:coraldesk/src/rust/api/agent_workspace_api.dart'
     as workspace_api;
 import 'package:coraldesk/src/rust/api/agent_api.dart' as agent_api;
+import 'package:coraldesk/src/rust/api/skills_api.dart' as skills_api;
+import 'package:coraldesk/src/rust/api/workspace_api.dart' as ws_api;
+import 'package:coraldesk/src/rust/api/mcp_api.dart' as mcp_api;
 import 'package:coraldesk/views/settings/widgets/settings_scaffold.dart';
 import 'package:coraldesk/views/settings/widgets/desktop_dialog.dart';
 
@@ -56,9 +59,11 @@ class _AgentWorkspacesPageState extends ConsumerState<AgentWorkspacesPage> {
     if (result == null || !mounted) return;
 
     final l10n = AppLocalizations.of(context)!;
-    final saveResult = await workspace_api.upsertAgentWorkspace(workspace: result);
+    final saveResult = await workspace_api.upsertAgentWorkspace(
+      workspace: result,
+    );
     if (!mounted) return;
-    
+
     if (saveResult == 'ok') {
       _showMessage(
         existing == null
@@ -104,7 +109,9 @@ class _AgentWorkspacesPageState extends ConsumerState<AgentWorkspacesPage> {
   }
 
   Future<void> _openWorkspaceFolder(String workspaceId) async {
-    final dir = await workspace_api.getAgentWorkspaceDir(workspaceId: workspaceId);
+    final dir = await workspace_api.getAgentWorkspaceDir(
+      workspaceId: workspaceId,
+    );
     await agent_api.openInSystem(path: dir);
   }
 
@@ -181,7 +188,11 @@ class _AgentWorkspacesPageState extends ConsumerState<AgentWorkspacesPage> {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.workspaces_outline, size: 20, color: AppColors.primary),
+                            Icon(
+                              Icons.workspaces_outline,
+                              size: 20,
+                              color: AppColors.primary,
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               l10n.agentWorkspaceOverview,
@@ -196,7 +207,10 @@ class _AgentWorkspacesPageState extends ConsumerState<AgentWorkspacesPage> {
                         const SizedBox(height: 8),
                         Text(
                           l10n.agentWorkspaceOverviewDesc,
-                          style: TextStyle(fontSize: 13, color: c.textSecondary),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: c.textSecondary,
+                          ),
                         ),
                         const SizedBox(height: 12),
                         Row(
@@ -210,7 +224,8 @@ class _AgentWorkspacesPageState extends ConsumerState<AgentWorkspacesPage> {
                             const SizedBox(width: 12),
                             _StatChip(
                               label: l10n.enabled,
-                              value: '${workspaces.where((w) => w.enabled).length}',
+                              value:
+                                  '${workspaces.where((w) => w.enabled).length}',
                               color: Colors.green,
                               c: c,
                             ),
@@ -241,7 +256,11 @@ class _AgentWorkspacesPageState extends ConsumerState<AgentWorkspacesPage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.workspaces_outline, size: 64, color: c.textHint.withValues(alpha: 0.5)),
+          Icon(
+            Icons.workspaces_outline,
+            size: 64,
+            color: c.textHint.withValues(alpha: 0.5),
+          ),
           const SizedBox(height: 16),
           Text(
             l10n.agentWorkspaceNoWorkspaces,
@@ -349,7 +368,9 @@ class _WorkspaceCardState extends State<_WorkspaceCard> {
           color: c.cardBg,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: _hovering ? tagColor.withValues(alpha: 0.5) : c.chatListBorder,
+            color: _hovering
+                ? tagColor.withValues(alpha: 0.5)
+                : c.chatListBorder,
             width: _hovering ? 1.5 : 1,
           ),
           boxShadow: _hovering
@@ -403,7 +424,9 @@ class _WorkspaceCardState extends State<_WorkspaceCard> {
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
-                                      color: ws.enabled ? c.textPrimary : c.textHint,
+                                      color: ws.enabled
+                                          ? c.textPrimary
+                                          : c.textHint,
                                     ),
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -438,16 +461,53 @@ class _WorkspaceCardState extends State<_WorkspaceCard> {
                   // Description
                   if (ws.description.isNotEmpty) ...[
                     const SizedBox(height: 12),
-                    Expanded(
-                      child: Text(
-                        ws.description,
-                        style: TextStyle(fontSize: 12, color: c.textSecondary),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                    Text(
+                      ws.description,
+                      style: TextStyle(fontSize: 12, color: c.textSecondary),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+
+                  const Spacer(),
+
+                  // Capability badges
+                  if (ws.allowedSkillsCount > 0 ||
+                      ws.allowedToolsCount > 0 ||
+                      ws.allowedMcpServersCount > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          if (ws.allowedSkillsCount > 0)
+                            _CapBadge(
+                              icon: Icons.psychology,
+                              count: ws.allowedSkillsCount,
+                              label: widget.l10n.agentWorkspaceSkillsCount,
+                              color: Colors.purple,
+                              c: c,
+                            ),
+                          if (ws.allowedToolsCount > 0)
+                            _CapBadge(
+                              icon: Icons.build_outlined,
+                              count: ws.allowedToolsCount,
+                              label: widget.l10n.agentWorkspaceToolsCount,
+                              color: Colors.teal,
+                              c: c,
+                            ),
+                          if (ws.allowedMcpServersCount > 0)
+                            _CapBadge(
+                              icon: Icons.dns_outlined,
+                              count: ws.allowedMcpServersCount,
+                              label: widget.l10n.agentWorkspaceMcpCount,
+                              color: Colors.orange,
+                              c: c,
+                            ),
+                        ],
                       ),
                     ),
-                  ] else
-                    const Spacer(),
 
                   // Actions
                   Row(
@@ -464,7 +524,10 @@ class _WorkspaceCardState extends State<_WorkspaceCard> {
                         tooltip: widget.l10n.openWorkspaceFolder,
                         visualDensity: VisualDensity.compact,
                         padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                        constraints: const BoxConstraints(
+                          minWidth: 32,
+                          minHeight: 32,
+                        ),
                       ),
                       // Edit button
                       IconButton(
@@ -477,20 +540,28 @@ class _WorkspaceCardState extends State<_WorkspaceCard> {
                         tooltip: widget.l10n.editMessage,
                         visualDensity: VisualDensity.compact,
                         padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                        constraints: const BoxConstraints(
+                          minWidth: 32,
+                          minHeight: 32,
+                        ),
                       ),
                       // Delete button
                       IconButton(
                         icon: Icon(
                           Icons.delete_outline,
                           size: 18,
-                          color: _hovering ? Colors.red.withValues(alpha: 0.7) : c.textHint,
+                          color: _hovering
+                              ? Colors.red.withValues(alpha: 0.7)
+                              : c.textHint,
                         ),
                         onPressed: widget.onDelete,
                         tooltip: widget.l10n.delete,
                         visualDensity: VisualDensity.compact,
                         padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                        constraints: const BoxConstraints(
+                          minWidth: 32,
+                          minHeight: 32,
+                        ),
                       ),
                     ],
                   ),
@@ -541,10 +612,7 @@ class _StatChip extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(fontSize: 12, color: c.textSecondary),
-          ),
+          Text(label, style: TextStyle(fontSize: 12, color: c.textSecondary)),
         ],
       ),
     );
@@ -577,25 +645,59 @@ class _WorkspaceEditorDialogState extends State<_WorkspaceEditorDialog>
   late bool _enabled;
   late TabController _tabController;
 
+  // Capability selections
+  late Set<String> _selectedSkills;
+  late Set<String> _selectedTools;
+  late Set<String> _selectedMcpServers;
+
+  // Available items (loaded async)
+  List<skills_api.SkillDto> _availableSkills = [];
+  List<ws_api.ToolInfo> _availableTools = [];
+  List<mcp_api.McpServerDto> _availableMcpServers = [];
+  bool _capabilitiesLoading = true;
+
   CoralDeskColors get c => CoralDeskColors.of(context);
 
   bool get isNew => widget.existing == null;
 
   static const _defaultAvatarOptions = [
-    '🤖', '👩‍💼', '👨‍💻', '🧑‍🔬', '🎨', '📝', '🔧', '🧠',
-    '🦊', '🐙', '🦉', '🐬', '🌟', '💡', '🎯', '🔮',
+    '🤖',
+    '👩‍💼',
+    '👨‍💻',
+    '🧑‍🔬',
+    '🎨',
+    '📝',
+    '🔧',
+    '🧠',
+    '🦊',
+    '🐙',
+    '🦉',
+    '🐬',
+    '🌟',
+    '💡',
+    '🎯',
+    '🔮',
   ];
 
   static const _colorOptions = [
-    '#2196F3', '#4CAF50', '#FF9800', '#E91E63',
-    '#9C27B0', '#009688', '#FF5722', '#795548',
-    '#607D8B', '#F44336', '#3F51B5', '#00BCD4',
+    '#2196F3',
+    '#4CAF50',
+    '#FF9800',
+    '#E91E63',
+    '#9C27B0',
+    '#009688',
+    '#FF5722',
+    '#795548',
+    '#607D8B',
+    '#F44336',
+    '#3F51B5',
+    '#00BCD4',
   ];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     final e = widget.existing;
     _nameCtrl = TextEditingController(text: e?.name ?? '');
     _descCtrl = TextEditingController(text: e?.description ?? '');
@@ -606,6 +708,30 @@ class _WorkspaceEditorDialogState extends State<_WorkspaceEditorDialog>
     _avatar = e?.avatar ?? '🤖';
     _colorTag = e?.colorTag ?? '#2196F3';
     _enabled = e?.enabled ?? true;
+    _selectedSkills = Set.from(e?.allowedSkills ?? []);
+    _selectedTools = Set.from(e?.allowedTools ?? []);
+    _selectedMcpServers = Set.from(e?.allowedMcpServers ?? []);
+    _loadCapabilities();
+  }
+
+  Future<void> _loadCapabilities() async {
+    try {
+      final skills = await skills_api.listSkills();
+      final tools = await ws_api.listToolsWithStatus();
+      final mcpConfig = await mcp_api.getMcpConfig();
+      if (mounted) {
+        setState(() {
+          _availableSkills = skills;
+          _availableTools = tools;
+          _availableMcpServers = mcpConfig.servers;
+          _capabilitiesLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _capabilitiesLoading = false);
+      }
+    }
   }
 
   @override
@@ -631,12 +757,16 @@ class _WorkspaceEditorDialogState extends State<_WorkspaceEditorDialog>
       avatar: _avatar,
       workspaceDir: widget.existing?.workspaceDir ?? '',
       enabled: _enabled,
+      isPreset: widget.existing?.isPreset ?? false,
       systemPrompt: '',
       soulMd: _soulMdCtrl.text,
       agentsMd: _agentsMdCtrl.text,
       userMd: _userMdCtrl.text,
       identityMd: _identityMdCtrl.text,
       colorTag: _colorTag,
+      allowedSkills: _selectedSkills.toList(),
+      allowedTools: _selectedTools.toList(),
+      allowedMcpServers: _selectedMcpServers.toList(),
       createdAt: widget.existing?.createdAt ?? now,
       updatedAt: now,
     );
@@ -675,7 +805,11 @@ class _WorkspaceEditorDialogState extends State<_WorkspaceEditorDialog>
                     // Description
                     _buildLabel(l10n.agentWorkspaceDescLabel),
                     const SizedBox(height: 6),
-                    _buildTextField(_descCtrl, l10n.agentWorkspaceDescHint, maxLines: 2),
+                    _buildTextField(
+                      _descCtrl,
+                      l10n.agentWorkspaceDescHint,
+                      maxLines: 2,
+                    ),
                     const SizedBox(height: 16),
 
                     // Avatar
@@ -697,11 +831,17 @@ class _WorkspaceEditorDialogState extends State<_WorkspaceEditorDialog>
                                   : c.inputBg,
                               borderRadius: BorderRadius.circular(6),
                               border: selected
-                                  ? Border.all(color: AppColors.primary, width: 2)
+                                  ? Border.all(
+                                      color: AppColors.primary,
+                                      width: 2,
+                                    )
                                   : Border.all(color: c.chatListBorder),
                             ),
                             alignment: Alignment.center,
-                            child: Text(emoji, style: const TextStyle(fontSize: 16)),
+                            child: Text(
+                              emoji,
+                              style: const TextStyle(fontSize: 16),
+                            ),
                           ),
                         );
                       }).toList(),
@@ -716,7 +856,10 @@ class _WorkspaceEditorDialogState extends State<_WorkspaceEditorDialog>
                       runSpacing: 6,
                       children: _colorOptions.map((hex) {
                         final color = Color(
-                          int.parse('FF${hex.replaceFirst('#', '')}', radix: 16),
+                          int.parse(
+                            'FF${hex.replaceFirst('#', '')}',
+                            radix: 16,
+                          ),
                         );
                         final selected = _colorTag == hex;
                         return GestureDetector(
@@ -731,11 +874,20 @@ class _WorkspaceEditorDialogState extends State<_WorkspaceEditorDialog>
                                   ? Border.all(color: Colors.white, width: 2)
                                   : null,
                               boxShadow: selected
-                                  ? [BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 6)]
+                                  ? [
+                                      BoxShadow(
+                                        color: color.withValues(alpha: 0.5),
+                                        blurRadius: 6,
+                                      ),
+                                    ]
                                   : null,
                             ),
                             child: selected
-                                ? const Icon(Icons.check, size: 14, color: Colors.white)
+                                ? const Icon(
+                                    Icons.check,
+                                    size: 14,
+                                    color: Colors.white,
+                                  )
                                 : null,
                           ),
                         );
@@ -772,10 +924,7 @@ class _WorkspaceEditorDialogState extends State<_WorkspaceEditorDialog>
             const SizedBox(width: 20),
 
             // Vertical divider
-            Container(
-              width: 1,
-              color: c.chatListBorder,
-            ),
+            Container(width: 1, color: c.chatListBorder),
 
             const SizedBox(width: 20),
 
@@ -789,7 +938,9 @@ class _WorkspaceEditorDialogState extends State<_WorkspaceEditorDialog>
                   // Tab bar
                   Container(
                     decoration: BoxDecoration(
-                      border: Border(bottom: BorderSide(color: c.chatListBorder)),
+                      border: Border(
+                        bottom: BorderSide(color: c.chatListBorder),
+                      ),
                     ),
                     child: TabBar(
                       controller: _tabController,
@@ -809,6 +960,7 @@ class _WorkspaceEditorDialogState extends State<_WorkspaceEditorDialog>
                         Tab(text: 'AGENTS.md'),
                         Tab(text: 'USER.md'),
                         Tab(text: 'IDENTITY.md'),
+                        Tab(text: '⚙️ Capabilities'),
                       ],
                     ),
                   ),
@@ -822,25 +974,52 @@ class _WorkspaceEditorDialogState extends State<_WorkspaceEditorDialog>
                           controller: _soulMdCtrl,
                           hint: l10n.agentWorkspaceSoulMdHint,
                           title: 'SOUL.md',
-                          subtitle: l10n.agentWorkspaceSoulMd.split('—').last.trim(),
+                          subtitle: l10n.agentWorkspaceSoulMd
+                              .split('—')
+                              .last
+                              .trim(),
                         ),
                         _CodeEditor(
                           controller: _agentsMdCtrl,
                           hint: l10n.agentWorkspaceAgentsMdHint,
                           title: 'AGENTS.md',
-                          subtitle: l10n.agentWorkspaceAgentsMd.split('—').last.trim(),
+                          subtitle: l10n.agentWorkspaceAgentsMd
+                              .split('—')
+                              .last
+                              .trim(),
                         ),
                         _CodeEditor(
                           controller: _userMdCtrl,
                           hint: l10n.agentWorkspaceUserMdHint,
                           title: 'USER.md',
-                          subtitle: l10n.agentWorkspaceUserMd.split('—').last.trim(),
+                          subtitle: l10n.agentWorkspaceUserMd
+                              .split('—')
+                              .last
+                              .trim(),
                         ),
                         _CodeEditor(
                           controller: _identityMdCtrl,
                           hint: l10n.agentWorkspaceIdentityMdHint,
                           title: 'IDENTITY.md',
-                          subtitle: l10n.agentWorkspaceIdentityMd.split('—').last.trim(),
+                          subtitle: l10n.agentWorkspaceIdentityMd
+                              .split('—')
+                              .last
+                              .trim(),
+                        ),
+                        _CapabilitiesTab(
+                          availableSkills: _availableSkills,
+                          availableTools: _availableTools,
+                          availableMcpServers: _availableMcpServers,
+                          selectedSkills: _selectedSkills,
+                          selectedTools: _selectedTools,
+                          selectedMcpServers: _selectedMcpServers,
+                          loading: _capabilitiesLoading,
+                          onSkillsChanged: (v) =>
+                              setState(() => _selectedSkills = v),
+                          onToolsChanged: (v) =>
+                              setState(() => _selectedTools = v),
+                          onMcpChanged: (v) =>
+                              setState(() => _selectedMcpServers = v),
                         ),
                       ],
                     ),
@@ -900,7 +1079,10 @@ class _WorkspaceEditorDialogState extends State<_WorkspaceEditorDialog>
         ),
         filled: true,
         fillColor: c.inputBg,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
         isDense: true,
       ),
       style: TextStyle(fontSize: 13, color: c.textPrimary),
@@ -979,7 +1161,9 @@ class _CodeEditorState extends State<_CodeEditor> {
             decoration: BoxDecoration(
               color: c.inputBg.withValues(alpha: 0.5),
               border: Border(
-                bottom: BorderSide(color: c.chatListBorder.withValues(alpha: 0.5)),
+                bottom: BorderSide(
+                  color: c.chatListBorder.withValues(alpha: 0.5),
+                ),
               ),
             ),
             child: Row(
@@ -1023,7 +1207,11 @@ class _CodeEditorState extends State<_CodeEditor> {
                     controller: _lineNumberScrollController,
                     physics: const NeverScrollableScrollPhysics(),
                     child: Padding(
-                      padding: const EdgeInsets.only(top: 12, right: 8, bottom: 12),
+                      padding: const EdgeInsets.only(
+                        top: 12,
+                        right: 8,
+                        bottom: 12,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: List.generate(
@@ -1077,6 +1265,421 @@ class _CodeEditorState extends State<_CodeEditor> {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Capability Badge (shown on workspace cards)
+// ═══════════════════════════════════════════════════════════════
+
+class _CapBadge extends StatelessWidget {
+  final IconData icon;
+  final int count;
+  final String label;
+  final Color color;
+  final CoralDeskColors c;
+
+  const _CapBadge({
+    required this.icon,
+    required this.count,
+    required this.label,
+    required this.color,
+    required this.c,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: color),
+          const SizedBox(width: 3),
+          Text(
+            '$count $label',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Capabilities Tab — select skills, tools, MCP servers
+// ═══════════════════════════════════════════════════════════════
+
+class _CapabilitiesTab extends StatelessWidget {
+  final List<skills_api.SkillDto> availableSkills;
+  final List<ws_api.ToolInfo> availableTools;
+  final List<mcp_api.McpServerDto> availableMcpServers;
+  final Set<String> selectedSkills;
+  final Set<String> selectedTools;
+  final Set<String> selectedMcpServers;
+  final bool loading;
+  final ValueChanged<Set<String>> onSkillsChanged;
+  final ValueChanged<Set<String>> onToolsChanged;
+  final ValueChanged<Set<String>> onMcpChanged;
+
+  const _CapabilitiesTab({
+    required this.availableSkills,
+    required this.availableTools,
+    required this.availableMcpServers,
+    required this.selectedSkills,
+    required this.selectedTools,
+    required this.selectedMcpServers,
+    required this.loading,
+    required this.onSkillsChanged,
+    required this.onToolsChanged,
+    required this.onMcpChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = CoralDeskColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
+
+    if (loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return Container(
+      color: c.surfaceBg,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Description
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, size: 16, color: AppColors.primary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l10n.agentWorkspaceCapabilitiesDesc,
+                      style: TextStyle(fontSize: 12, color: c.textSecondary),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Skills section
+            _CapabilitySection(
+              title: l10n.agentWorkspaceAllowedSkills,
+              icon: Icons.psychology,
+              color: Colors.purple,
+              items: availableSkills
+                  .map(
+                    (s) => _CapItem(
+                      id: s.name,
+                      name: s.name,
+                      description: s.description,
+                    ),
+                  )
+                  .toList(),
+              selected: selectedSkills,
+              onChanged: onSkillsChanged,
+              allLabel: l10n.agentWorkspaceAllAllowed,
+              selectedLabel: (n) => l10n.agentWorkspaceNSelected(n),
+            ),
+            const SizedBox(height: 16),
+
+            // Tools section
+            _CapabilitySection(
+              title: l10n.agentWorkspaceAllowedTools,
+              icon: Icons.build_outlined,
+              color: Colors.teal,
+              items: availableTools
+                  .map(
+                    (t) => _CapItem(
+                      id: t.name,
+                      name: t.name,
+                      description: t.description,
+                    ),
+                  )
+                  .toList(),
+              selected: selectedTools,
+              onChanged: onToolsChanged,
+              allLabel: l10n.agentWorkspaceAllAllowed,
+              selectedLabel: (n) => l10n.agentWorkspaceNSelected(n),
+            ),
+            const SizedBox(height: 16),
+
+            // MCP Servers section
+            _CapabilitySection(
+              title: l10n.agentWorkspaceAllowedMcp,
+              icon: Icons.dns_outlined,
+              color: Colors.orange,
+              items: availableMcpServers
+                  .map(
+                    (s) => _CapItem(
+                      id: s.name,
+                      name: s.name,
+                      description:
+                          '${s.transport} — ${s.url.isNotEmpty ? s.url : s.command}',
+                    ),
+                  )
+                  .toList(),
+              selected: selectedMcpServers,
+              onChanged: onMcpChanged,
+              allLabel: l10n.agentWorkspaceAllAllowed,
+              selectedLabel: (n) => l10n.agentWorkspaceNSelected(n),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Helper model for capability items
+class _CapItem {
+  final String id;
+  final String name;
+  final String description;
+  const _CapItem({
+    required this.id,
+    required this.name,
+    required this.description,
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Capability Section — reusable for skills / tools / MCP
+// ═══════════════════════════════════════════════════════════════
+
+class _CapabilitySection extends StatefulWidget {
+  final String title;
+  final IconData icon;
+  final Color color;
+  final List<_CapItem> items;
+  final Set<String> selected;
+  final ValueChanged<Set<String>> onChanged;
+  final String allLabel;
+  final String Function(int) selectedLabel;
+
+  const _CapabilitySection({
+    required this.title,
+    required this.icon,
+    required this.color,
+    required this.items,
+    required this.selected,
+    required this.onChanged,
+    required this.allLabel,
+    required this.selectedLabel,
+  });
+
+  @override
+  State<_CapabilitySection> createState() => _CapabilitySectionState();
+}
+
+class _CapabilitySectionState extends State<_CapabilitySection> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = CoralDeskColors.of(context);
+    final isEmpty = widget.selected.isEmpty;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: c.cardBg,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: c.chatListBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header (always visible)
+          InkWell(
+            onTap: () => setState(() => _expanded = !_expanded),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              child: Row(
+                children: [
+                  Icon(widget.icon, size: 16, color: widget.color),
+                  const SizedBox(width: 8),
+                  Text(
+                    widget.title,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: c.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isEmpty
+                          ? Colors.green.withValues(alpha: 0.1)
+                          : widget.color.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      isEmpty
+                          ? widget.allLabel
+                          : widget.selectedLabel(widget.selected.length),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: isEmpty ? Colors.green : widget.color,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  if (widget.items.isNotEmpty) ...[
+                    if (!isEmpty)
+                      GestureDetector(
+                        onTap: () {
+                          widget.onChanged({});
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Text(
+                            'Clear',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.red.withValues(alpha: 0.7),
+                            ),
+                          ),
+                        ),
+                      ),
+                    Icon(
+                      _expanded ? Icons.expand_less : Icons.expand_more,
+                      size: 18,
+                      color: c.textHint,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+
+          // Expanded item list
+          if (_expanded && widget.items.isNotEmpty) ...[
+            Divider(height: 1, color: c.chatListBorder),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 200),
+              child: ListView.builder(
+                shrinkWrap: true,
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                itemCount: widget.items.length,
+                itemBuilder: (ctx, i) {
+                  final item = widget.items[i];
+                  final checked = widget.selected.contains(item.id);
+                  return InkWell(
+                    onTap: () {
+                      final newSet = Set<String>.from(widget.selected);
+                      if (checked) {
+                        newSet.remove(item.id);
+                      } else {
+                        newSet.add(item.id);
+                      }
+                      widget.onChanged(newSet);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 6,
+                      ),
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: Checkbox(
+                              value: checked,
+                              onChanged: (v) {
+                                final newSet = Set<String>.from(
+                                  widget.selected,
+                                );
+                                if (v == true) {
+                                  newSet.add(item.id);
+                                } else {
+                                  newSet.remove(item.id);
+                                }
+                                widget.onChanged(newSet);
+                              },
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                              activeColor: widget.color,
+                              visualDensity: VisualDensity.compact,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.name,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: c.textPrimary,
+                                  ),
+                                ),
+                                if (item.description.isNotEmpty)
+                                  Text(
+                                    item.description,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: c.textHint,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+
+          // Empty state
+          if (_expanded && widget.items.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(14),
+              child: Text(
+                'No items available',
+                style: TextStyle(fontSize: 12, color: c.textHint),
+              ),
+            ),
         ],
       ),
     );

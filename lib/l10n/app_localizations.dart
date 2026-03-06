@@ -3482,6 +3482,66 @@ abstract class AppLocalizations {
   /// **'Agent name, creature type, vibe, emoji — the agent\'s self-description...'**
   String get agentWorkspaceIdentityMdHint;
 
+  /// Capabilities tab label
+  ///
+  /// In en, this message translates to:
+  /// **'Capabilities'**
+  String get agentWorkspaceCapabilities;
+
+  /// Capabilities section description
+  ///
+  /// In en, this message translates to:
+  /// **'Control which skills, tools, and MCP servers this agent can use. Leave empty to allow all.'**
+  String get agentWorkspaceCapabilitiesDesc;
+
+  /// Allowed skills section title
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed Skills'**
+  String get agentWorkspaceAllowedSkills;
+
+  /// Allowed tools section title
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed Tools'**
+  String get agentWorkspaceAllowedTools;
+
+  /// Allowed MCP servers section title
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed MCP Servers'**
+  String get agentWorkspaceAllowedMcp;
+
+  /// Label when all items are allowed
+  ///
+  /// In en, this message translates to:
+  /// **'All (no restriction)'**
+  String get agentWorkspaceAllAllowed;
+
+  /// N items selected label
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String agentWorkspaceNSelected(int count);
+
+  /// Skills count label on card
+  ///
+  /// In en, this message translates to:
+  /// **'Skills'**
+  String get agentWorkspaceSkillsCount;
+
+  /// Tools count label on card
+  ///
+  /// In en, this message translates to:
+  /// **'Tools'**
+  String get agentWorkspaceToolsCount;
+
+  /// MCP count label on card
+  ///
+  /// In en, this message translates to:
+  /// **'MCP'**
+  String get agentWorkspaceMcpCount;
+
   /// Workspace saved message
   ///
   /// In en, this message translates to:
@@ -3541,6 +3601,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Current: {name}'**
   String agentSelectorCurrentAgent(String name);
+
+  /// Multi-agent mode toggle label
+  ///
+  /// In en, this message translates to:
+  /// **'Multi-Agent Mode'**
+  String get multiAgentMode;
+
+  /// Short label for multi-agent team badge
+  ///
+  /// In en, this message translates to:
+  /// **'Team'**
+  String get multiAgentTeam;
+
+  /// Tooltip when multi-agent is enabled
+  ///
+  /// In en, this message translates to:
+  /// **'Multi-agent ON'**
+  String get multiAgentOn;
+
+  /// Tooltip when multi-agent is disabled
+  ///
+  /// In en, this message translates to:
+  /// **'Multi-agent'**
+  String get multiAgentOff;
+
+  /// Multi-agent dialog description
+  ///
+  /// In en, this message translates to:
+  /// **'Select which agent roles participate in this session. The orchestrator will automatically delegate tasks to them.'**
+  String get multiAgentDesc;
+
+  /// Cancel button in multi-agent dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get multiAgentCancel;
+
+  /// Apply button in multi-agent dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get multiAgentApply;
+
+  /// Badge label for built-in preset agents
+  ///
+  /// In en, this message translates to:
+  /// **'Preset'**
+  String get presetBadge;
 }
 
 class _AppLocalizationsDelegate

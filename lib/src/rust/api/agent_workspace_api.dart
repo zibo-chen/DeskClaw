@@ -31,11 +31,16 @@ Future<String> upsertAgentWorkspace({required AgentWorkspaceDto workspace}) =>
       workspace: workspace,
     );
 
-/// Delete an agent workspace
+/// Delete an agent workspace (preset workspaces cannot be deleted)
 Future<String> deleteAgentWorkspace({required String workspaceId}) => RustLib
     .instance
     .api
     .crateApiAgentWorkspaceApiDeleteAgentWorkspace(workspaceId: workspaceId);
+
+/// Seed 6 built-in preset agent workspaces (role-based team members).
+/// Returns the number of presets created (0-6).
+Future<int> seedPresetWorkspaces() =>
+    RustLib.instance.api.crateApiAgentWorkspaceApiSeedPresetWorkspaces();
 
 /// Get the workspace directory path for an agent workspace
 Future<String> getAgentWorkspaceDir({required String workspaceId}) => RustLib
@@ -85,6 +90,9 @@ class AgentWorkspaceDto {
   /// Whether this workspace is active/enabled
   final bool enabled;
 
+  /// Whether this is a built-in preset workspace
+  final bool isPreset;
+
   /// Custom system prompt override (if any)
   final String systemPrompt;
 
@@ -103,6 +111,15 @@ class AgentWorkspaceDto {
   /// Optional color tag (hex string like "#FF5722")
   final String colorTag;
 
+  /// Allowed skill names (empty = all allowed)
+  final List<String> allowedSkills;
+
+  /// Allowed tool names (empty = all allowed)
+  final List<String> allowedTools;
+
+  /// Allowed MCP server names (empty = all allowed)
+  final List<String> allowedMcpServers;
+
   /// Created timestamp (epoch seconds)
   final PlatformInt64 createdAt;
 
@@ -116,12 +133,16 @@ class AgentWorkspaceDto {
     required this.avatar,
     required this.workspaceDir,
     required this.enabled,
+    required this.isPreset,
     required this.systemPrompt,
     required this.soulMd,
     required this.agentsMd,
     required this.userMd,
     required this.identityMd,
     required this.colorTag,
+    required this.allowedSkills,
+    required this.allowedTools,
+    required this.allowedMcpServers,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -134,12 +155,16 @@ class AgentWorkspaceDto {
       avatar.hashCode ^
       workspaceDir.hashCode ^
       enabled.hashCode ^
+      isPreset.hashCode ^
       systemPrompt.hashCode ^
       soulMd.hashCode ^
       agentsMd.hashCode ^
       userMd.hashCode ^
       identityMd.hashCode ^
       colorTag.hashCode ^
+      allowedSkills.hashCode ^
+      allowedTools.hashCode ^
+      allowedMcpServers.hashCode ^
       createdAt.hashCode ^
       updatedAt.hashCode;
 
@@ -154,12 +179,16 @@ class AgentWorkspaceDto {
           avatar == other.avatar &&
           workspaceDir == other.workspaceDir &&
           enabled == other.enabled &&
+          isPreset == other.isPreset &&
           systemPrompt == other.systemPrompt &&
           soulMd == other.soulMd &&
           agentsMd == other.agentsMd &&
           userMd == other.userMd &&
           identityMd == other.identityMd &&
           colorTag == other.colorTag &&
+          allowedSkills == other.allowedSkills &&
+          allowedTools == other.allowedTools &&
+          allowedMcpServers == other.allowedMcpServers &&
           createdAt == other.createdAt &&
           updatedAt == other.updatedAt;
 }
@@ -171,7 +200,17 @@ class AgentWorkspaceSummary {
   final String description;
   final String avatar;
   final bool enabled;
+  final bool isPreset;
   final String colorTag;
+
+  /// Number of allowed skills (0 = all)
+  final int allowedSkillsCount;
+
+  /// Number of allowed tools (0 = all)
+  final int allowedToolsCount;
+
+  /// Number of allowed MCP servers (0 = all)
+  final int allowedMcpServersCount;
 
   const AgentWorkspaceSummary({
     required this.id,
@@ -179,7 +218,11 @@ class AgentWorkspaceSummary {
     required this.description,
     required this.avatar,
     required this.enabled,
+    required this.isPreset,
     required this.colorTag,
+    required this.allowedSkillsCount,
+    required this.allowedToolsCount,
+    required this.allowedMcpServersCount,
   });
 
   @override
@@ -189,7 +232,11 @@ class AgentWorkspaceSummary {
       description.hashCode ^
       avatar.hashCode ^
       enabled.hashCode ^
-      colorTag.hashCode;
+      isPreset.hashCode ^
+      colorTag.hashCode ^
+      allowedSkillsCount.hashCode ^
+      allowedToolsCount.hashCode ^
+      allowedMcpServersCount.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -201,5 +248,9 @@ class AgentWorkspaceSummary {
           description == other.description &&
           avatar == other.avatar &&
           enabled == other.enabled &&
-          colorTag == other.colorTag;
+          isPreset == other.isPreset &&
+          colorTag == other.colorTag &&
+          allowedSkillsCount == other.allowedSkillsCount &&
+          allowedToolsCount == other.allowedToolsCount &&
+          allowedMcpServersCount == other.allowedMcpServersCount;
 }

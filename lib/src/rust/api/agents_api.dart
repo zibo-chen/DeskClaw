@@ -6,6 +6,7 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+// These functions are ignored because they are not marked as `pub`: `multi_agent_sessions`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `fmt`
 
 /// List all configured delegate agents
@@ -21,12 +22,47 @@ Future<String> upsertDelegateAgent({required DelegateAgentDto agent}) =>
     RustLib.instance.api.crateApiAgentsApiUpsertDelegateAgent(agent: agent);
 
 /// Remove a delegate agent by name. Returns "ok" on success, error string otherwise.
+/// Preset roles (is_preset = true) cannot be deleted.
 Future<String> removeDelegateAgent({required String name}) =>
     RustLib.instance.api.crateApiAgentsApiRemoveDelegateAgent(name: name);
 
 /// Return the count of currently configured delegate agents (sync for quick display)
 int delegateAgentCount() =>
     RustLib.instance.api.crateApiAgentsApiDelegateAgentCount();
+
+/// Seed the 6 built-in preset roles if they don't already exist.
+/// Called during app initialization to ensure preset agents are available.
+/// Returns the number of presets created (0–6).
+Future<int> seedPresetRoles() =>
+    RustLib.instance.api.crateApiAgentsApiSeedPresetRoles();
+
+/// Set the multi-agent orchestrator system prompt for a session.
+/// When enabled, the main agent's system prompt is augmented with
+/// orchestrator instructions that direct it to use the delegate tool
+/// to coordinate the preset roles.
+///
+/// Returns "ok" on success, error string otherwise.
+Future<String> setSessionMultiAgentMode({
+  required String sessionId,
+  required bool enabled,
+  required List<String> roleNames,
+}) => RustLib.instance.api.crateApiAgentsApiSetSessionMultiAgentMode(
+  sessionId: sessionId,
+  enabled: enabled,
+  roleNames: roleNames,
+);
+
+/// Check if a session has multi-agent mode enabled
+Future<bool> isSessionMultiAgent({required String sessionId}) => RustLib
+    .instance
+    .api
+    .crateApiAgentsApiIsSessionMultiAgent(sessionId: sessionId);
+
+/// Get the active roles for a multi-agent session
+Future<List<String>> getSessionActiveRoles({required String sessionId}) =>
+    RustLib.instance.api.crateApiAgentsApiGetSessionActiveRoles(
+      sessionId: sessionId,
+    );
 
 /// A delegate sub-agent configuration exposed to Flutter UI
 class DelegateAgentDto {
@@ -50,6 +86,18 @@ class DelegateAgentDto {
   /// Whether this agent profile is enabled
   final bool enabled;
 
+  /// Optional display label for multi-agent role UI
+  final String? roleLabel;
+
+  /// Optional hex color for multi-agent role UI (e.g. "#4A90D9")
+  final String? roleColor;
+
+  /// Optional emoji icon for multi-agent role UI (e.g. "🏗️")
+  final String? roleIcon;
+
+  /// Whether this is a built-in preset role
+  final bool isPreset;
+
   const DelegateAgentDto({
     required this.name,
     required this.provider,
@@ -64,6 +112,10 @@ class DelegateAgentDto {
     required this.capabilities,
     required this.priority,
     required this.enabled,
+    this.roleLabel,
+    this.roleColor,
+    this.roleIcon,
+    required this.isPreset,
   });
 
   @override
@@ -80,7 +132,11 @@ class DelegateAgentDto {
       maxIterations.hashCode ^
       capabilities.hashCode ^
       priority.hashCode ^
-      enabled.hashCode;
+      enabled.hashCode ^
+      roleLabel.hashCode ^
+      roleColor.hashCode ^
+      roleIcon.hashCode ^
+      isPreset.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -99,5 +155,9 @@ class DelegateAgentDto {
           maxIterations == other.maxIterations &&
           capabilities == other.capabilities &&
           priority == other.priority &&
-          enabled == other.enabled;
+          enabled == other.enabled &&
+          roleLabel == other.roleLabel &&
+          roleColor == other.roleColor &&
+          roleIcon == other.roleIcon &&
+          isPreset == other.isPreset;
 }

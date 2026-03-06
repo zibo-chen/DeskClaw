@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:coraldesk/models/models.dart';
 import 'package:coraldesk/services/settings_service.dart';
 import 'package:coraldesk/src/rust/api/agent_api.dart' as agent_api;
+import 'package:coraldesk/src/rust/api/agents_api.dart' as agents_api;
 import 'package:coraldesk/src/rust/api/config_api.dart' as config_api;
 import 'package:coraldesk/src/rust/api/sessions_api.dart' as sessions_api;
 
@@ -117,6 +118,47 @@ class SessionsNotifier extends StateNotifier<List<ChatSession>> {
           messageCount: s.messageCount + 1,
           updatedAt: DateTime.now(),
         );
+      }
+      return s;
+    }).toList();
+  }
+
+  /// Toggle multi-agent mode for a session and notify Rust.
+  Future<void> setMultiAgent(
+    String id,
+    bool enabled,
+    List<String> roleNames,
+  ) async {
+    state = state.map((s) {
+      if (s.id == id) {
+        return s.copyWith(
+          isMultiAgent: enabled,
+          activeRoles: roleNames,
+          updatedAt: DateTime.now(),
+        );
+      }
+      return s;
+    }).toList();
+    // Propagate to Rust-side state
+    try {
+      await agents_api.setSessionMultiAgentMode(
+        sessionId: id,
+        enabled: enabled,
+        roleNames: roleNames,
+      );
+      // Invalidate the cached agent so next message re-creates with
+      // orchestrator system prompt (or without it if disabled).
+      await agent_api.removeSessionAgent(sessionId: id);
+    } catch (e) {
+      debugPrint('Failed to set multi-agent mode: $e');
+    }
+  }
+
+  /// Update the active roles for a session.
+  void setActiveRoles(String id, List<String> roleNames) {
+    state = state.map((s) {
+      if (s.id == id) {
+        return s.copyWith(activeRoles: roleNames);
       }
       return s;
     }).toList();
@@ -367,3 +409,29 @@ class SessionFilesNotifier extends StateNotifier<List<String>> {
     _sessionFiles.remove(sessionId);
   }
 }
+
+// ── Multi-agent mode ─────────────────────────────────────
+
+/// Whether the active session has multi-agent mode enabled.
+final isMultiAgentProvider = Provider<bool>((ref) {
+  final activeId = ref.watch(activeSessionIdProvider);
+  if (activeId == null) return false;
+  final sessions = ref.watch(sessionsProvider);
+  final session = sessions.where((s) => s.id == activeId).firstOrNull;
+  return session?.isMultiAgent ?? false;
+});
+
+/// The active roles for the current session.
+final activeRolesProvider = Provider<List<String>>((ref) {
+  final activeId = ref.watch(activeSessionIdProvider);
+  if (activeId == null) return [];
+  final sessions = ref.watch(sessionsProvider);
+  final session = sessions.where((s) => s.id == activeId).firstOrNull;
+  return session?.activeRoles ?? [];
+});
+
+/// Delegate agents fetched from Rust (cached via FutureProvider).
+final delegateAgentsProvider =
+    FutureProvider<List<agents_api.DelegateAgentDto>>((ref) async {
+      return await agents_api.listDelegateAgents();
+    });

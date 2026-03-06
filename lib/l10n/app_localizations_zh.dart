@@ -1799,6 +1799,39 @@ class AppLocalizationsZh extends AppLocalizations {
   String get agentWorkspaceIdentityMdHint => '智能体名称、类型、氛围、emoji——智能体的自我描述...';
 
   @override
+  String get agentWorkspaceCapabilities => '能力权限';
+
+  @override
+  String get agentWorkspaceCapabilitiesDesc =>
+      '控制此角色可以使用哪些技能、工具和 MCP 服务器。留空表示允许全部。';
+
+  @override
+  String get agentWorkspaceAllowedSkills => '允许的技能';
+
+  @override
+  String get agentWorkspaceAllowedTools => '允许的工具';
+
+  @override
+  String get agentWorkspaceAllowedMcp => '允许的 MCP 服务器';
+
+  @override
+  String get agentWorkspaceAllAllowed => '全部（无限制）';
+
+  @override
+  String agentWorkspaceNSelected(int count) {
+    return '已选 $count 个';
+  }
+
+  @override
+  String get agentWorkspaceSkillsCount => '技能';
+
+  @override
+  String get agentWorkspaceToolsCount => '工具';
+
+  @override
+  String get agentWorkspaceMcpCount => 'MCP';
+
+  @override
   String agentWorkspaceSaved(String name) {
     return '角色「$name」已保存';
   }
@@ -1837,4 +1870,28 @@ class AppLocalizationsZh extends AppLocalizations {
   String agentSelectorCurrentAgent(String name) {
     return '当前：$name';
   }
+
+  @override
+  String get multiAgentMode => '多智能体模式';
+
+  @override
+  String get multiAgentTeam => '团队';
+
+  @override
+  String get multiAgentOn => '多智能体已开启';
+
+  @override
+  String get multiAgentOff => '多智能体';
+
+  @override
+  String get multiAgentDesc => '选择参与本次会话的智能体角色。协调者将自动分配任务给对应的角色。';
+
+  @override
+  String get multiAgentCancel => '取消';
+
+  @override
+  String get multiAgentApply => '应用';
+
+  @override
+  String get presetBadge => '内置';
 }

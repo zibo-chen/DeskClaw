@@ -1849,6 +1849,39 @@ class AppLocalizationsEn extends AppLocalizations {
       'Agent name, creature type, vibe, emoji — the agent\'s self-description...';
 
   @override
+  String get agentWorkspaceCapabilities => 'Capabilities';
+
+  @override
+  String get agentWorkspaceCapabilitiesDesc =>
+      'Control which skills, tools, and MCP servers this agent can use. Leave empty to allow all.';
+
+  @override
+  String get agentWorkspaceAllowedSkills => 'Allowed Skills';
+
+  @override
+  String get agentWorkspaceAllowedTools => 'Allowed Tools';
+
+  @override
+  String get agentWorkspaceAllowedMcp => 'Allowed MCP Servers';
+
+  @override
+  String get agentWorkspaceAllAllowed => 'All (no restriction)';
+
+  @override
+  String agentWorkspaceNSelected(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get agentWorkspaceSkillsCount => 'Skills';
+
+  @override
+  String get agentWorkspaceToolsCount => 'Tools';
+
+  @override
+  String get agentWorkspaceMcpCount => 'MCP';
+
+  @override
   String agentWorkspaceSaved(String name) {
     return 'Workspace \'\'$name\'\' saved';
   }
@@ -1887,4 +1920,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String agentSelectorCurrentAgent(String name) {
     return 'Current: $name';
   }
+
+  @override
+  String get multiAgentMode => 'Multi-Agent Mode';
+
+  @override
+  String get multiAgentTeam => 'Team';
+
+  @override
+  String get multiAgentOn => 'Multi-agent ON';
+
+  @override
+  String get multiAgentOff => 'Multi-agent';
+
+  @override
+  String get multiAgentDesc =>
+      'Select which agent roles participate in this session. The orchestrator will automatically delegate tasks to them.';
+
+  @override
+  String get multiAgentCancel => 'Cancel';
+
+  @override
+  String get multiAgentApply => 'Apply';
+
+  @override
+  String get presetBadge => 'Preset';
 }

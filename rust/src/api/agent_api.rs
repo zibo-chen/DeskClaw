@@ -1,11 +1,19 @@
 use crate::frb_generated::StreamSink;
 use flutter_rust_bridge::frb;
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, OnceLock};
 use std::time::Instant;
 use tokio::sync::{Mutex as TokioMutex, RwLock};
 use tokio::time::{timeout, Duration};
 use tokio_util::sync::CancellationToken;
+
+fn mark_turn_activity(activity_epoch: &Instant, last_activity_ms: &AtomicU64) {
+    last_activity_ms.store(
+        activity_epoch.elapsed().as_millis() as u64,
+        Ordering::Relaxed,
+    );
+}
 
 // ──────────────────────────── DTOs ────────────────────────────
 
@@ -16,12 +24,21 @@ pub enum AgentEvent {
     /// Agent is thinking / preparing
     Thinking,
     /// Incremental text token from LLM
-    TextDelta { text: String },
+    TextDelta {
+        text: String,
+        /// The delegate agent role producing this delta (None = main agent)
+        role_name: Option<String>,
+    },
     /// Clear any previously streamed content (e.g., when tool calls are detected
     /// after streaming partial response that included raw tool_call tags)
     ClearStreamedContent,
     /// LLM started calling a tool
-    ToolCallStart { name: String, args: String },
+    ToolCallStart {
+        name: String,
+        args: String,
+        /// The delegate agent role calling this tool (None = main agent)
+        role_name: Option<String>,
+    },
     /// Tool call completed
     ToolCallEnd {
         name: String,
@@ -35,6 +52,13 @@ pub enum AgentEvent {
         request_id: String,
         name: String,
         args: String,
+    },
+    /// A delegate agent role has started producing output.
+    /// Emitted when the orchestrator delegates to a sub-agent.
+    RoleSwitch {
+        role_name: String,
+        role_color: String,
+        role_icon: String,
     },
     /// Full message generation complete
     MessageComplete {
@@ -169,6 +193,12 @@ pub(crate) fn config_state() -> &'static RwLock<ConfigState> {
 pub(crate) async fn invalidate_all_agents() {
     let mut agents = session_agents().write().await;
     agents.clear();
+}
+
+/// Invalidate a specific session's cached agent (e.g., when multi-agent mode changes).
+pub(crate) async fn invalidate_session_agent(session_id: &str) {
+    let mut agents = session_agents().write().await;
+    agents.remove(session_id);
 }
 
 // ──────────── Active Stream Cancellation Tokens ──────────────
@@ -1246,8 +1276,7 @@ async fn ensure_session_agent(session_id: &str) -> Result<Arc<TokioMutex<Session
 
     // 6. Configure session-specific workspace
     // Check if this session is bound to an agent workspace
-    let agent_binding =
-        super::agent_workspace_api::get_binding_for_session(session_id).await;
+    let agent_binding = super::agent_workspace_api::get_binding_for_session(session_id).await;
 
     let session_workspace = if let Some(ref ws_id) = agent_binding {
         // Use agent workspace directory — independent identity/personality
@@ -1320,6 +1349,56 @@ async fn ensure_session_agent(session_id: &str) -> Result<Arc<TokioMutex<Session
     //    "custom:{base_url}" so the delegate hits the correct API endpoint
     //    instead of the provider's default URL (e.g. api.openai.com).
     resolve_delegate_providers(&mut config);
+
+    // 7b. Multi-agent mode: inject orchestrator identity when active.
+    //     This writes orchestrator instructions to the session workspace's
+    //     SOUL.md file so the agent's SystemPromptBuilder picks them up,
+    //     and augments delegate agent configs with the active roles.
+    {
+        let ma_sessions = super::agents_api::multi_agent_sessions().read().await;
+        if let Some(active_roles) = ma_sessions.get(session_id) {
+            let roles_desc = active_roles
+                .iter()
+                .filter_map(|name| {
+                    config.agents.get(name).map(|cfg| {
+                        let label = cfg.role_label.as_deref().unwrap_or(name.as_str());
+                        let icon = cfg.role_icon.as_deref().unwrap_or("");
+                        format!(
+                            "- **{icon} {label}** (`{name}`): {}",
+                            cfg.capabilities.join(", ")
+                        )
+                    })
+                })
+                .collect::<Vec<_>>()
+                .join("\n");
+
+            let orchestrator_prompt = format!(
+                "# Team Orchestrator\n\n\
+                 You are an AI team orchestrator coordinating specialized agents.\n\n\
+                 ## Your Team\n\
+                 Use the `delegate` tool with the agent name to assign tasks:\n\
+                 {roles_desc}\n\n\
+                 ## Workflow\n\
+                 1. Analyze the user's request to determine which agents are needed\n\
+                 2. Use `delegate` with agent=\"<name>\" and prompt=\"<task>\" to invoke roles\n\
+                 3. Coordinate results — if critic finds issues, send back to coder\n\
+                 4. Synthesize and present the final result clearly\n\n\
+                 For simple tasks, use just 1-2 agents. For complex tasks, use the full pipeline.\n"
+            );
+
+            // Write orchestrator identity to the session workspace SOUL.md
+            let soul_path = session_workspace.join("SOUL.md");
+            let existing_soul = std::fs::read_to_string(&soul_path).unwrap_or_default();
+            if !existing_soul.contains("# Team Orchestrator") {
+                let combined = format!("{orchestrator_prompt}\n{existing_soul}");
+                let _ = std::fs::write(&soul_path, combined);
+            }
+
+            // Ensure agent teams are enabled
+            config.agent.teams.enabled = true;
+            config.agent.teams.auto_activate = true;
+        }
+    }
 
     // 8. Create the agent
     let agent = zeroclaw::agent::Agent::from_config(&config)
@@ -1397,6 +1476,7 @@ pub async fn send_message(session_id: String, message: String) -> Vec<AgentEvent
                             events.push(AgentEvent::ToolCallStart {
                                 name: tc.name.clone(),
                                 args: truncate_str(&tc.arguments, 1000),
+                                role_name: None,
                             });
                         }
                     }
@@ -1417,7 +1497,10 @@ pub async fn send_message(session_id: String, message: String) -> Vec<AgentEvent
                 }
             }
 
-            events.push(AgentEvent::TextDelta { text: response });
+            events.push(AgentEvent::TextDelta {
+                text: response,
+                role_name: None,
+            });
             events.push(AgentEvent::MessageComplete {
                 input_tokens: None,
                 output_tokens: None,
@@ -1451,6 +1534,7 @@ pub async fn send_message(session_id: String, message: String) -> Vec<AgentEvent
                                         events.push(AgentEvent::ToolCallStart {
                                             name: tc.name.clone(),
                                             args: truncate_str(&tc.arguments, 1000),
+                                            role_name: None,
                                         });
                                     }
                                 }
@@ -1470,7 +1554,10 @@ pub async fn send_message(session_id: String, message: String) -> Vec<AgentEvent
                                 _ => {}
                             }
                         }
-                        events.push(AgentEvent::TextDelta { text: response });
+                        events.push(AgentEvent::TextDelta {
+                            text: response,
+                            role_name: None,
+                        });
                         events.push(AgentEvent::MessageComplete {
                             input_tokens: None,
                             output_tokens: None,
@@ -1509,7 +1596,8 @@ pub async fn send_message_stream(
     message: String,
     sink: StreamSink<AgentEvent>,
 ) {
-    const TURN_TIMEOUT_SECS: u64 = 180;
+    const TURN_IDLE_TIMEOUT_SECS: u64 = 180;
+    const TURN_IDLE_POLL_MILLIS: u64 = 1_000;
     const RELAY_DRAIN_TIMEOUT_SECS: u64 = 10;
 
     // Get or create session-specific agent
@@ -1552,6 +1640,52 @@ pub async fn send_message_stream(
     let sink_clone = sink.clone();
     let stream_cancel_token = CancellationToken::new();
     let relay_cancel_token = stream_cancel_token.clone();
+    let watchdog_done_token = CancellationToken::new();
+    let activity_epoch = Arc::new(Instant::now());
+    let last_activity_ms = Arc::new(AtomicU64::new(0));
+    let tool_active = Arc::new(AtomicBool::new(false));
+    let awaiting_approval = Arc::new(AtomicBool::new(false));
+    let idle_timeout_triggered = Arc::new(AtomicBool::new(false));
+
+    mark_turn_activity(activity_epoch.as_ref(), last_activity_ms.as_ref());
+
+    let watchdog_handle = {
+        let stream_cancel_token = stream_cancel_token.clone();
+        let watchdog_done_token = watchdog_done_token.clone();
+        let activity_epoch = activity_epoch.clone();
+        let last_activity_ms = last_activity_ms.clone();
+        let tool_active = tool_active.clone();
+        let awaiting_approval = awaiting_approval.clone();
+        let idle_timeout_triggered = idle_timeout_triggered.clone();
+
+        tokio::spawn(async move {
+            loop {
+                tokio::select! {
+                    _ = watchdog_done_token.cancelled() => break,
+                    _ = tokio::time::sleep(Duration::from_millis(TURN_IDLE_POLL_MILLIS)) => {}
+                }
+
+                if tool_active.load(Ordering::Relaxed) || awaiting_approval.load(Ordering::Relaxed)
+                {
+                    continue;
+                }
+
+                let now_ms = activity_epoch.elapsed().as_millis() as u64;
+                let last_ms = last_activity_ms.load(Ordering::Relaxed);
+                let idle_ms = now_ms.saturating_sub(last_ms);
+
+                if idle_ms >= TURN_IDLE_TIMEOUT_SECS.saturating_mul(1_000) {
+                    idle_timeout_triggered.store(true, Ordering::Relaxed);
+                    stream_cancel_token.cancel();
+                    tracing::warn!(
+                        "send_message_stream idle timeout for session after {}s of no activity",
+                        TURN_IDLE_TIMEOUT_SECS
+                    );
+                    break;
+                }
+            }
+        })
+    };
 
     // Store the token so Flutter can cancel via cancel_generation()
     {
@@ -1568,7 +1702,41 @@ pub async fn send_message_stream(
     //   - `\x00CLEAR\x00`         — clear accumulated progress before final answer
     //   - `\x01TOOL_RESULT\x02`   — structured tool result
     //   - plain text              — final answer chunks
+    //
+    // For multi-agent role tracking: when a delegate tool call is detected,
+    // we look up the agent's role_label/role_color/role_icon metadata and
+    // emit a RoleSwitch event so the Flutter UI can render role headers.
+    let relay_activity_epoch = activity_epoch.clone();
+    let relay_last_activity_ms = last_activity_ms.clone();
+    let relay_tool_active = tool_active.clone();
     let relay_handle = tokio::spawn(async move {
+        let activity_epoch = relay_activity_epoch;
+        let last_activity_ms = relay_last_activity_ms;
+        let tool_active = relay_tool_active;
+        // Snapshot agent role metadata for delegate tracking
+        let agent_role_metadata: HashMap<String, (String, String, String)> = {
+            let gc = global_config().read().await;
+            gc.config
+                .as_ref()
+                .map(|c| {
+                    c.agents
+                        .iter()
+                        .filter_map(|(name, cfg)| {
+                            let label = cfg.role_label.clone().unwrap_or_else(|| name.clone());
+                            let color = cfg.role_color.clone().unwrap_or_default();
+                            let icon = cfg.role_icon.clone().unwrap_or_default();
+                            if color.is_empty() && icon.is_empty() {
+                                None
+                            } else {
+                                Some((name.clone(), (label, color, icon)))
+                            }
+                        })
+                        .collect()
+                })
+                .unwrap_or_default()
+        };
+        // Track current active role for annotating TextDelta events
+        let mut current_role: Option<String> = None;
         // Helper macro to send events and exit early if sink is closed
         macro_rules! send_or_break {
             ($event:expr) => {
@@ -1581,6 +1749,7 @@ pub async fn send_message_stream(
         }
 
         while let Some(delta) = rx.recv().await {
+            mark_turn_activity(activity_epoch.as_ref(), last_activity_ms.as_ref());
             let trimmed = delta.trim();
 
             // Sentinel: clear accumulated progress (final answer coming)
@@ -1603,6 +1772,11 @@ pub async fn send_message_stream(
                         let name = parts[0].to_string();
                         let success = parts[1] == "true";
                         let result = parts[2].to_string();
+                        tool_active.store(false, Ordering::Relaxed);
+                        // Reset current role when delegate tool completes
+                        if name == "delegate" {
+                            current_role = None;
+                        }
                         send_or_break!(AgentEvent::ToolCallEnd {
                             name,
                             result,
@@ -1654,7 +1828,35 @@ pub async fn send_message_stream(
                     } else {
                         (rest.to_string(), String::new())
                     };
-                    send_or_break!(AgentEvent::ToolCallStart { name, args });
+                    tool_active.store(true, Ordering::Relaxed);
+
+                    // Detect delegate tool calls → emit RoleSwitch for multi-agent UI
+                    if name == "delegate" {
+                        // Try to parse agent name from args JSON
+                        if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&args) {
+                            if let Some(agent_name) = parsed.get("agent").and_then(|v| v.as_str()) {
+                                let agent_key = agent_name.to_string();
+                                if let Some((label, color, icon)) =
+                                    agent_role_metadata.get(&agent_key)
+                                {
+                                    if !color.is_empty() || !icon.is_empty() {
+                                        send_or_break!(AgentEvent::RoleSwitch {
+                                            role_name: label.clone(),
+                                            role_color: color.clone(),
+                                            role_icon: icon.clone(),
+                                        });
+                                        current_role = Some(agent_key);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    send_or_break!(AgentEvent::ToolCallStart {
+                        name,
+                        args,
+                        role_name: current_role.clone()
+                    });
                     handled = true;
                     continue;
                 }
@@ -1662,6 +1864,7 @@ pub async fn send_message_stream(
                 // Tool success: "✅ tool_name (Ns)"
                 // Status-only; the actual result follows in the TOOL_RESULT message.
                 if effective.starts_with('✅') {
+                    tool_active.store(false, Ordering::Relaxed);
                     handled = true;
                     continue;
                 }
@@ -1669,6 +1872,7 @@ pub async fn send_message_stream(
                 // Tool failure: "❌ tool_name (Ns)"
                 // Status-only; the actual result follows in the TOOL_RESULT message.
                 if effective.starts_with('❌') {
+                    tool_active.store(false, Ordering::Relaxed);
                     handled = true;
                     continue;
                 }
@@ -1715,7 +1919,10 @@ pub async fn send_message_stream(
 
             // Everything else is streamed text content.
             if !delta.is_empty() {
-                send_or_break!(AgentEvent::TextDelta { text: delta });
+                send_or_break!(AgentEvent::TextDelta {
+                    text: delta,
+                    role_name: current_role.clone()
+                });
             }
         }
     });
@@ -1734,16 +1941,24 @@ pub async fn send_message_stream(
     // via `respond_to_tool_approval()`.
     let sink_for_approval = sink.clone();
     let session_id_for_approval = session_id.clone();
+    let approval_activity_epoch = activity_epoch.clone();
+    let approval_last_activity_ms = last_activity_ms.clone();
+    let approval_awaiting_flag = awaiting_approval.clone();
     let on_approval_fn: Option<zeroclaw::agent::loop_::OnApprovalFn> = if !trust_me {
         Some(Box::new(
             move |tool_name: String, tool_args: serde_json::Value| {
                 let sink_inner = sink_for_approval.clone();
                 let _session_id = session_id_for_approval.clone();
+                let activity_epoch = approval_activity_epoch.clone();
+                let last_activity_ms = approval_last_activity_ms.clone();
+                let awaiting_approval = approval_awaiting_flag.clone();
                 Box::pin(async move {
                     let request_id = uuid::Uuid::new_v4().to_string();
                     let args_str = serde_json::to_string(&tool_args).unwrap_or_default();
 
                     // Send approval request to Flutter UI
+                    awaiting_approval.store(true, Ordering::Relaxed);
+                    mark_turn_activity(activity_epoch.as_ref(), last_activity_ms.as_ref());
                     let _ = sink_inner.add(AgentEvent::ToolApprovalRequest {
                         request_id: request_id.clone(),
                         name: tool_name,
@@ -1766,12 +1981,18 @@ pub async fn send_message_stream(
 
                     // Wait for Flutter to respond (with a generous timeout)
                     match tokio::time::timeout(Duration::from_secs(300), resp_rx).await {
-                        Ok(Ok(decision)) => decision,
+                        Ok(Ok(decision)) => {
+                            awaiting_approval.store(false, Ordering::Relaxed);
+                            mark_turn_activity(activity_epoch.as_ref(), last_activity_ms.as_ref());
+                            decision
+                        }
                         Ok(Err(_)) => {
+                            awaiting_approval.store(false, Ordering::Relaxed);
                             // Channel was dropped — treat as denied
                             zeroclaw::approval::ApprovalResponse::No
                         }
                         Err(_) => {
+                            awaiting_approval.store(false, Ordering::Relaxed);
                             // Timeout — clean up and treat as denied
                             {
                                 let mut legacy = legacy_pending_approval().lock().await;
@@ -1793,17 +2014,18 @@ pub async fn send_message_stream(
         let mut session_agent = agent_arc.lock().await;
         session_agent.last_used = Instant::now();
         let agent = &mut session_agent.agent;
-        timeout(
-            Duration::from_secs(TURN_TIMEOUT_SECS),
-            agent.turn_streaming(
+        agent
+            .turn_streaming(
                 &enriched_message,
                 tx,
                 Some(stream_cancel_token.clone()),
                 on_approval_fn.as_ref(),
-            ),
-        )
-        .await
+            )
+            .await
     };
+
+    watchdog_done_token.cancel();
+    let _ = watchdog_handle.await;
 
     // If relay cannot finish quickly, abort it so the stream can close.
     let relay_abort = relay_handle.abort_handle();
@@ -1818,7 +2040,7 @@ pub async fn send_message_stream(
         );
     }
 
-    if stream_cancel_token.is_cancelled() {
+    if stream_cancel_token.is_cancelled() && !idle_timeout_triggered.load(Ordering::Relaxed) {
         tracing::info!(
             session_id = %session_id,
             "send_message_stream cancelled because Dart sink/relay closed"
@@ -1838,7 +2060,7 @@ pub async fn send_message_stream(
     }
 
     match turn_result {
-        Ok(Ok(_)) => {
+        Ok(_) => {
             tracing::info!(
                 session_id = %session_id,
                 "Agent turn completed successfully"
@@ -1848,7 +2070,19 @@ pub async fn send_message_stream(
                 output_tokens: None,
             });
         }
-        Ok(Err(e)) => {
+        Err(e) => {
+            if idle_timeout_triggered.load(Ordering::Relaxed) {
+                let msg = format!(
+                    "Agent 在 {} 秒内未收到新的模型/API响应，已停止本次请求。若任务仍在正常进行，可考虑提高空闲超时。",
+                    TURN_IDLE_TIMEOUT_SECS
+                );
+                tracing::error!(
+                    "send_message_stream idle timeout for session {session_id}: {TURN_IDLE_TIMEOUT_SECS}s"
+                );
+                let _ = sink.add(AgentEvent::Error { message: msg });
+                return;
+            }
+
             let err_str = e.to_string();
             tracing::info!(
                 session_id = %session_id,
@@ -1869,14 +2103,6 @@ pub async fn send_message_stream(
             let _ = sink.add(AgentEvent::Error {
                 message: user_message,
             });
-        }
-        Err(_) => {
-            let msg =
-                format!("Request timed out after {TURN_TIMEOUT_SECS} seconds. Please try again.");
-            tracing::error!(
-                "send_message_stream timeout for session {session_id}: {TURN_TIMEOUT_SECS}s"
-            );
-            let _ = sink.add(AgentEvent::Error { message: msg });
         }
     }
 }

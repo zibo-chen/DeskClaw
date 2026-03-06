@@ -9,7 +9,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'agent_api.freezed.dart';
 
-// These functions are ignored because they are not marked as `pub`: `active_stream_tokens`, `config_state`, `ensure_session_agent`, `evict_oldest_agent_if_needed`, `global_config`, `invalidate_all_agents`, `legacy_pending_approval`, `load_default_profile_id`, `load_embedding_api_key`, `pending_approvals`, `resolve_delegate_providers`, `session_agents`, `truncate_str`
+// These functions are ignored because they are not marked as `pub`: `active_stream_tokens`, `config_state`, `ensure_session_agent`, `evict_oldest_agent_if_needed`, `global_config`, `invalidate_all_agents`, `invalidate_session_agent`, `legacy_pending_approval`, `load_default_profile_id`, `load_embedding_api_key`, `pending_approvals`, `resolve_delegate_providers`, `session_agents`, `truncate_str`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ChatMessageDto`, `ConfigState`, `GlobalConfig`, `PendingApproval`, `SessionAgent`, `ToolCallDto`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
@@ -179,8 +179,12 @@ sealed class AgentEvent with _$AgentEvent {
   const factory AgentEvent.thinking() = AgentEvent_Thinking;
 
   /// Incremental text token from LLM
-  const factory AgentEvent.textDelta({required String text}) =
-      AgentEvent_TextDelta;
+  const factory AgentEvent.textDelta({
+    required String text,
+
+    /// The delegate agent role producing this delta (None = main agent)
+    String? roleName,
+  }) = AgentEvent_TextDelta;
 
   /// Clear any previously streamed content (e.g., when tool calls are detected
   /// after streaming partial response that included raw tool_call tags)
@@ -191,6 +195,9 @@ sealed class AgentEvent with _$AgentEvent {
   const factory AgentEvent.toolCallStart({
     required String name,
     required String args,
+
+    /// The delegate agent role calling this tool (None = main agent)
+    String? roleName,
   }) = AgentEvent_ToolCallStart;
 
   /// Tool call completed
@@ -208,6 +215,14 @@ sealed class AgentEvent with _$AgentEvent {
     required String name,
     required String args,
   }) = AgentEvent_ToolApprovalRequest;
+
+  /// A delegate agent role has started producing output.
+  /// Emitted when the orchestrator delegates to a sub-agent.
+  const factory AgentEvent.roleSwitch({
+    required String roleName,
+    required String roleColor,
+    required String roleIcon,
+  }) = AgentEvent_RoleSwitch;
 
   /// Full message generation complete
   const factory AgentEvent.messageComplete({
