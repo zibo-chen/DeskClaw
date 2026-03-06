@@ -1245,16 +1245,48 @@ async fn ensure_session_agent(session_id: &str) -> Result<Arc<TokioMutex<Session
     );
 
     // 6. Configure session-specific workspace
-    let session_workspace = dirs::home_dir()
+    // Check if this session is bound to an agent workspace
+    let agent_binding =
+        super::agent_workspace_api::get_binding_for_session(session_id).await;
+
+    let session_workspace = if let Some(ref ws_id) = agent_binding {
+        // Use agent workspace directory — independent identity/personality
+        if let Err(e) =
+            super::agent_workspace_api::resolve_workspace_config(&mut config, ws_id).await
+        {
+            tracing::warn!("Failed to resolve agent workspace {ws_id}: {e}");
+            // Fall back to default session workspace
+            let fallback = dirs::home_dir()
+                .unwrap_or_default()
+                .join(".zeroclaw")
+                .join("workspace")
+                .join("session")
+                .join(session_id);
+            let _ = std::fs::create_dir_all(&fallback);
+            config.workspace_dir = fallback.clone();
+            fallback
+        } else {
+            config.workspace_dir.clone()
+        }
+    } else {
+        // Default: session-specific workspace
+        let ws = dirs::home_dir()
+            .unwrap_or_default()
+            .join(".zeroclaw")
+            .join("workspace")
+            .join("session")
+            .join(session_id);
+        let _ = std::fs::create_dir_all(&ws);
+        config.workspace_dir = ws.clone();
+        ws
+    };
+
+    // Symlink shared memory directory
+    let global_memory_dir = dirs::home_dir()
         .unwrap_or_default()
         .join(".zeroclaw")
         .join("workspace")
-        .join("session")
-        .join(session_id);
-    let _ = std::fs::create_dir_all(&session_workspace);
-
-    // Symlink shared memory directory
-    let global_memory_dir = config.workspace_dir.join("memory");
+        .join("memory");
     let session_memory_link = session_workspace.join("memory");
     if !session_memory_link.exists() {
         let _ = std::fs::create_dir_all(&global_memory_dir);
@@ -1267,8 +1299,6 @@ async fn ensure_session_agent(session_id: &str) -> Result<Arc<TokioMutex<Session
             let _ = std::os::windows::fs::symlink_dir(&global_memory_dir, &session_memory_link);
         }
     }
-
-    config.workspace_dir = session_workspace;
 
     // Inject session files into allowed_roots
     for file_path in &session_files {

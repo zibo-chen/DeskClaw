@@ -2054,6 +2054,12 @@ abstract class AppLocalizations {
   /// **'Agents'**
   String get navAgents;
 
+  /// Agent workspaces nav item
+  ///
+  /// In en, this message translates to:
+  /// **'Agent Workspaces'**
+  String get navAgentWorkspaces;
+
   /// Sub-agents page title
   ///
   /// In en, this message translates to:
@@ -3349,6 +3355,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Proxy settings have been reset'**
   String get proxyResetSuccess;
+
+  /// Agent workspaces page title
+  ///
+  /// In en, this message translates to:
+  /// **'Agent Workspaces'**
+  String get agentWorkspaces;
+
+  /// Overview section title
+  ///
+  /// In en, this message translates to:
+  /// **'Agent Workspace Overview'**
+  String get agentWorkspaceOverview;
+
+  /// Overview description
+  ///
+  /// In en, this message translates to:
+  /// **'Configure independent agent workspaces. Each workspace has its own personality (SOUL.md), behavior rules (AGENTS.md), and identity. Sessions can be bound to a specific agent for personalized interactions.'**
+  String get agentWorkspaceOverviewDesc;
+
+  /// New workspace button
+  ///
+  /// In en, this message translates to:
+  /// **'New Workspace'**
+  String get agentWorkspaceNew;
+
+  /// Edit workspace dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Workspace'**
+  String get agentWorkspaceEdit;
+
+  /// Empty state title
+  ///
+  /// In en, this message translates to:
+  /// **'No agent workspaces configured'**
+  String get agentWorkspaceNoWorkspaces;
+
+  /// Empty state hint
+  ///
+  /// In en, this message translates to:
+  /// **'Create an agent workspace to give your AI assistant a unique personality, style, and behavior for different tasks.'**
+  String get agentWorkspaceNoWorkspacesHint;
+
+  /// Workspace name label
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get agentWorkspaceNameLabel;
+
+  /// Workspace name hint
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Product Manager'**
+  String get agentWorkspaceNameHint;
+
+  /// Workspace description label
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get agentWorkspaceDescLabel;
+
+  /// Workspace description hint
+  ///
+  /// In en, this message translates to:
+  /// **'Brief description of this agent\'s role'**
+  String get agentWorkspaceDescHint;
+
+  /// Avatar emoji label
+  ///
+  /// In en, this message translates to:
+  /// **'Avatar Emoji'**
+  String get agentWorkspaceAvatarLabel;
+
+  /// Color tag label
+  ///
+  /// In en, this message translates to:
+  /// **'Color Tag'**
+  String get agentWorkspaceColorLabel;
+
+  /// SOUL.md editor label
+  ///
+  /// In en, this message translates to:
+  /// **'SOUL.md — Personality'**
+  String get agentWorkspaceSoulMd;
+
+  /// SOUL.md hint
+  ///
+  /// In en, this message translates to:
+  /// **'Define the agent\'s personality, communication style, and core values...'**
+  String get agentWorkspaceSoulMdHint;
+
+  /// AGENTS.md editor label
+  ///
+  /// In en, this message translates to:
+  /// **'AGENTS.md — Behavior Rules'**
+  String get agentWorkspaceAgentsMd;
+
+  /// AGENTS.md hint
+  ///
+  /// In en, this message translates to:
+  /// **'Define session startup rules, safety guidelines, and operational procedures...'**
+  String get agentWorkspaceAgentsMdHint;
+
+  /// USER.md editor label
+  ///
+  /// In en, this message translates to:
+  /// **'USER.md — User Context'**
+  String get agentWorkspaceUserMd;
+
+  /// USER.md hint
+  ///
+  /// In en, this message translates to:
+  /// **'Describe the user this agent is helping — preferences, context, work style...'**
+  String get agentWorkspaceUserMdHint;
+
+  /// IDENTITY.md editor label
+  ///
+  /// In en, this message translates to:
+  /// **'IDENTITY.md — Identity Card'**
+  String get agentWorkspaceIdentityMd;
+
+  /// IDENTITY.md hint
+  ///
+  /// In en, this message translates to:
+  /// **'Agent name, creature type, vibe, emoji — the agent\'s self-description...'**
+  String get agentWorkspaceIdentityMdHint;
+
+  /// Workspace saved message
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace \'\'{name}\'\' saved'**
+  String agentWorkspaceSaved(String name);
+
+  /// Workspace created message
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace \'\'{name}\'\' created'**
+  String agentWorkspaceCreated(String name);
+
+  /// Delete workspace dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Workspace'**
+  String get agentWorkspaceDeleteTitle;
+
+  /// Delete workspace dialog body
+  ///
+  /// In en, this message translates to:
+  /// **'Delete workspace \'\'{name}\'\'? This will remove all identity files.'**
+  String agentWorkspaceDeleteConfirm(String name);
+
+  /// Workspace deleted message
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace \'\'{name}\'\' deleted'**
+  String agentWorkspaceDeleted(String name);
+
+  /// Enabled toggle label
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled'**
+  String get agentWorkspaceEnabled;
+
+  /// Identity files section header
+  ///
+  /// In en, this message translates to:
+  /// **'Identity Files'**
+  String get agentWorkspaceIdentityFiles;
+
+  /// Agent selector popup title
+  ///
+  /// In en, this message translates to:
+  /// **'Select Agent'**
+  String get agentSelectorTitle;
+
+  /// Default option in agent selector
+  ///
+  /// In en, this message translates to:
+  /// **'Default (No Agent)'**
+  String get agentSelectorDefault;
+
+  /// Current agent label
+  ///
+  /// In en, this message translates to:
+  /// **'Current: {name}'**
+  String agentSelectorCurrentAgent(String name);
 }
 
 class _AppLocalizationsDelegate

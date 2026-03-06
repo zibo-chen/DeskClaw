@@ -1,4 +1,5 @@
 pub mod agent_api;
+pub mod agent_workspace_api;
 pub mod agents_api;
 pub mod browser_bootstrap;
 pub mod channel_runtime_api;

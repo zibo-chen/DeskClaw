@@ -15,6 +15,7 @@ import 'package:coraldesk/views/settings/channels_page.dart';
 import 'package:coraldesk/views/settings/skills_page.dart';
 import 'package:coraldesk/views/settings/mcp_page.dart';
 import 'package:coraldesk/views/settings/agents_page.dart';
+import 'package:coraldesk/views/settings/agent_workspaces_page.dart';
 import 'package:coraldesk/views/settings/proxy_page.dart';
 import 'package:coraldesk/views/settings/sessions_page.dart';
 import 'package:coraldesk/views/settings/cron_jobs_page.dart';
@@ -211,6 +212,7 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
       NavSection.skills => const SkillsPage(),
       NavSection.mcp => const McpPage(),
       NavSection.agents => const AgentsPage(),
+      NavSection.agentWorkspaces => const AgentWorkspacesPage(),
       NavSection.proxy => const ProxyPage(),
     };
   }

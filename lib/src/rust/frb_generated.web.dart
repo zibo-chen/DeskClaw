@@ -7,6 +7,7 @@
 // ignore_for_file: argument_type_not_assignable
 
 import 'api/agent_api.dart';
+import 'api/agent_workspace_api.dart';
 import 'api/agents_api.dart';
 import 'api/browser_bootstrap.dart';
 import 'api/channel_runtime_api.dart';
@@ -56,6 +57,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   AgentEvent dco_decode_agent_event(dynamic raw);
 
   @protected
+  AgentWorkspaceDto dco_decode_agent_workspace_dto(dynamic raw);
+
+  @protected
+  AgentWorkspaceSummary dco_decode_agent_workspace_summary(dynamic raw);
+
+  @protected
   AppConfig dco_decode_app_config(dynamic raw);
 
   @protected
@@ -63,6 +70,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   bool dco_decode_bool(dynamic raw);
+
+  @protected
+  AgentWorkspaceDto dco_decode_box_autoadd_agent_workspace_dto(dynamic raw);
 
   @protected
   AppConfig dco_decode_box_autoadd_app_config(dynamic raw);
@@ -169,6 +179,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<AgentEvent> dco_decode_list_agent_event(dynamic raw);
 
   @protected
+  List<AgentWorkspaceSummary> dco_decode_list_agent_workspace_summary(
+    dynamic raw,
+  );
+
+  @protected
   List<ChannelSummary> dco_decode_list_channel_summary(dynamic raw);
 
   @protected
@@ -247,6 +262,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   String? dco_decode_opt_String(dynamic raw);
+
+  @protected
+  AgentWorkspaceDto? dco_decode_opt_box_autoadd_agent_workspace_dto(
+    dynamic raw,
+  );
 
   @protected
   bool? dco_decode_opt_box_autoadd_bool(dynamic raw);
@@ -358,6 +378,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   AgentEvent sse_decode_agent_event(SseDeserializer deserializer);
 
   @protected
+  AgentWorkspaceDto sse_decode_agent_workspace_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  AgentWorkspaceSummary sse_decode_agent_workspace_summary(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   AppConfig sse_decode_app_config(SseDeserializer deserializer);
 
   @protected
@@ -365,6 +395,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   bool sse_decode_bool(SseDeserializer deserializer);
+
+  @protected
+  AgentWorkspaceDto sse_decode_box_autoadd_agent_workspace_dto(
+    SseDeserializer deserializer,
+  );
 
   @protected
   AppConfig sse_decode_box_autoadd_app_config(SseDeserializer deserializer);
@@ -491,6 +526,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<AgentEvent> sse_decode_list_agent_event(SseDeserializer deserializer);
 
   @protected
+  List<AgentWorkspaceSummary> sse_decode_list_agent_workspace_summary(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<ChannelSummary> sse_decode_list_channel_summary(
     SseDeserializer deserializer,
   );
@@ -595,6 +635,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   String? sse_decode_opt_String(SseDeserializer deserializer);
+
+  @protected
+  AgentWorkspaceDto? sse_decode_opt_box_autoadd_agent_workspace_dto(
+    SseDeserializer deserializer,
+  );
 
   @protected
   bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer);
@@ -720,6 +765,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_agent_event(AgentEvent self, SseSerializer serializer);
 
   @protected
+  void sse_encode_agent_workspace_dto(
+    AgentWorkspaceDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_agent_workspace_summary(
+    AgentWorkspaceSummary self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_app_config(AppConfig self, SseSerializer serializer);
 
   @protected
@@ -730,6 +787,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_bool(bool self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_agent_workspace_dto(
+    AgentWorkspaceDto self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_app_config(
@@ -897,6 +960,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_agent_workspace_summary(
+    List<AgentWorkspaceSummary> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_channel_summary(
     List<ChannelSummary> self,
     SseSerializer serializer,
@@ -1033,6 +1102,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_opt_String(String? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_agent_workspace_dto(
+    AgentWorkspaceDto? self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer);

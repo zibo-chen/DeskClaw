@@ -179,6 +179,14 @@ class _SidebarNavState extends ConsumerState<SidebarNav> {
                     _buildNavItem(
                       c,
                       ref: ref,
+                      icon: Icons.workspaces_outline,
+                      label: l10n.navAgentWorkspaces,
+                      section: NavSection.agentWorkspaces,
+                      isActive: currentNav == NavSection.agentWorkspaces,
+                    ),
+                    _buildNavItem(
+                      c,
+                      ref: ref,
                       icon: Icons.settings,
                       label: l10n.navConfiguration,
                       section: NavSection.configuration,
@@ -249,6 +257,11 @@ class _SidebarNavState extends ConsumerState<SidebarNav> {
       (Icons.psychology, NavSection.skills, l10n.navSkills),
       (Icons.extension, NavSection.mcp, l10n.navMcp),
       (Icons.hub_outlined, NavSection.agents, l10n.navAgents),
+      (
+        Icons.workspaces_outline,
+        NavSection.agentWorkspaces,
+        l10n.navAgentWorkspaces,
+      ),
       (Icons.settings, NavSection.configuration, l10n.navConfiguration),
       (Icons.model_training, NavSection.models, l10n.navModels),
       (Icons.vpn_key, NavSection.proxy, l10n.navProxy),

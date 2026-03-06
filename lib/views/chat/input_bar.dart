@@ -8,6 +8,8 @@ import 'package:coraldesk/providers/providers.dart';
 import 'package:coraldesk/theme/app_theme.dart';
 import 'package:coraldesk/src/rust/api/agent_api.dart' as agent_api;
 import 'package:coraldesk/src/rust/api/providers_api.dart' as providers_api;
+import 'package:coraldesk/src/rust/api/agent_workspace_api.dart'
+    as workspace_api;
 
 /// Chat input bar at the bottom of the chat view
 class ChatInputBar extends ConsumerStatefulWidget {
@@ -151,6 +153,9 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
                       const SizedBox(width: 4),
                       // Model selector button
                       _ModelSelectorButton(),
+                      const SizedBox(width: 4),
+                      // Agent selector button
+                      _AgentSelectorButton(),
                       const Spacer(),
                       // Character count
                       Text(
@@ -413,6 +418,202 @@ class _ModelChoice {
   final String provider;
   final String model;
   const _ModelChoice({required this.provider, required this.model});
+}
+
+/// Agent selector button — allows binding a session to an agent workspace
+class _AgentSelectorButton extends ConsumerStatefulWidget {
+  @override
+  ConsumerState<_AgentSelectorButton> createState() =>
+      _AgentSelectorButtonState();
+}
+
+class _AgentSelectorButtonState extends ConsumerState<_AgentSelectorButton> {
+  @override
+  void initState() {
+    super.initState();
+    // Ensure workspace list is loaded into provider
+    ref.read(agentWorkspacesProvider.notifier).load();
+  }
+
+  Future<void> _switchAgent(String? workspaceId) async {
+    final sessionId = ref.read(activeSessionIdProvider);
+    if (sessionId == null) return;
+
+    if (workspaceId == null) {
+      // Unbind — revert to default
+      await ref.read(sessionAgentBindingProvider.notifier).unbind(sessionId);
+    } else {
+      await ref
+          .read(sessionAgentBindingProvider.notifier)
+          .bind(sessionId, workspaceId);
+    }
+    // Force session agent recreation on next message
+    await agent_api.removeSessionAgent(sessionId: sessionId);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = CoralDeskColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final workspaces = ref.watch(agentWorkspacesProvider);
+    final activeAgentId = ref.watch(activeSessionAgentProvider);
+
+    // Find active workspace name
+    String displayName = l10n.agentSelectorDefault;
+    String displayEmoji = '🤖';
+    if (activeAgentId != null) {
+      final ws = workspaces
+          .cast<workspace_api.AgentWorkspaceSummary?>()
+          .firstWhere((w) => w?.id == activeAgentId, orElse: () => null);
+      if (ws != null) {
+        displayName = ws.name;
+        displayEmoji = ws.avatar.isNotEmpty ? ws.avatar : '🤖';
+      }
+    }
+
+    final truncated = displayName.length > 16
+        ? '${displayName.substring(0, 14)}…'
+        : displayName;
+
+    return PopupMenuButton<String?>(
+      tooltip: l10n.agentSelectorTitle,
+      offset: const Offset(0, -200),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: c.surfaceBg,
+      onSelected: (choice) => _switchAgent(choice),
+      itemBuilder: (context) {
+        ref.read(agentWorkspacesProvider.notifier).refresh(); // Refresh on open
+        return _buildMenuItems(context, workspaces, activeAgentId);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(6),
+          color: activeAgentId != null
+              ? AppColors.primary.withValues(alpha: 0.12)
+              : c.inputBg,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(displayEmoji, style: const TextStyle(fontSize: 13)),
+            const SizedBox(width: 4),
+            Text(
+              truncated,
+              style: TextStyle(
+                fontSize: 11,
+                color: activeAgentId != null
+                    ? AppColors.primary
+                    : c.textSecondary,
+              ),
+            ),
+            Icon(Icons.arrow_drop_down, size: 14, color: c.textHint),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<PopupMenuEntry<String?>> _buildMenuItems(
+    BuildContext context,
+    List<workspace_api.AgentWorkspaceSummary> workspaces,
+    String? activeAgentId,
+  ) {
+    final c = CoralDeskColors.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final items = <PopupMenuEntry<String?>>[];
+
+    // Default (no agent)
+    final isDefault = activeAgentId == null;
+    items.add(
+      PopupMenuItem<String?>(
+        value: null,
+        child: Row(
+          children: [
+            if (isDefault)
+              const Icon(Icons.check, size: 16, color: AppColors.primary)
+            else
+              const SizedBox(width: 16),
+            const SizedBox(width: 8),
+            Text(
+              l10n.agentSelectorDefault,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: isDefault ? FontWeight.w600 : FontWeight.normal,
+                color: c.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (workspaces.isNotEmpty) {
+      items.add(const PopupMenuDivider());
+    }
+
+    // Enabled workspaces
+    for (final ws in workspaces.where((w) => w.enabled)) {
+      final isCurrent = activeAgentId == ws.id;
+      items.add(
+        PopupMenuItem<String?>(
+          value: ws.id,
+          child: Row(
+            children: [
+              if (isCurrent)
+                const Icon(Icons.check, size: 16, color: AppColors.primary)
+              else
+                const SizedBox(width: 16),
+              const SizedBox(width: 8),
+              Text(
+                ws.avatar.isNotEmpty ? ws.avatar : '🤖',
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      ws.name,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: isCurrent
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                        color: c.textPrimary,
+                      ),
+                    ),
+                    if (ws.description.isNotEmpty)
+                      Text(
+                        ws.description,
+                        style: TextStyle(fontSize: 11, color: c.textHint),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (workspaces.where((w) => w.enabled).isEmpty) {
+      items.add(
+        PopupMenuItem<String?>(
+          enabled: false,
+          child: Text(
+            l10n.agentWorkspaceNoWorkspaces,
+            style: TextStyle(fontSize: 12, color: c.textHint),
+          ),
+        ),
+      );
+    }
+
+    return items;
+  }
 }
 
 /// Attachment button with popup menu for adding files or folders

@@ -1080,6 +1080,9 @@
   "navAgents": "Agents",
   "@navAgents": { "description": "Agents nav item" },
 
+  "navAgentWorkspaces": "Agent Workspaces",
+  "@navAgentWorkspaces": { "description": "Agent workspaces nav item" },
+
   "pageAgents": "Sub-Agents",
   "@pageAgents": { "description": "Sub-agents page title" },
 
@@ -1728,5 +1731,98 @@
   "@proxyResetConfirmBody": { "description": "Reset proxy confirmation body" },
 
   "proxyResetSuccess": "Proxy settings have been reset",
-  "@proxyResetSuccess": { "description": "Proxy reset success message" }
+  "@proxyResetSuccess": { "description": "Proxy reset success message" },
+
+  "agentWorkspaces": "Agent Workspaces",
+  "@agentWorkspaces": { "description": "Agent workspaces page title" },
+
+  "agentWorkspaceOverview": "Agent Workspace Overview",
+  "@agentWorkspaceOverview": { "description": "Overview section title" },
+
+  "agentWorkspaceOverviewDesc": "Configure independent agent workspaces. Each workspace has its own personality (SOUL.md), behavior rules (AGENTS.md), and identity. Sessions can be bound to a specific agent for personalized interactions.",
+  "@agentWorkspaceOverviewDesc": { "description": "Overview description" },
+
+  "agentWorkspaceNew": "New Workspace",
+  "@agentWorkspaceNew": { "description": "New workspace button" },
+
+  "agentWorkspaceEdit": "Edit Workspace",
+  "@agentWorkspaceEdit": { "description": "Edit workspace dialog title" },
+
+  "agentWorkspaceNoWorkspaces": "No agent workspaces configured",
+  "@agentWorkspaceNoWorkspaces": { "description": "Empty state title" },
+
+  "agentWorkspaceNoWorkspacesHint": "Create an agent workspace to give your AI assistant a unique personality, style, and behavior for different tasks.",
+  "@agentWorkspaceNoWorkspacesHint": { "description": "Empty state hint" },
+
+  "agentWorkspaceNameLabel": "Name",
+  "@agentWorkspaceNameLabel": { "description": "Workspace name label" },
+
+  "agentWorkspaceNameHint": "e.g. Product Manager",
+  "@agentWorkspaceNameHint": { "description": "Workspace name hint" },
+
+  "agentWorkspaceDescLabel": "Description",
+  "@agentWorkspaceDescLabel": { "description": "Workspace description label" },
+
+  "agentWorkspaceDescHint": "Brief description of this agent's role",
+  "@agentWorkspaceDescHint": { "description": "Workspace description hint" },
+
+  "agentWorkspaceAvatarLabel": "Avatar Emoji",
+  "@agentWorkspaceAvatarLabel": { "description": "Avatar emoji label" },
+
+  "agentWorkspaceColorLabel": "Color Tag",
+  "@agentWorkspaceColorLabel": { "description": "Color tag label" },
+
+  "agentWorkspaceSoulMd": "SOUL.md — Personality",
+  "@agentWorkspaceSoulMd": { "description": "SOUL.md editor label" },
+
+  "agentWorkspaceSoulMdHint": "Define the agent's personality, communication style, and core values...",
+  "@agentWorkspaceSoulMdHint": { "description": "SOUL.md hint" },
+
+  "agentWorkspaceAgentsMd": "AGENTS.md — Behavior Rules",
+  "@agentWorkspaceAgentsMd": { "description": "AGENTS.md editor label" },
+
+  "agentWorkspaceAgentsMdHint": "Define session startup rules, safety guidelines, and operational procedures...",
+  "@agentWorkspaceAgentsMdHint": { "description": "AGENTS.md hint" },
+
+  "agentWorkspaceUserMd": "USER.md — User Context",
+  "@agentWorkspaceUserMd": { "description": "USER.md editor label" },
+
+  "agentWorkspaceUserMdHint": "Describe the user this agent is helping — preferences, context, work style...",
+  "@agentWorkspaceUserMdHint": { "description": "USER.md hint" },
+
+  "agentWorkspaceIdentityMd": "IDENTITY.md — Identity Card",
+  "@agentWorkspaceIdentityMd": { "description": "IDENTITY.md editor label" },
+
+  "agentWorkspaceIdentityMdHint": "Agent name, creature type, vibe, emoji — the agent's self-description...",
+  "@agentWorkspaceIdentityMdHint": { "description": "IDENTITY.md hint" },
+
+  "agentWorkspaceSaved": "Workspace ''{name}'' saved",
+  "@agentWorkspaceSaved": { "description": "Workspace saved message", "placeholders": { "name": { "type": "String" } } },
+
+  "agentWorkspaceCreated": "Workspace ''{name}'' created",
+  "@agentWorkspaceCreated": { "description": "Workspace created message", "placeholders": { "name": { "type": "String" } } },
+
+  "agentWorkspaceDeleteTitle": "Delete Workspace",
+  "@agentWorkspaceDeleteTitle": { "description": "Delete workspace dialog title" },
+
+  "agentWorkspaceDeleteConfirm": "Delete workspace ''{name}''? This will remove all identity files.",
+  "@agentWorkspaceDeleteConfirm": { "description": "Delete workspace dialog body", "placeholders": { "name": { "type": "String" } } },
+
+  "agentWorkspaceDeleted": "Workspace ''{name}'' deleted",
+  "@agentWorkspaceDeleted": { "description": "Workspace deleted message", "placeholders": { "name": { "type": "String" } } },
+
+  "agentWorkspaceEnabled": "Enabled",
+  "@agentWorkspaceEnabled": { "description": "Enabled toggle label" },
+
+  "agentWorkspaceIdentityFiles": "Identity Files",
+  "@agentWorkspaceIdentityFiles": { "description": "Identity files section header" },
+
+  "agentSelectorTitle": "Select Agent",
+  "@agentSelectorTitle": { "description": "Agent selector popup title" },
+
+  "agentSelectorDefault": "Default (No Agent)",
+  "@agentSelectorDefault": { "description": "Default option in agent selector" },
+
+  "agentSelectorCurrentAgent": "Current: {name}",
+  "@agentSelectorCurrentAgent": { "description": "Current agent label", "placeholders": { "name": { "type": "String" } } }
 }

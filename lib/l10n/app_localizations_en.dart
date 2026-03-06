@@ -1074,6 +1074,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navAgents => 'Agents';
 
   @override
+  String get navAgentWorkspaces => 'Agent Workspaces';
+
+  @override
   String get pageAgents => 'Sub-Agents';
 
   @override
@@ -1774,4 +1777,114 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get proxyResetSuccess => 'Proxy settings have been reset';
+
+  @override
+  String get agentWorkspaces => 'Agent Workspaces';
+
+  @override
+  String get agentWorkspaceOverview => 'Agent Workspace Overview';
+
+  @override
+  String get agentWorkspaceOverviewDesc =>
+      'Configure independent agent workspaces. Each workspace has its own personality (SOUL.md), behavior rules (AGENTS.md), and identity. Sessions can be bound to a specific agent for personalized interactions.';
+
+  @override
+  String get agentWorkspaceNew => 'New Workspace';
+
+  @override
+  String get agentWorkspaceEdit => 'Edit Workspace';
+
+  @override
+  String get agentWorkspaceNoWorkspaces => 'No agent workspaces configured';
+
+  @override
+  String get agentWorkspaceNoWorkspacesHint =>
+      'Create an agent workspace to give your AI assistant a unique personality, style, and behavior for different tasks.';
+
+  @override
+  String get agentWorkspaceNameLabel => 'Name';
+
+  @override
+  String get agentWorkspaceNameHint => 'e.g. Product Manager';
+
+  @override
+  String get agentWorkspaceDescLabel => 'Description';
+
+  @override
+  String get agentWorkspaceDescHint =>
+      'Brief description of this agent\'s role';
+
+  @override
+  String get agentWorkspaceAvatarLabel => 'Avatar Emoji';
+
+  @override
+  String get agentWorkspaceColorLabel => 'Color Tag';
+
+  @override
+  String get agentWorkspaceSoulMd => 'SOUL.md — Personality';
+
+  @override
+  String get agentWorkspaceSoulMdHint =>
+      'Define the agent\'s personality, communication style, and core values...';
+
+  @override
+  String get agentWorkspaceAgentsMd => 'AGENTS.md — Behavior Rules';
+
+  @override
+  String get agentWorkspaceAgentsMdHint =>
+      'Define session startup rules, safety guidelines, and operational procedures...';
+
+  @override
+  String get agentWorkspaceUserMd => 'USER.md — User Context';
+
+  @override
+  String get agentWorkspaceUserMdHint =>
+      'Describe the user this agent is helping — preferences, context, work style...';
+
+  @override
+  String get agentWorkspaceIdentityMd => 'IDENTITY.md — Identity Card';
+
+  @override
+  String get agentWorkspaceIdentityMdHint =>
+      'Agent name, creature type, vibe, emoji — the agent\'s self-description...';
+
+  @override
+  String agentWorkspaceSaved(String name) {
+    return 'Workspace \'\'$name\'\' saved';
+  }
+
+  @override
+  String agentWorkspaceCreated(String name) {
+    return 'Workspace \'\'$name\'\' created';
+  }
+
+  @override
+  String get agentWorkspaceDeleteTitle => 'Delete Workspace';
+
+  @override
+  String agentWorkspaceDeleteConfirm(String name) {
+    return 'Delete workspace \'\'$name\'\'? This will remove all identity files.';
+  }
+
+  @override
+  String agentWorkspaceDeleted(String name) {
+    return 'Workspace \'\'$name\'\' deleted';
+  }
+
+  @override
+  String get agentWorkspaceEnabled => 'Enabled';
+
+  @override
+  String get agentWorkspaceIdentityFiles => 'Identity Files';
+
+  @override
+  String get agentSelectorTitle => 'Select Agent';
+
+  @override
+  String get agentSelectorDefault => 'Default (No Agent)';
+
+  @override
+  String agentSelectorCurrentAgent(String name) {
+    return 'Current: $name';
+  }
 }

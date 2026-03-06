@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:math';
 
 import 'package:desktop_drop/desktop_drop.dart';
@@ -29,8 +28,6 @@ class _ChatViewState extends ConsumerState<ChatView> {
   CoralDeskColors get c => CoralDeskColors.of(context);
   bool _isDragging = false;
   bool _showFilesPanel = false;
-  StreamSubscription<agent_api.AgentEvent>? _activeStreamSubscription;
-  String? _activeStreamSessionId;
 
   static const int _totalSuggestions = 8;
   late List<int> _selectedIndices;
@@ -76,7 +73,8 @@ class _ChatViewState extends ConsumerState<ChatView> {
   @override
   void dispose() {
     _scrollController.dispose();
-    _activeStreamSubscription?.cancel();
+    // Stream subscriptions are managed by ChatController and survive
+    // widget disposal — no stream cleanup needed here.
     super.dispose();
   }
 
@@ -92,13 +90,6 @@ class _ChatViewState extends ConsumerState<ChatView> {
     });
   }
 
-  /// Only scroll if the given session is the currently active one
-  void _scrollToBottomIfActive(String sessionId) {
-    if (ref.read(activeSessionIdProvider) == sessionId) {
-      _scrollToBottom();
-    }
-  }
-
   void _handleSend(String text) {
     if (text.trim().isEmpty) return;
 
@@ -106,15 +97,18 @@ class _ChatViewState extends ConsumerState<ChatView> {
     final result = controller.prepareAndSend(text);
     if (result == null) return; // already processing
 
+    final l10n = AppLocalizations.of(context)!;
     _scrollToBottom();
-    _callAgent(result.sessionId, result.stream);
+    controller.processAgentStream(
+      sessionId: result.sessionId,
+      stream: result.stream,
+      thinkingText: l10n.thinking,
+      errorOccurredFormat: l10n.errorOccurred,
+      errorGenericFormat: l10n.errorGeneric,
+    );
   }
 
-  void _showToolApprovalDialog(
-    String requestId,
-    String toolName,
-    String toolArgs,
-  ) {
+  void _showToolApprovalDialog(ToolApprovalRequest request) {
     final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
@@ -140,7 +134,7 @@ class _ChatViewState extends ConsumerState<ChatView> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  l10n.toolApprovalBody(toolName),
+                  l10n.toolApprovalBody(request.toolName),
                   style: const TextStyle(fontSize: 14),
                 ),
                 const SizedBox(height: 12),
@@ -152,7 +146,7 @@ class _ChatViewState extends ConsumerState<ChatView> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: SelectableText(
-                    toolArgs,
+                    request.toolArgs,
                     style: TextStyle(
                       fontFamily: 'monospace',
                       fontSize: 12,
@@ -186,273 +180,9 @@ class _ChatViewState extends ConsumerState<ChatView> {
 
   /// Cancel the active generation for the current session.
   void _cancelGeneration() {
-    final sessionId = _activeStreamSessionId;
+    final sessionId = ref.read(activeSessionIdProvider);
     if (sessionId == null) return;
-
-    // Cancel the Dart-side stream subscription
-    _activeStreamSubscription?.cancel();
-    _activeStreamSubscription = null;
-    _activeStreamSessionId = null;
-
-    // Cancel the Rust-side agent turn via the stored CancellationToken
-    agent_api.cancelGeneration(sessionId: sessionId);
-
-    // Finalize the current assistant message with whatever was streamed so far
-    final controller = ref.read(chatControllerProvider);
-    controller.cancelGeneration(sessionId);
-  }
-
-  Future<void> _callAgent(
-    String sessionId,
-    Stream<agent_api.AgentEvent> stream,
-  ) async {
-    final controller = ref.read(chatControllerProvider);
-    _scrollToBottomIfActive(sessionId);
-
-    // ── Parts-based accumulation ─────────────────────────
-    final parts = <MessagePart>[];
-    var currentTextBuffer = StringBuffer();
-    var isThinking = false;
-
-    /// Regex to strip raw tool-call XML/JSON tags that some providers
-    /// leak into the text stream (e.g. <tool_call>…</tool_call>,
-    /// <|tool▁call|>, {"name":…,"arguments":…} blocks, etc.)
-    final toolCallTagPattern = RegExp(
-      r'<\s*tool_call\s*>[\s\S]*?<\s*/\s*tool_call\s*>'
-      r'|<\|tool[▁_]call\|>[\s\S]*?$'
-      r'|\{[\s\S]*?"(?:name|function)"[\s\S]*?"arguments"[\s\S]*?\}',
-      caseSensitive: false,
-    );
-
-    /// Ensure the last part is a TextPart reflecting currentTextBuffer.
-    void ensureTextPart() {
-      if (parts.isEmpty || parts.last is! TextPart) {
-        parts.add(TextPart(currentTextBuffer.toString()));
-      } else {
-        parts[parts.length - 1] = TextPart(currentTextBuffer.toString());
-      }
-    }
-
-    /// Finalise the current text segment (push it to parts) and start a
-    /// fresh buffer.  This is called before adding a ToolCallPart so that
-    /// text and tool-call segments don't overlap.
-    void finalizeCurrentTextSegment() {
-      if (currentTextBuffer.isNotEmpty) {
-        ensureTextPart();
-      }
-      currentTextBuffer = StringBuffer();
-    }
-
-    /// Remove a "Thinking…" placeholder when real content arrives.
-    void clearThinkingIfNeeded() {
-      if (isThinking) {
-        isThinking = false;
-        currentTextBuffer.clear();
-        if (parts.isNotEmpty && parts.last is TextPart) {
-          parts.removeLast();
-        }
-      }
-    }
-
-    /// Derive a flat content string from parts (for persistence / copy).
-    String computeContent() {
-      return parts
-          .whereType<TextPart>()
-          .map((p) => p.text)
-          .where((t) => t.isNotEmpty)
-          .join('\n\n');
-    }
-
-    /// Derive a flat tool-call list from parts (for persistence).
-    List<ToolCallInfo>? computeToolCalls() {
-      final tcs = parts
-          .whereType<ToolCallPart>()
-          .map((p) => p.toolCall)
-          .toList();
-      return tcs.isNotEmpty ? tcs : null;
-    }
-
-    /// Push current state to the UI.
-    void updateUI() {
-      if (!mounted) return;
-      controller.updateStreamingContent(
-        sessionId,
-        computeContent(),
-        toolCalls: computeToolCalls(),
-        parts: List<MessagePart>.from(parts),
-      );
-      _scrollToBottomIfActive(sessionId);
-    }
-
-    // Use Completer + StreamSubscription so we can cancel mid-stream
-    final completer = Completer<void>();
-
-    final subscription = stream.listen(
-      (event) {
-        if (!mounted) {
-          _activeStreamSubscription?.cancel();
-          _activeStreamSubscription = null;
-          _activeStreamSessionId = null;
-          return;
-        }
-        event.when(
-          thinking: () {
-            if (!mounted) return;
-            final l10n = AppLocalizations.of(context)!;
-            // If we are already showing a thinking placeholder, refresh it in
-            // place instead of appending another one.
-            if (isThinking) {
-              currentTextBuffer = StringBuffer(l10n.thinking);
-              if (parts.isNotEmpty && parts.last is TextPart) {
-                parts[parts.length - 1] = TextPart(
-                  currentTextBuffer.toString(),
-                );
-              } else {
-                parts.add(TextPart(currentTextBuffer.toString()));
-              }
-              updateUI();
-              return;
-            }
-            // Finalise any real text from the previous segment so it is not
-            // overwritten by the "Thinking…" placeholder.
-            finalizeCurrentTextSegment();
-            currentTextBuffer = StringBuffer(l10n.thinking);
-            isThinking = true;
-            // Always add a NEW TextPart (previous text is already saved).
-            parts.add(TextPart(currentTextBuffer.toString()));
-            updateUI();
-          },
-          textDelta: (text) {
-            clearThinkingIfNeeded();
-            currentTextBuffer.write(text);
-            ensureTextPart();
-            updateUI();
-          },
-          clearStreamedContent: () {
-            // The CLEAR sentinel means the streamed text *might* contain
-            // raw <tool_call> XML tags that should not be shown.  Instead
-            // of wholesale removal (which causes visible content flashing),
-            // strip only the known tag patterns and keep clean text.
-            isThinking = false;
-            final raw = currentTextBuffer.toString();
-            final cleaned = raw.replaceAll(toolCallTagPattern, '').trim();
-            if (cleaned.isEmpty) {
-              // Nothing useful left — remove the text segment entirely.
-              currentTextBuffer.clear();
-              if (parts.isNotEmpty && parts.last is TextPart) {
-                parts.removeLast();
-              }
-            } else {
-              // Keep the clean portion.
-              currentTextBuffer = StringBuffer(cleaned);
-              ensureTextPart();
-            }
-            updateUI();
-          },
-          toolCallStart: (name, args) {
-            clearThinkingIfNeeded();
-            // Finalise current text (if any) into its own part.
-            finalizeCurrentTextSegment();
-
-            final tc = ToolCallInfo(
-              id: 'tc_${parts.whereType<ToolCallPart>().length}',
-              name: name,
-              arguments: args,
-              status: ToolCallStatus.running,
-            );
-            parts.add(ToolCallPart(tc));
-            updateUI();
-          },
-          toolCallEnd: (name, result, success) {
-            // Match the last *running* tool with this name (handles same-name
-            // tools like two "shell" calls in one turn).
-            for (int i = parts.length - 1; i >= 0; i--) {
-              final part = parts[i];
-              if (part is ToolCallPart &&
-                  part.toolCall.name == name &&
-                  part.toolCall.status == ToolCallStatus.running) {
-                parts[i] = ToolCallPart(
-                  part.toolCall.copyWith(
-                    result: result,
-                    success: success,
-                    status: success
-                        ? ToolCallStatus.completed
-                        : ToolCallStatus.failed,
-                  ),
-                );
-                break;
-              }
-            }
-            updateUI();
-          },
-          toolApprovalRequest: (requestId, name, args) {
-            if (!mounted) return;
-            clearThinkingIfNeeded();
-            finalizeCurrentTextSegment();
-
-            final tc = ToolCallInfo(
-              id: 'approval_$requestId',
-              name: name,
-              arguments: args,
-              status: ToolCallStatus.running,
-              result: '⏳ Waiting for approval...',
-            );
-            parts.add(ToolCallPart(tc));
-            updateUI();
-            _showToolApprovalDialog(requestId, name, args);
-          },
-          messageComplete: (inputTokens, outputTokens) {
-            // Message is complete
-          },
-          error: (message) {
-            if (!mounted) return;
-            final l10n = AppLocalizations.of(context)!;
-            clearThinkingIfNeeded();
-            if (currentTextBuffer.isNotEmpty) {
-              currentTextBuffer.writeln();
-              currentTextBuffer.writeln();
-            }
-            currentTextBuffer.write(l10n.errorOccurred(message));
-            ensureTextPart();
-          },
-        );
-      },
-      onDone: () {
-        // Mark as complete
-        if (mounted) {
-          controller.finishAgentTurn(
-            sessionId,
-            computeContent(),
-            toolCalls: computeToolCalls(),
-            parts: List<MessagePart>.from(parts),
-          );
-        }
-        _activeStreamSubscription = null;
-        _activeStreamSessionId = null;
-        if (!completer.isCompleted) completer.complete();
-      },
-      onError: (e) {
-        if (mounted) {
-          final l10n = AppLocalizations.of(context)!;
-          controller.handleAgentError(
-            sessionId,
-            l10n.errorGeneric(e.toString()),
-          );
-        }
-        _activeStreamSubscription = null;
-        _activeStreamSessionId = null;
-        if (!completer.isCompleted) completer.complete();
-      },
-    );
-
-    _activeStreamSubscription = subscription;
-    _activeStreamSessionId = sessionId;
-
-    try {
-      await completer.future;
-    } finally {
-      if (mounted) _scrollToBottomIfActive(sessionId);
-    }
+    ref.read(chatControllerProvider).cancelActiveStream(sessionId);
   }
 
   void _handleSuggestion(String text) {
@@ -509,6 +239,23 @@ class _ChatViewState extends ConsumerState<ChatView> {
         _loadSessionFiles(next);
       }
     });
+
+    // Auto-scroll when the controller pushes new streaming content.
+    ref.listen(streamScrollNotifierProvider, (prev, next) {
+      if (prev != next) {
+        _scrollToBottom();
+      }
+    });
+
+    // Show tool-approval dialog when the controller requests it.
+    ref.listen<ToolApprovalRequest?>(pendingToolApprovalProvider, (prev, next) {
+      if (next != null && next != prev) {
+        // Clear the provider first so re-navigation doesn't re-show it.
+        ref.read(pendingToolApprovalProvider.notifier).state = null;
+        _showToolApprovalDialog(next);
+      }
+    });
+
     final l10n = AppLocalizations.of(context)!;
 
     return DropTarget(

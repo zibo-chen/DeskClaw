@@ -19,6 +19,7 @@ enum NavSection {
   skills,
   mcp,
   agents,
+  agentWorkspaces,
   configuration,
   models,
   proxy,

@@ -1049,6 +1049,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get navAgents => '子代理';
 
   @override
+  String get navAgentWorkspaces => '智能体工作区';
+
+  @override
   String get pageAgents => '子代理管理';
 
   @override
@@ -1729,4 +1732,109 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get proxyResetSuccess => '代理设置已重置';
+
+  @override
+  String get agentWorkspaces => '智能体工作区';
+
+  @override
+  String get agentWorkspaceOverview => '智能体工作区概览';
+
+  @override
+  String get agentWorkspaceOverviewDesc =>
+      '配置独立的智能体工作区。每个工作区都有自己的性格（SOUL.md）、行为规则（AGENTS.md）和身份。会话可以绑定到特定的智能体，提供个性化交互。';
+
+  @override
+  String get agentWorkspaceNew => '新建工作区';
+
+  @override
+  String get agentWorkspaceEdit => '编辑工作区';
+
+  @override
+  String get agentWorkspaceNoWorkspaces => '暂无智能体工作区';
+
+  @override
+  String get agentWorkspaceNoWorkspacesHint =>
+      '创建一个智能体工作区，为AI助手赋予独特的性格、风格和行为，以适应不同的任务场景。';
+
+  @override
+  String get agentWorkspaceNameLabel => '名称';
+
+  @override
+  String get agentWorkspaceNameHint => '如：产品经理';
+
+  @override
+  String get agentWorkspaceDescLabel => '描述';
+
+  @override
+  String get agentWorkspaceDescHint => '简要描述该智能体的角色';
+
+  @override
+  String get agentWorkspaceAvatarLabel => '头像 Emoji';
+
+  @override
+  String get agentWorkspaceColorLabel => '颜色标签';
+
+  @override
+  String get agentWorkspaceSoulMd => 'SOUL.md — 性格特征';
+
+  @override
+  String get agentWorkspaceSoulMdHint => '定义智能体的性格、沟通风格和核心价值观...';
+
+  @override
+  String get agentWorkspaceAgentsMd => 'AGENTS.md — 行为规则';
+
+  @override
+  String get agentWorkspaceAgentsMdHint => '定义会话启动规则、安全准则和操作流程...';
+
+  @override
+  String get agentWorkspaceUserMd => 'USER.md — 用户背景';
+
+  @override
+  String get agentWorkspaceUserMdHint => '描述该智能体服务的用户——偏好、背景、工作风格...';
+
+  @override
+  String get agentWorkspaceIdentityMd => 'IDENTITY.md — 身份卡';
+
+  @override
+  String get agentWorkspaceIdentityMdHint => '智能体名称、类型、氛围、emoji——智能体的自我描述...';
+
+  @override
+  String agentWorkspaceSaved(String name) {
+    return '工作区「$name」已保存';
+  }
+
+  @override
+  String agentWorkspaceCreated(String name) {
+    return '工作区「$name」已创建';
+  }
+
+  @override
+  String get agentWorkspaceDeleteTitle => '删除工作区';
+
+  @override
+  String agentWorkspaceDeleteConfirm(String name) {
+    return '删除工作区「$name」？这将移除所有身份文件。';
+  }
+
+  @override
+  String agentWorkspaceDeleted(String name) {
+    return '工作区「$name」已删除';
+  }
+
+  @override
+  String get agentWorkspaceEnabled => '已启用';
+
+  @override
+  String get agentWorkspaceIdentityFiles => '身份文件';
+
+  @override
+  String get agentSelectorTitle => '选择智能体';
+
+  @override
+  String get agentSelectorDefault => '默认（无智能体）';
+
+  @override
+  String agentSelectorCurrentAgent(String name) {
+    return '当前：$name';
+  }
 }
