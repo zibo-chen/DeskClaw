@@ -1406,34 +1406,42 @@ async fn ensure_session_agent(session_id: &str) -> Result<Arc<TokioMutex<Session
 
             let orchestrator_prompt = format!(
                 "# Team Orchestrator\n\n\
-                 You are an AI team orchestrator coordinating specialized role agents \n\
-                 that collaborate as peers.\n\
-                 Each role agent has its own independent workspace, tools, MCP servers, \n\
-                 and skills. They retain memory across multiple invocations within this session.\n\n\
+                 You are the central Orchestrator. You coordinate specialized roles that \n\
+                 work under your direction. ALL communication between roles flows through \n\
+                 you — roles do NOT communicate with each other directly.\n\n\
                  ## Your Team\n\
-                 Use the `collaborate` tool with the role name to engage them:\n\
+                 Use the `delegate` tool with the role name to assign tasks:\n\
                  {roles_desc}\n\n\
-                 ## Peer Collaboration Model\n\
-                 Role agents are **peers**, not subordinates. They collaborate as a team:\n\
-                 - Each role has full autonomy within its domain of expertise\n\
-                 - Roles can communicate with each other, building on each other's work\n\
-                 - Handoffs between roles are collaboration requests, not task assignments\n\
-                 - Each role retains context from prior interactions for continuous workflow\n\n\
+                 ## Context Reference System\n\
+                 Every `delegate` call returns a `[context_id: N]` at the top of its output.\n\
+                 To pass that output to a subsequent role, use `context_refs: [N]` instead \n\
+                 of re-typing the output. The tool automatically assembles referenced contexts.\n\n\
+                 Example:\n\
+                 1. delegate(agent: \"architect\", prompt: \"design API\") → [context_id: 1]\n\
+                 2. delegate(agent: \"coder\", prompt: \"implement API\", context_refs: [1])\n\
+                    → coder receives architect's full output automatically\n\
+                 3. delegate(agent: \"critic\", prompt: \"review\", context_refs: [1, 2])\n\
+                    → critic sees both architect + coder outputs\n\n\
+                 **Always use `context_refs`** to pass prior outputs — never re-type them.\n\n\
+                 ## Your Responsibilities\n\
+                 1. **Task Decomposition**: Break complex requests into role-specific subtasks\n\
+                 2. **Context Routing**: Use `context_refs` to route prior outputs to roles that need them\n\
+                 3. **Result Synthesis**: Combine role outputs into a coherent final result\n\
+                 4. **Context Persistence**: Use `team_context` to store key findings across the session\n\n\
                  ## Workflow\n\
-                 1. Analyze the user's request to determine which roles should collaborate\n\
-                 2. Use `collaborate` with agent=\"<name>\" and prompt=\"<task>\" to engage roles\n\
-                 3. Roles may naturally involve each other — monitor the collaboration chain\n\
-                 4. Coordinate results — if critic identifies issues, involve coder to address them\n\
-                 5. Use context_keeper periodically to record key decisions\n\
-                 6. Synthesize and present the final result clearly\n\
-                 7. Only conclude when you are satisfied ALL collaborative work is complete\n\n\
+                 1. Analyze the user's request — determine which roles are needed\n\
+                 2. Delegate to the first role with a clear task\n\
+                 3. Note the `context_id` returned\n\
+                 4. For subsequent roles, reference prior outputs via `context_refs`\n\
+                 5. Repeat until all subtasks are complete\n\
+                 6. Synthesize and present the final result to the user\n\n\
                  ## Handoff Protocol\n\
-                 When a role finishes its contribution, it includes a structured handoff:\n\
+                 When a role finishes, it returns a structured handoff:\n\
                  - **Status**: done | needs-review | blocked\n\
                  - **Summary**: What was accomplished\n\
-                 - **Next**: Recommended next role and collaborative task (if any)\n\
-                 You decide whether to follow the recommendation or conclude.\n\n\
-                 For simple tasks, engage just 1-2 roles. For complex tasks, use the full pipeline.\n"
+                 - **Next**: Recommended next role (if any)\n\
+                 You decide whether to follow the recommendation or proceed differently.\n\n\
+                 For simple tasks, engage 1-2 roles. For complex tasks, use the full pipeline.\n"
             );
 
             // Write orchestrator identity to the session workspace SOUL.md
@@ -1869,10 +1877,10 @@ pub async fn send_message_stream(
                         let success = parts[1] == "true";
                         let result = parts[2].to_string();
                         tool_active.store(false, Ordering::Relaxed);
-                        // Reset current role when collaborate tool completes.
+                        // Reset current role when delegate tool completes.
                         // Try to parse handoff protocol from the result to emit
                         // a RoleHandoff event for the UI.
-                        if name == "collaborate" {
+                        if name == "delegate" {
                             if let Some(from_role) = current_role.take() {
                                 // Look for handoff markers in the result:
                                 //   **Next**: agent_name: task description
@@ -1967,8 +1975,8 @@ pub async fn send_message_stream(
                     };
                     tool_active.store(true, Ordering::Relaxed);
 
-                    // Detect collaborate tool calls → emit RoleSwitch for multi-agent UI
-                    if name == "collaborate" {
+                    // Detect delegate tool calls → emit RoleSwitch for multi-agent UI
+                    if name == "delegate" {
                         let mut resolved_key: Option<String> = None;
                         // Try to parse agent name from args JSON
                         if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&args) {

@@ -211,6 +211,26 @@ class AppTheme {
         ),
       ),
       dividerTheme: DividerThemeData(color: c.chatListBorder, thickness: 1),
+      // Work around Flutter 3.41 RawTooltipState bug: it uses
+      // SingleTickerProviderStateMixin but creates two AnimationControllers
+      // (entrance + exit).  Setting exitDuration to zero avoids the second.
+      tooltipTheme: TooltipThemeData(
+        exitDuration: Duration.zero,
+        waitDuration: const Duration(milliseconds: 500),
+        textStyle: TextStyle(fontSize: 12, color: c.textPrimary),
+        decoration: BoxDecoration(
+          color: c.surfaceBg,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: c.chatListBorder),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -270,6 +290,23 @@ class AppTheme {
         ),
       ),
       dividerTheme: DividerThemeData(color: c.chatListBorder, thickness: 1),
+      tooltipTheme: TooltipThemeData(
+        exitDuration: Duration.zero,
+        waitDuration: const Duration(milliseconds: 500),
+        textStyle: TextStyle(fontSize: 12, color: c.textPrimary),
+        decoration: BoxDecoration(
+          color: c.surfaceBg,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: c.chatListBorder),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

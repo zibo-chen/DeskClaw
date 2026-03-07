@@ -1089,7 +1089,7 @@
   "agentOverview": "Overview",
   "@agentOverview": { "description": "Overview section title" },
 
-  "agentOverviewDesc": "Manage team roles and custom sub-agents. Built-in roles collaborate as team peers; custom sub-agents handle specialized tasks independently.",
+  "agentOverviewDesc": "Manage team roles and custom sub-agents. Built-in roles delegate tasks and share context; custom sub-agents handle specialized tasks independently.",
   "@agentOverviewDesc": { "description": "Overview description" },
 
   "agentAgenticCount": "Agentic",
@@ -1167,7 +1167,7 @@
   "rolesSectionTitle": "Team Roles",
   "@rolesSectionTitle": { "description": "Roles section header" },
 
-  "rolesSectionDesc": "Built-in roles collaborate as team peers, each with their own workspace, tools, and skills. Roles activate automatically in team mode.",
+  "rolesSectionDesc": "Built-in roles delegate tasks to specialized sub-agents, each with their own workspace, tools, and skills. Roles activate automatically in team mode.",
   "@rolesSectionDesc": { "description": "Roles section description" },
 
   "subAgentsSectionTitle": "Custom Sub-Agents",

@@ -2075,7 +2075,7 @@ abstract class AppLocalizations {
   /// Overview description
   ///
   /// In en, this message translates to:
-  /// **'Manage team roles and custom sub-agents. Built-in roles collaborate as team peers; custom sub-agents handle specialized tasks independently.'**
+  /// **'Manage team roles and custom sub-agents. Built-in roles delegate tasks and share context; custom sub-agents handle specialized tasks independently.'**
   String get agentOverviewDesc;
 
   /// Agentic agents count label
@@ -2207,7 +2207,7 @@ abstract class AppLocalizations {
   /// Roles section description
   ///
   /// In en, this message translates to:
-  /// **'Built-in roles collaborate as team peers, each with their own workspace, tools, and skills. Roles activate automatically in team mode.'**
+  /// **'Built-in roles delegate tasks to specialized sub-agents, each with their own workspace, tools, and skills. Roles activate automatically in team mode.'**
   String get rolesSectionDesc;
 
   /// Sub-agents section header

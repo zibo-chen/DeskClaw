@@ -1084,7 +1084,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get agentOverviewDesc =>
-      'Manage team roles and custom sub-agents. Built-in roles collaborate as team peers; custom sub-agents handle specialized tasks independently.';
+      'Manage team roles and custom sub-agents. Built-in roles delegate tasks and share context; custom sub-agents handle specialized tasks independently.';
 
   @override
   String get agentAgenticCount => 'Agentic';
@@ -1161,7 +1161,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rolesSectionDesc =>
-      'Built-in roles collaborate as team peers, each with their own workspace, tools, and skills. Roles activate automatically in team mode.';
+      'Built-in roles delegate tasks to specialized sub-agents, each with their own workspace, tools, and skills. Roles activate automatically in team mode.';
 
   @override
   String get subAgentsSectionTitle => 'Custom Sub-Agents';

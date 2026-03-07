@@ -375,14 +375,14 @@ pub async fn seed_preset_roles() -> u32 {
                 "file_edit".to_string(),
                 "glob".to_string(),
                 "grep".to_string(),
-                "collaborate".to_string(),
+                "subagent_execute".to_string(),
             ],
             max_iterations: 10,
             role_label: Some(name.to_string()),
             role_color: Some(color.to_string()),
             role_icon: Some(icon.to_string()),
             is_preset: true,
-            allow_nested_delegate: true,
+            allow_nested_delegate: false,
         };
 
         {
