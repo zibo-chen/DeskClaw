@@ -57,10 +57,28 @@ class McpTestClient {
       final mergedEnv = Map<String, String>.from(Platform.environment)
         ..addAll(env);
 
+      // On Windows, .cmd/.bat scripts (like npx.cmd) need runInShell to execute.
+      // This avoids "not recognized as an internal or external command" errors.
+      final needsShell =
+          Platform.isWindows &&
+          (resolvedCommand.endsWith('.cmd') ||
+              resolvedCommand.endsWith('.bat') ||
+              // Common npm/npx/yarn scripts that are .cmd wrappers on Windows
+              [
+                'npx',
+                'npm',
+                'yarn',
+                'pnpm',
+                'node',
+                'python',
+                'pip',
+              ].contains(command.toLowerCase()));
+
       process = await Process.start(
         resolvedCommand,
         args,
         environment: mergedEnv,
+        runInShell: needsShell,
       );
 
       // Create a single reader for the process stdout — avoids
@@ -228,21 +246,41 @@ class McpTestClient {
   static String _resolveCommand(String command) {
     // If it's an absolute path, use it directly
     if (command.startsWith('/')) return command;
+    // Windows absolute paths (e.g. C:\..., D:\...)
+    if (Platform.isWindows &&
+        command.length >= 3 &&
+        command[1] == ':' &&
+        (command[2] == '\\' || command[2] == '/')) {
+      return command;
+    }
 
-    // Try to resolve relative commands via common paths
-    final pathDirs = (Platform.environment['PATH'] ?? '').split(':');
+    // Try to resolve relative commands via common paths.
+    // PATH separator is ';' on Windows, ':' on Unix.
+    final pathSep = Platform.isWindows ? ';' : ':';
+    final pathDirs = (Platform.environment['PATH'] ?? '').split(pathSep);
 
-    // Also add common locations for node/npx/python etc.
-    final extraDirs = [
-      '/usr/local/bin',
-      '/opt/homebrew/bin',
-      '${Platform.environment['HOME']}/.local/bin',
-      '${Platform.environment['HOME']}/.nvm/versions/node',
-    ];
+    if (Platform.isWindows) {
+      // On Windows, try the command directly and with common extensions
+      final extensions = ['', '.exe', '.cmd', '.bat', '.com'];
+      for (final dir in pathDirs) {
+        for (final ext in extensions) {
+          final fullPath = '$dir\\$command$ext';
+          if (File(fullPath).existsSync()) return fullPath;
+        }
+      }
+    } else {
+      // Also add common locations for node/npx/python etc.
+      final extraDirs = [
+        '/usr/local/bin',
+        '/opt/homebrew/bin',
+        '${Platform.environment['HOME']}/.local/bin',
+        '${Platform.environment['HOME']}/.nvm/versions/node',
+      ];
 
-    for (final dir in [...pathDirs, ...extraDirs]) {
-      final fullPath = '$dir/$command';
-      if (File(fullPath).existsSync()) return fullPath;
+      for (final dir in [...pathDirs, ...extraDirs]) {
+        final fullPath = '$dir/$command';
+        if (File(fullPath).existsSync()) return fullPath;
+      }
     }
 
     // Fall back to the command as-is (will fail if not in PATH)
