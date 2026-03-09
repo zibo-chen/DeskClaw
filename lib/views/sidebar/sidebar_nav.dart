@@ -148,14 +148,6 @@ class _SidebarNavState extends ConsumerState<SidebarNav> {
                     _buildNavItem(
                       c,
                       ref: ref,
-                      icon: Icons.business,
-                      label: l10n.navWorkspace,
-                      section: NavSection.workspace,
-                      isActive: currentNav == NavSection.workspace,
-                    ),
-                    _buildNavItem(
-                      c,
-                      ref: ref,
                       icon: Icons.menu_book,
                       label: l10n.navKnowledge,
                       section: NavSection.knowledge,
@@ -270,7 +262,6 @@ class _SidebarNavState extends ConsumerState<SidebarNav> {
       (Icons.wifi, NavSection.channels, l10n.navChannels),
       (Icons.people_outline, NavSection.sessions, l10n.navSessions),
       (Icons.schedule, NavSection.cronJobs, l10n.navCronJobs),
-      (Icons.business, NavSection.workspace, l10n.navWorkspace),
       (Icons.menu_book, NavSection.knowledge, l10n.navKnowledge),
       (Icons.psychology, NavSection.skills, l10n.navSkills),
       (Icons.extension, NavSection.mcp, l10n.navMcp),

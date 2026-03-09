@@ -37,7 +37,7 @@ impl Default for AppConfig {
             api_key: String::new(),
             api_base: None,
             temperature: 0.7,
-            max_tool_iterations: 10,
+            max_tool_iterations: 50,
             language: "en".into(),
         }
     }

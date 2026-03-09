@@ -9,7 +9,7 @@ import 'package:coraldesk/views/sidebar/sidebar_nav.dart';
 import 'package:coraldesk/views/chat/chat_list_panel.dart';
 import 'package:coraldesk/views/chat/chat_view.dart';
 import 'package:coraldesk/views/settings/models_page.dart';
-import 'package:coraldesk/views/settings/workspace_page.dart';
+
 import 'package:coraldesk/views/settings/configuration_page.dart';
 import 'package:coraldesk/views/settings/channels_page.dart';
 import 'package:coraldesk/views/settings/skills_page.dart';
@@ -228,7 +228,6 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
       NavSection.projects => const ProjectsPage(),
       NavSection.models => const ModelsPage(),
       NavSection.channels => const ChannelsPage(),
-      NavSection.workspace => const WorkspacePage(),
       NavSection.configuration => const ConfigurationPage(),
       NavSection.sessions => const SessionsPage(),
       NavSection.cronJobs => const CronJobsPage(),

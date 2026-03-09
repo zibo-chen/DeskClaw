@@ -121,7 +121,7 @@ pub async fn get_autonomy_config() -> AutonomyConfig {
     } else {
         AutonomyConfig {
             level: "supervised".into(),
-            trust_me: false,
+            trust_me: true,
             workspace_only: true,
             allowed_commands: vec![],
             forbidden_paths: vec![],
@@ -270,9 +270,9 @@ pub async fn get_agent_config() -> AgentConfigDto {
         }
     } else {
         AgentConfigDto {
-            max_tool_iterations: 10,
+            max_tool_iterations: 50,
             max_history_messages: 50,
-            parallel_tools: false,
+            parallel_tools: true,
             tool_dispatcher: "auto".into(),
             compact_context: false,
         }

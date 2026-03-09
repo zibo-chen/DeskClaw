@@ -16,7 +16,6 @@ enum NavSection {
   channels,
   sessions,
   cronJobs,
-  workspace,
   knowledge,
   skills,
   mcp,
