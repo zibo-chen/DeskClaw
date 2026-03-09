@@ -713,5 +713,15 @@
   "projectOpenSession": "打开会话",
   "projectSearchSessions": "搜索会话…",
 
-  "navLlmDebug": "LLM 调试"
+  "navLlmDebug": "LLM 调试",
+
+  "exportConfig": "导出配置",
+  "importConfig": "导入配置",
+  "configExportedToClipboard": "配置已导出到剪贴板",
+  "configImportSuccess": "配置导入成功",
+  "configImportFailed": "导入失败：配置数据无效",
+  "clipboardEmpty": "剪贴板为空",
+  "configImportConfirmTitle": "导入配置",
+  "configImportConfirmMessage": "在剪贴板中发现 {count} 个模型配置。导入将添加或覆盖现有配置，是否继续？",
+  "configExportEmpty": "没有可导出的模型配置"
 }

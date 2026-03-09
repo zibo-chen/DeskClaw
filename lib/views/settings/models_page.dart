@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:coraldesk/l10n/app_localizations.dart';
 import 'package:coraldesk/theme/app_theme.dart';
@@ -226,7 +229,7 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Description + Add button
+          // Description + action buttons
           Row(
             children: [
               Expanded(
@@ -236,6 +239,32 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
                 ),
               ),
               const SizedBox(width: 12),
+              // Import button
+              OutlinedButton.icon(
+                icon: const Icon(Icons.download_outlined, size: 18),
+                label: Text(l10n.importConfig),
+                onPressed: _importConfig,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Export button
+              OutlinedButton.icon(
+                icon: const Icon(Icons.upload_outlined, size: 18),
+                label: Text(l10n.exportConfig),
+                onPressed: _exportConfig,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
               FilledButton.icon(
                 icon: const Icon(Icons.add, size: 18),
                 label: Text(l10n.providerProfileNew),
@@ -479,6 +508,351 @@ class _ModelsPageState extends ConsumerState<ModelsPage> {
   Future<void> _refreshProfiles() async {
     final profiles = await providers_api.listModelProviderProfiles();
     if (mounted) setState(() => _providerProfiles = profiles);
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  Import / Export
+  // ═══════════════════════════════════════════════════════════════
+
+  /// Serialize provider profiles + embedding config to TOML, base64-encode,
+  /// and copy to clipboard.
+  Future<void> _exportConfig() async {
+    final l10n = AppLocalizations.of(context)!;
+    if (_providerProfiles.isEmpty && _embeddingProvider == 'none') {
+      _showSnack(l10n.configExportEmpty, isError: true);
+      return;
+    }
+
+    final buf = StringBuffer();
+    buf.writeln('# DeskClaw Model Configuration');
+    buf.writeln('# Generated: ${DateTime.now().toIso8601String()}');
+    buf.writeln();
+    if (_defaultProfileId.isNotEmpty) {
+      buf.writeln('default_profile = "${_escapeToml(_defaultProfileId)}"');
+      buf.writeln();
+    }
+
+    // ── Provider profiles ──
+    for (final p in _providerProfiles) {
+      buf.writeln('[model_providers.${_escapeTomlKey(p.id)}]');
+      if (p.name != null && p.name!.isNotEmpty) {
+        buf.writeln('name = "${_escapeToml(p.name!)}"');
+      }
+      if (p.baseUrl != null && p.baseUrl!.isNotEmpty) {
+        buf.writeln('base_url = "${_escapeToml(p.baseUrl!)}"');
+      }
+      if (p.wireApi != null && p.wireApi!.isNotEmpty) {
+        buf.writeln('wire_api = "${_escapeToml(p.wireApi!)}"');
+      }
+      if (p.defaultModel != null && p.defaultModel!.isNotEmpty) {
+        buf.writeln('default_model = "${_escapeToml(p.defaultModel!)}"');
+      }
+      if (p.apiKey != null && p.apiKey!.isNotEmpty) {
+        buf.writeln('api_key = "${_escapeToml(p.apiKey!)}"');
+      }
+      buf.writeln();
+    }
+
+    // ── Embedding configuration ──
+    buf.writeln('[embedding]');
+    buf.writeln('provider = "${_escapeToml(_embeddingProvider)}"');
+    buf.writeln('model = "${_escapeToml(_embeddingModelCtrl.text.trim())}"');
+    buf.writeln(
+      'dimensions = ${int.tryParse(_embeddingDimsCtrl.text.trim()) ?? 1536}',
+    );
+    buf.writeln('vector_weight = ${_vectorWeight.toStringAsFixed(2)}');
+    buf.writeln('keyword_weight = ${_keywordWeight.toStringAsFixed(2)}');
+    buf.writeln(
+      'min_relevance_score = ${_minRelevanceScore.toStringAsFixed(2)}',
+    );
+    if (_embeddingBaseUrlCtrl.text.trim().isNotEmpty) {
+      buf.writeln(
+        'base_url = "${_escapeToml(_embeddingBaseUrlCtrl.text.trim())}"',
+      );
+    }
+    if (_embeddingApiKeyCtrl.text.trim().isNotEmpty) {
+      buf.writeln(
+        'api_key = "${_escapeToml(_embeddingApiKeyCtrl.text.trim())}"',
+      );
+    }
+    buf.writeln();
+
+    final tomlStr = buf.toString();
+    final b64 = base64Encode(utf8.encode(tomlStr));
+    await Clipboard.setData(ClipboardData(text: b64));
+    if (mounted) _showSnack(l10n.configExportedToClipboard);
+  }
+
+  /// Read base64-encoded TOML from clipboard, parse, and import profiles.
+  Future<void> _importConfig() async {
+    final l10n = AppLocalizations.of(context)!;
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    if (data == null || data.text == null || data.text!.trim().isEmpty) {
+      _showSnack(l10n.clipboardEmpty, isError: true);
+      return;
+    }
+
+    // Decode base64
+    String tomlStr;
+    try {
+      tomlStr = utf8.decode(base64Decode(data.text!.trim()));
+    } catch (_) {
+      _showSnack(l10n.configImportFailed, isError: true);
+      return;
+    }
+
+    // Parse the TOML into profiles + embedding config
+    final parsed = _parseTomlProfiles(tomlStr);
+    if (parsed.profiles.isEmpty && parsed.embedding == null) {
+      _showSnack(l10n.configImportFailed, isError: true);
+      return;
+    }
+
+    // Build confirmation message showing what will be imported
+    final itemCount =
+        parsed.profiles.length + (parsed.embedding != null ? 1 : 0);
+
+    // Confirm with user
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.configImportConfirmTitle),
+        content: Text(l10n.configImportConfirmMessage(itemCount)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.importConfig),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    // Upsert all profiles
+    for (final profile in parsed.profiles) {
+      await providers_api.upsertModelProviderProfile(profile: profile);
+    }
+
+    // Set default profile if specified
+    if (parsed.defaultProfileId != null &&
+        parsed.defaultProfileId!.isNotEmpty) {
+      await providers_api.setDefaultProfile(id: parsed.defaultProfileId!);
+      if (mounted) {
+        setState(() => _defaultProfileId = parsed.defaultProfileId!);
+      }
+    }
+
+    // Restore embedding configuration
+    if (parsed.embedding != null) {
+      await routes_api.updateEmbeddingConfig(config: parsed.embedding!);
+      if (mounted) {
+        final e = parsed.embedding!;
+        setState(() {
+          _embeddingProvider = e.embeddingProvider;
+          _embeddingModelCtrl.text = e.embeddingModel;
+          _embeddingDimsCtrl.text = e.embeddingDimensions.toString();
+          _embeddingBaseUrlCtrl.text = e.embeddingBaseUrl ?? '';
+          _embeddingApiKeyCtrl.text = e.embeddingApiKey ?? '';
+          _vectorWeight = e.vectorWeight;
+          _keywordWeight = e.keywordWeight;
+          _minRelevanceScore = e.minRelevanceScore;
+        });
+      }
+    }
+
+    if (!mounted) return;
+    await _refreshProfiles();
+    _showSnack(l10n.configImportSuccess);
+  }
+
+  /// Escape a string value for TOML (handle backslash, quotes, newlines).
+  String _escapeToml(String s) {
+    return s
+        .replaceAll('\\', '\\\\')
+        .replaceAll('"', '\\"')
+        .replaceAll('\n', '\\n')
+        .replaceAll('\r', '\\r')
+        .replaceAll('\t', '\\t');
+  }
+
+  /// Escape a TOML key (bare keys allow [A-Za-z0-9_-]).
+  String _escapeTomlKey(String s) {
+    if (RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(s)) return s;
+    return '"${_escapeToml(s)}"';
+  }
+
+  /// Simple TOML parser for the export format we produce.
+  _ParsedConfig _parseTomlProfiles(String toml) {
+    final profiles = <providers_api.ModelProviderProfileDto>[];
+    String? defaultProfileId;
+
+    // Current provider profile fields
+    String? currentId;
+    String? name;
+    String? baseUrl;
+    String? wireApi;
+    String? defaultModel;
+    String? apiKey;
+
+    // Embedding fields
+    bool inEmbeddingSection = false;
+    String? embProvider;
+    String? embModel;
+    int? embDimensions;
+    double? embVectorWeight;
+    double? embKeywordWeight;
+    double? embMinRelevance;
+    String? embBaseUrl;
+    String? embApiKey;
+
+    void flushCurrent() {
+      if (currentId != null) {
+        profiles.add(
+          providers_api.ModelProviderProfileDto(
+            id: currentId!,
+            name: name,
+            baseUrl: baseUrl,
+            wireApi: wireApi,
+            defaultModel: defaultModel,
+            apiKey: apiKey,
+          ),
+        );
+      }
+      currentId = null;
+      name = null;
+      baseUrl = null;
+      wireApi = null;
+      defaultModel = null;
+      apiKey = null;
+      inEmbeddingSection = false;
+    }
+
+    for (var line in toml.split('\n')) {
+      line = line.trim();
+      if (line.isEmpty || line.startsWith('#')) continue;
+
+      // Section header: [embedding]
+      if (line == '[embedding]') {
+        flushCurrent();
+        inEmbeddingSection = true;
+        continue;
+      }
+
+      // Section header: [model_providers.xxx]
+      final sectionMatch = RegExp(
+        r'^\[model_providers\.("(?:[^"\\]|\\.)*"|[A-Za-z0-9_-]+)\]$',
+      ).firstMatch(line);
+      if (sectionMatch != null) {
+        flushCurrent();
+        var id = sectionMatch.group(1)!;
+        if (id.startsWith('"') && id.endsWith('"')) {
+          id = _unescapeToml(id.substring(1, id.length - 1));
+        }
+        currentId = id;
+        continue;
+      }
+
+      // Key = "string_value" pairs
+      final kvStrMatch = RegExp(
+        r'^(\w+)\s*=\s*"((?:[^"\\]|\\.)*)"$',
+      ).firstMatch(line);
+      // Key = number pairs (int or float)
+      final kvNumMatch = RegExp(
+        r'^(\w+)\s*=\s*([0-9]+(?:\.[0-9]+)?)$',
+      ).firstMatch(line);
+
+      if (inEmbeddingSection) {
+        // Parse embedding section keys
+        if (kvStrMatch != null) {
+          final key = kvStrMatch.group(1)!;
+          final value = _unescapeToml(kvStrMatch.group(2)!);
+          switch (key) {
+            case 'provider':
+              embProvider = value;
+            case 'model':
+              embModel = value;
+            case 'base_url':
+              embBaseUrl = value;
+            case 'api_key':
+              embApiKey = value;
+          }
+        } else if (kvNumMatch != null) {
+          final key = kvNumMatch.group(1)!;
+          final numStr = kvNumMatch.group(2)!;
+          switch (key) {
+            case 'dimensions':
+              embDimensions = int.tryParse(numStr);
+            case 'vector_weight':
+              embVectorWeight = double.tryParse(numStr);
+            case 'keyword_weight':
+              embKeywordWeight = double.tryParse(numStr);
+            case 'min_relevance_score':
+              embMinRelevance = double.tryParse(numStr);
+          }
+        }
+        continue;
+      }
+
+      if (kvStrMatch != null) {
+        final key = kvStrMatch.group(1)!;
+        final value = _unescapeToml(kvStrMatch.group(2)!);
+
+        // Top-level key (before any section)
+        if (currentId == null) {
+          if (key == 'default_profile') defaultProfileId = value;
+          continue;
+        }
+
+        switch (key) {
+          case 'name':
+            name = value;
+          case 'base_url':
+            baseUrl = value;
+          case 'wire_api':
+            wireApi = value;
+          case 'default_model':
+            defaultModel = value;
+          case 'api_key':
+            apiKey = value;
+        }
+      }
+    }
+    flushCurrent();
+
+    // Build embedding config if we found an [embedding] section
+    routes_api.EmbeddingConfigDto? embedding;
+    if (embProvider != null) {
+      embedding = routes_api.EmbeddingConfigDto(
+        embeddingProvider: embProvider,
+        embeddingModel: embModel ?? '',
+        embeddingDimensions: embDimensions ?? 1536,
+        vectorWeight: embVectorWeight ?? 0.7,
+        keywordWeight: embKeywordWeight ?? 0.3,
+        minRelevanceScore: embMinRelevance ?? 0.4,
+        embeddingBaseUrl: embBaseUrl,
+        embeddingApiKey: embApiKey,
+      );
+    }
+
+    return _ParsedConfig(
+      profiles: profiles,
+      defaultProfileId: defaultProfileId,
+      embedding: embedding,
+    );
+  }
+
+  /// Unescape a TOML string value.
+  String _unescapeToml(String s) {
+    return s
+        .replaceAll('\\n', '\n')
+        .replaceAll('\\r', '\r')
+        .replaceAll('\\t', '\t')
+        .replaceAll('\\"', '"')
+        .replaceAll('\\\\', '\\');
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -1078,4 +1452,16 @@ class _ProfileEditorDialogState extends State<_ProfileEditorDialog> {
       ],
     );
   }
+}
+
+/// Helper class for parsed import data.
+class _ParsedConfig {
+  final List<providers_api.ModelProviderProfileDto> profiles;
+  final String? defaultProfileId;
+  final routes_api.EmbeddingConfigDto? embedding;
+  const _ParsedConfig({
+    required this.profiles,
+    this.defaultProfileId,
+    this.embedding,
+  });
 }

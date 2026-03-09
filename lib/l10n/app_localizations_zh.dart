@@ -2156,4 +2156,33 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get navLlmDebug => 'LLM 调试';
+
+  @override
+  String get exportConfig => '导出配置';
+
+  @override
+  String get importConfig => '导入配置';
+
+  @override
+  String get configExportedToClipboard => '配置已导出到剪贴板';
+
+  @override
+  String get configImportSuccess => '配置导入成功';
+
+  @override
+  String get configImportFailed => '导入失败：配置数据无效';
+
+  @override
+  String get clipboardEmpty => '剪贴板为空';
+
+  @override
+  String get configImportConfirmTitle => '导入配置';
+
+  @override
+  String configImportConfirmMessage(int count) {
+    return '在剪贴板中发现 $count 个模型配置。导入将添加或覆盖现有配置，是否继续？';
+  }
+
+  @override
+  String get configExportEmpty => '没有可导出的模型配置';
 }

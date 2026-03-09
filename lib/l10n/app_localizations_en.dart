@@ -2213,4 +2213,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get navLlmDebug => 'LLM Debug';
+
+  @override
+  String get exportConfig => 'Export Config';
+
+  @override
+  String get importConfig => 'Import Config';
+
+  @override
+  String get configExportedToClipboard => 'Config exported to clipboard';
+
+  @override
+  String get configImportSuccess => 'Config imported successfully';
+
+  @override
+  String get configImportFailed => 'Import failed: invalid config data';
+
+  @override
+  String get clipboardEmpty => 'Clipboard is empty';
+
+  @override
+  String get configImportConfirmTitle => 'Import Config';
+
+  @override
+  String configImportConfirmMessage(int count) {
+    return 'Found $count provider profiles in clipboard. Import will add or overwrite existing profiles. Continue?';
+  }
+
+  @override
+  String get configExportEmpty => 'No provider profiles to export';
 }

@@ -2108,5 +2108,24 @@
   "@projectSearchSessions": { "description": "Hint for session search field" },
 
   "navLlmDebug": "LLM Debug",
-  "@navLlmDebug": { "description": "LLM Debug nav item" }
+  "@navLlmDebug": { "description": "LLM Debug nav item" },
+
+  "exportConfig": "Export Config",
+  "@exportConfig": { "description": "Export model config button" },
+  "importConfig": "Import Config",
+  "@importConfig": { "description": "Import model config button" },
+  "configExportedToClipboard": "Config exported to clipboard",
+  "@configExportedToClipboard": { "description": "Snackbar after export" },
+  "configImportSuccess": "Config imported successfully",
+  "@configImportSuccess": { "description": "Snackbar after successful import" },
+  "configImportFailed": "Import failed: invalid config data",
+  "@configImportFailed": { "description": "Snackbar on import failure" },
+  "clipboardEmpty": "Clipboard is empty",
+  "@clipboardEmpty": { "description": "Snackbar when clipboard is empty" },
+  "configImportConfirmTitle": "Import Config",
+  "@configImportConfirmTitle": { "description": "Import confirm dialog title" },
+  "configImportConfirmMessage": "Found {count} provider profiles in clipboard. Import will add or overwrite existing profiles. Continue?",
+  "@configImportConfirmMessage": { "description": "Import confirm message", "placeholders": { "count": { "type": "int" } } },
+  "configExportEmpty": "No provider profiles to export",
+  "@configExportEmpty": { "description": "When no profiles exist to export" }
 }

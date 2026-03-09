@@ -4141,6 +4141,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'LLM Debug'**
   String get navLlmDebug;
+
+  /// Export model config button
+  ///
+  /// In en, this message translates to:
+  /// **'Export Config'**
+  String get exportConfig;
+
+  /// Import model config button
+  ///
+  /// In en, this message translates to:
+  /// **'Import Config'**
+  String get importConfig;
+
+  /// Snackbar after export
+  ///
+  /// In en, this message translates to:
+  /// **'Config exported to clipboard'**
+  String get configExportedToClipboard;
+
+  /// Snackbar after successful import
+  ///
+  /// In en, this message translates to:
+  /// **'Config imported successfully'**
+  String get configImportSuccess;
+
+  /// Snackbar on import failure
+  ///
+  /// In en, this message translates to:
+  /// **'Import failed: invalid config data'**
+  String get configImportFailed;
+
+  /// Snackbar when clipboard is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Clipboard is empty'**
+  String get clipboardEmpty;
+
+  /// Import confirm dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Import Config'**
+  String get configImportConfirmTitle;
+
+  /// Import confirm message
+  ///
+  /// In en, this message translates to:
+  /// **'Found {count} provider profiles in clipboard. Import will add or overwrite existing profiles. Continue?'**
+  String configImportConfirmMessage(int count);
+
+  /// When no profiles exist to export
+  ///
+  /// In en, this message translates to:
+  /// **'No provider profiles to export'**
+  String get configExportEmpty;
 }
 
 class _AppLocalizationsDelegate
