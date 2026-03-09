@@ -21,6 +21,7 @@ import 'package:coraldesk/views/settings/sessions_page.dart';
 import 'package:coraldesk/views/settings/cron_jobs_page.dart';
 import 'package:coraldesk/views/settings/knowledge_page.dart';
 import 'package:coraldesk/views/settings/llm_debug_page.dart';
+import 'package:coraldesk/views/settings/app_settings_page.dart';
 import 'package:coraldesk/views/notification/notification_panel.dart';
 import 'package:coraldesk/views/project/projects_page.dart';
 import 'package:window_manager/window_manager.dart';
@@ -238,6 +239,7 @@ class _AppShellState extends ConsumerState<AppShell> with WindowListener {
       NavSection.agentWorkspaces => const AgentWorkspacesPage(),
       NavSection.proxy => const ProxyPage(),
       NavSection.llmDebug => const LlmDebugPage(),
+      NavSection.appSettings => const AppSettingsPage(),
     };
   }
 

@@ -2242,4 +2242,121 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get configExportEmpty => 'No provider profiles to export';
+
+  @override
+  String get navAppSettings => 'Preferences';
+
+  @override
+  String get appSettingsTitle => 'Preferences';
+
+  @override
+  String get settingSectionAppearance => 'Appearance';
+
+  @override
+  String get settingSectionGeneral => 'General';
+
+  @override
+  String get settingSectionAbout => 'About';
+
+  @override
+  String get settingLanguage => 'Language';
+
+  @override
+  String get settingLanguageDesc => 'Choose display language for the interface';
+
+  @override
+  String get settingTheme => 'Theme';
+
+  @override
+  String get settingThemeDesc => 'Choose color scheme for the interface';
+
+  @override
+  String get followSystem => 'Follow System';
+
+  @override
+  String get english => 'English';
+
+  @override
+  String get chinese => '中文';
+
+  @override
+  String get themeLight => 'Light';
+
+  @override
+  String get themeDark => 'Dark';
+
+  @override
+  String get settingSendShortcut => 'Send Message';
+
+  @override
+  String get settingSendShortcutDesc => 'Keyboard shortcut to send a message';
+
+  @override
+  String get sendByEnter => 'Enter';
+
+  @override
+  String get sendByCtrlEnter => 'Ctrl + Enter';
+
+  @override
+  String get settingSidebarDefault => 'Sidebar';
+
+  @override
+  String get settingSidebarDefaultDesc => 'Default sidebar state on startup';
+
+  @override
+  String get sidebarExpanded => 'Expanded';
+
+  @override
+  String get sidebarCollapsed => 'Collapsed';
+
+  @override
+  String get aboutVersion => 'Version';
+
+  @override
+  String get aboutBuildWith => 'Built with Flutter & Rust';
+
+  @override
+  String get aboutGitHub => 'GitHub Repository';
+
+  @override
+  String get aboutGitHubDesc => 'View source code, report issues';
+
+  @override
+  String get aboutCheckUpdate => 'Check for Updates';
+
+  @override
+  String get aboutCheckUpdateDesc => 'Check if a newer version is available';
+
+  @override
+  String aboutUpdateAvailable(String version) {
+    return 'New version available: $version';
+  }
+
+  @override
+  String get aboutUpdateCurrent => 'You are on the latest version';
+
+  @override
+  String get aboutUpdateError => 'Failed to check for updates';
+
+  @override
+  String get aboutUpdateChecking => 'Checking for updates…';
+
+  @override
+  String get aboutUpdateDownload => 'Download';
+
+  @override
+  String get aboutLicense => 'License';
+
+  @override
+  String get settingsResetTitle => 'Reset Settings';
+
+  @override
+  String get settingsResetDesc => 'Reset all preferences to default values';
+
+  @override
+  String get settingsResetConfirm =>
+      'Are you sure you want to reset all preferences to defaults?';
+
+  @override
+  String get reset => 'Reset';
 }

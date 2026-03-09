@@ -4195,6 +4195,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No provider profiles to export'**
   String get configExportEmpty;
+
+  /// App settings / preferences nav item
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences'**
+  String get navAppSettings;
+
+  /// App settings page title
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences'**
+  String get appSettingsTitle;
+
+  /// Appearance section header
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get settingSectionAppearance;
+
+  /// General section header
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get settingSectionGeneral;
+
+  /// About section header
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get settingSectionAbout;
+
+  /// Language setting label
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get settingLanguage;
+
+  /// Language setting description
+  ///
+  /// In en, this message translates to:
+  /// **'Choose display language for the interface'**
+  String get settingLanguageDesc;
+
+  /// Theme setting label
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get settingTheme;
+
+  /// Theme setting description
+  ///
+  /// In en, this message translates to:
+  /// **'Choose color scheme for the interface'**
+  String get settingThemeDesc;
+
+  /// Follow system setting option
+  ///
+  /// In en, this message translates to:
+  /// **'Follow System'**
+  String get followSystem;
+
+  /// English language name
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get english;
+
+  /// Chinese language name
+  ///
+  /// In en, this message translates to:
+  /// **'中文'**
+  String get chinese;
+
+  /// Light theme option
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeLight;
+
+  /// Dark theme option
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDark;
+
+  /// Send message shortcut label
+  ///
+  /// In en, this message translates to:
+  /// **'Send Message'**
+  String get settingSendShortcut;
+
+  /// Send shortcut description
+  ///
+  /// In en, this message translates to:
+  /// **'Keyboard shortcut to send a message'**
+  String get settingSendShortcutDesc;
+
+  /// Send with Enter key
+  ///
+  /// In en, this message translates to:
+  /// **'Enter'**
+  String get sendByEnter;
+
+  /// Send with Ctrl+Enter
+  ///
+  /// In en, this message translates to:
+  /// **'Ctrl + Enter'**
+  String get sendByCtrlEnter;
+
+  /// sidebar default state label
+  ///
+  /// In en, this message translates to:
+  /// **'Sidebar'**
+  String get settingSidebarDefault;
+
+  /// sidebar default state description
+  ///
+  /// In en, this message translates to:
+  /// **'Default sidebar state on startup'**
+  String get settingSidebarDefaultDesc;
+
+  /// Sidebar expanded
+  ///
+  /// In en, this message translates to:
+  /// **'Expanded'**
+  String get sidebarExpanded;
+
+  /// Sidebar collapsed
+  ///
+  /// In en, this message translates to:
+  /// **'Collapsed'**
+  String get sidebarCollapsed;
+
+  /// Version label
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get aboutVersion;
+
+  /// Build tech description
+  ///
+  /// In en, this message translates to:
+  /// **'Built with Flutter & Rust'**
+  String get aboutBuildWith;
+
+  /// GitHub repo link label
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub Repository'**
+  String get aboutGitHub;
+
+  /// GitHub repo description
+  ///
+  /// In en, this message translates to:
+  /// **'View source code, report issues'**
+  String get aboutGitHubDesc;
+
+  /// Check for updates button
+  ///
+  /// In en, this message translates to:
+  /// **'Check for Updates'**
+  String get aboutCheckUpdate;
+
+  /// Check for updates description
+  ///
+  /// In en, this message translates to:
+  /// **'Check if a newer version is available'**
+  String get aboutCheckUpdateDesc;
+
+  /// Update is available
+  ///
+  /// In en, this message translates to:
+  /// **'New version available: {version}'**
+  String aboutUpdateAvailable(String version);
+
+  /// Already up to date
+  ///
+  /// In en, this message translates to:
+  /// **'You are on the latest version'**
+  String get aboutUpdateCurrent;
+
+  /// Update check failed
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to check for updates'**
+  String get aboutUpdateError;
+
+  /// Update check in progress
+  ///
+  /// In en, this message translates to:
+  /// **'Checking for updates…'**
+  String get aboutUpdateChecking;
+
+  /// Download update button
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get aboutUpdateDownload;
+
+  /// License label
+  ///
+  /// In en, this message translates to:
+  /// **'License'**
+  String get aboutLicense;
+
+  /// Reset settings button
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Settings'**
+  String get settingsResetTitle;
+
+  /// Reset settings description
+  ///
+  /// In en, this message translates to:
+  /// **'Reset all preferences to default values'**
+  String get settingsResetDesc;
+
+  /// Reset confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to reset all preferences to defaults?'**
+  String get settingsResetConfirm;
+
+  /// Reset button text
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get reset;
 }
 
 class _AppLocalizationsDelegate

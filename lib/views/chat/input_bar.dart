@@ -81,13 +81,24 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
                   child: KeyboardListener(
                     focusNode: FocusNode(),
                     onKeyEvent: (event) {
-                      // Enter to send, Shift+Enter for newline
+                      // Send shortcut is configurable: Enter or Ctrl+Enter
+                      // Shift+Enter always inserts newline
                       // Skip if IME is composing (e.g. pinyin input)
+                      final shortcut = ref.read(sendShortcutProvider);
                       if (event is KeyDownEvent &&
                           event.logicalKey == LogicalKeyboardKey.enter &&
                           !HardwareKeyboard.instance.isShiftPressed &&
                           !_controller.value.composing.isValid) {
-                        _send();
+                        if (shortcut == 'ctrlEnter') {
+                          // Ctrl+Enter / Cmd+Enter to send
+                          if (HardwareKeyboard.instance.isControlPressed ||
+                              HardwareKeyboard.instance.isMetaPressed) {
+                            _send();
+                          }
+                        } else {
+                          // Enter to send (default)
+                          _send();
+                        }
                       }
                     },
                     child: TextField(

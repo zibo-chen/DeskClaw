@@ -2185,4 +2185,120 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get configExportEmpty => '没有可导出的模型配置';
+
+  @override
+  String get navAppSettings => '偏好设置';
+
+  @override
+  String get appSettingsTitle => '偏好设置';
+
+  @override
+  String get settingSectionAppearance => '外观';
+
+  @override
+  String get settingSectionGeneral => '通用';
+
+  @override
+  String get settingSectionAbout => '关于';
+
+  @override
+  String get settingLanguage => '语言';
+
+  @override
+  String get settingLanguageDesc => '选择界面显示语言';
+
+  @override
+  String get settingTheme => '主题';
+
+  @override
+  String get settingThemeDesc => '选择界面配色方案';
+
+  @override
+  String get followSystem => '跟随系统';
+
+  @override
+  String get english => 'English';
+
+  @override
+  String get chinese => '中文';
+
+  @override
+  String get themeLight => '浅色';
+
+  @override
+  String get themeDark => '深色';
+
+  @override
+  String get settingSendShortcut => '发送消息';
+
+  @override
+  String get settingSendShortcutDesc => '发送消息的键盘快捷键';
+
+  @override
+  String get sendByEnter => 'Enter';
+
+  @override
+  String get sendByCtrlEnter => 'Ctrl + Enter';
+
+  @override
+  String get settingSidebarDefault => '侧边栏';
+
+  @override
+  String get settingSidebarDefaultDesc => '启动时侧边栏的默认状态';
+
+  @override
+  String get sidebarExpanded => '展开';
+
+  @override
+  String get sidebarCollapsed => '收起';
+
+  @override
+  String get aboutVersion => '版本';
+
+  @override
+  String get aboutBuildWith => '基于 Flutter 与 Rust 构建';
+
+  @override
+  String get aboutGitHub => 'GitHub 仓库';
+
+  @override
+  String get aboutGitHubDesc => '查看源码、反馈问题';
+
+  @override
+  String get aboutCheckUpdate => '检查更新';
+
+  @override
+  String get aboutCheckUpdateDesc => '检查是否有新版本可用';
+
+  @override
+  String aboutUpdateAvailable(String version) {
+    return '发现新版本：$version';
+  }
+
+  @override
+  String get aboutUpdateCurrent => '当前已是最新版本';
+
+  @override
+  String get aboutUpdateError => '检查更新失败';
+
+  @override
+  String get aboutUpdateChecking => '正在检查更新…';
+
+  @override
+  String get aboutUpdateDownload => '下载';
+
+  @override
+  String get aboutLicense => '许可证';
+
+  @override
+  String get settingsResetTitle => '重置设置';
+
+  @override
+  String get settingsResetDesc => '将所有偏好设置恢复为默认值';
+
+  @override
+  String get settingsResetConfirm => '确定要将所有偏好设置恢复为默认值吗？';
+
+  @override
+  String get reset => '重置';
 }

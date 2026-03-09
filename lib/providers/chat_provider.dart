@@ -25,6 +25,7 @@ enum NavSection {
   models,
   proxy,
   llmDebug,
+  appSettings,
 }
 
 /// Current navigation state
@@ -353,15 +354,42 @@ final isCurrentSessionProcessingProvider = Provider<bool>((ref) {
 
 // ── User preferences ─────────────────────────────────────
 
-/// Language / Locale setting — initialised from persisted preference
-final localeProvider = StateProvider<Locale>(
-  (ref) => Locale(SettingsService.locale),
+/// Raw locale setting — 'system' | 'en' | 'zh'
+final localeSettingProvider = StateProvider<String>(
+  (ref) => SettingsService.locale,
 );
 
-/// Theme mode — initialised from persisted preference
-final themeModeProvider = StateProvider<ThemeMode>(
-  (ref) =>
-      SettingsService.themeMode == 'dark' ? ThemeMode.dark : ThemeMode.light,
+/// Resolved locale — when 'system', uses platform locale
+final localeProvider = Provider<Locale>((ref) {
+  final setting = ref.watch(localeSettingProvider);
+  if (setting == 'system') {
+    final platformLocale = WidgetsBinding.instance.platformDispatcher.locale;
+    // Map to supported locales: zh or en (fallback)
+    return platformLocale.languageCode == 'zh'
+        ? const Locale('zh')
+        : const Locale('en');
+  }
+  return Locale(setting);
+});
+
+/// Raw theme setting — 'system' | 'light' | 'dark'
+final themeSettingProvider = StateProvider<String>(
+  (ref) => SettingsService.themeMode,
+);
+
+/// Resolved theme mode — 'system' maps to ThemeMode.system
+final themeModeProvider = Provider<ThemeMode>((ref) {
+  final setting = ref.watch(themeSettingProvider);
+  return switch (setting) {
+    'dark' => ThemeMode.dark,
+    'light' => ThemeMode.light,
+    _ => ThemeMode.system,
+  };
+});
+
+/// Send message shortcut setting — 'enter' | 'ctrlEnter'
+final sendShortcutProvider = StateProvider<String>(
+  (ref) => SettingsService.sendShortcut,
 );
 
 // ── UI layout state ──────────────────────────────────────

@@ -7,6 +7,15 @@ class AppConstants {
   static const String appName = 'CoralDesk';
   static const String appVersion = 'v0.1.0';
   static const String appTagline = 'Works for you, grows with you';
+
+  // GitHub repository
+  static const String githubOwner = 'zibo-chen';
+  static const String githubRepo = 'CoralDesk';
+  static const String githubUrl = 'https://github.com/$githubOwner/$githubRepo';
+  static const String releasesUrl = '$githubUrl/releases';
+  static const String licenseUrl = '$githubUrl/blob/main/LICENSE';
+  static const String licenseName = 'GNU Affero General Public License v3.0';
+  static const String licenseShort = 'AGPL-3.0';
   static const String welcomeTitle = 'Hello, how can I help you today?';
   static const String welcomeSubtitle =
       'I am a helpful assistant that can help you with your questions.';

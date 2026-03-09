@@ -19,12 +19,15 @@ class CoralDeskApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Persist locale & theme whenever they change
-    ref.listen<Locale>(localeProvider, (_, next) {
-      SettingsService.locale = next.languageCode;
+    // Persist locale & theme whenever the raw settings change
+    ref.listen<String>(localeSettingProvider, (_, next) {
+      SettingsService.locale = next;
     });
-    ref.listen<ThemeMode>(themeModeProvider, (_, next) {
-      SettingsService.themeMode = next == ThemeMode.dark ? 'dark' : 'light';
+    ref.listen<String>(themeSettingProvider, (_, next) {
+      SettingsService.themeMode = next;
+    });
+    ref.listen<String>(sendShortcutProvider, (_, next) {
+      SettingsService.sendShortcut = next;
     });
 
     final themeMode = ref.watch(themeModeProvider);

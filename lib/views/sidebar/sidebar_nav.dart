@@ -229,6 +229,14 @@ class _SidebarNavState extends ConsumerState<SidebarNav> {
                       section: NavSection.llmDebug,
                       isActive: currentNav == NavSection.llmDebug,
                     ),
+                    _buildNavItem(
+                      c,
+                      ref: ref,
+                      icon: Icons.tune_rounded,
+                      label: l10n.navAppSettings,
+                      section: NavSection.appSettings,
+                      isActive: currentNav == NavSection.appSettings,
+                    ),
                   ],
                 ),
               ],
@@ -253,7 +261,6 @@ class _SidebarNavState extends ConsumerState<SidebarNav> {
       cronNotificationProvider.select((s) => s.unreadCount),
     );
     final isNotifOpen = ref.watch(notificationPanelOpenProvider);
-    final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
 
     // All nav items as (icon, section, label)
     final navItems = [
@@ -275,6 +282,7 @@ class _SidebarNavState extends ConsumerState<SidebarNav> {
       (Icons.model_training, NavSection.models, l10n.navModels),
       (Icons.vpn_key, NavSection.proxy, l10n.navProxy),
       (Icons.bug_report_outlined, NavSection.llmDebug, 'LLM Debug'),
+      (Icons.tune_rounded, NavSection.appSettings, l10n.navAppSettings),
     ];
 
     return Column(
@@ -464,9 +472,9 @@ class _SidebarNavState extends ConsumerState<SidebarNav> {
                 ),
               ),
               const SizedBox(height: 2),
-              // Theme toggle
+              // Settings shortcut
               Tooltip(
-                message: isDark ? l10n.darkMode : l10n.lightMode,
+                message: l10n.navAppSettings,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 9,
@@ -478,9 +486,8 @@ class _SidebarNavState extends ConsumerState<SidebarNav> {
                     child: InkWell(
                       borderRadius: BorderRadius.circular(8),
                       onTap: () {
-                        ref.read(themeModeProvider.notifier).state = isDark
-                            ? ThemeMode.light
-                            : ThemeMode.dark;
+                        ref.read(currentNavProvider.notifier).state =
+                            NavSection.appSettings;
                       },
                       child: Container(
                         width: 36,
@@ -489,9 +496,13 @@ class _SidebarNavState extends ConsumerState<SidebarNav> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
-                          isDark ? Icons.dark_mode : Icons.light_mode,
+                          currentNav == NavSection.appSettings
+                              ? Icons.tune_rounded
+                              : Icons.tune_outlined,
                           size: 18,
-                          color: c.sidebarText,
+                          color: currentNav == NavSection.appSettings
+                              ? AppColors.primary
+                              : c.sidebarText,
                         ),
                       ),
                     ),
@@ -675,8 +686,6 @@ class _SidebarNavState extends ConsumerState<SidebarNav> {
     AppLocalizations l10n,
     CoralDeskColors c,
   ) {
-    final locale = ref.watch(localeProvider);
-    final isZh = locale.languageCode == 'zh';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
@@ -687,34 +696,6 @@ class _SidebarNavState extends ConsumerState<SidebarNav> {
         children: [
           // Notification bell
           _buildNotificationBell(ref, c),
-          const SizedBox(height: 8),
-          // Language toggle
-          Row(
-            children: [
-              Icon(Icons.language, size: 16, color: c.sidebarText),
-              const SizedBox(width: 8),
-              _buildLangChip(
-                c,
-                label: 'EN',
-                selected: !isZh,
-                onTap: () {
-                  ref.read(localeProvider.notifier).state = const Locale('en');
-                },
-              ),
-              const SizedBox(width: 4),
-              _buildLangChip(
-                c,
-                label: '中文',
-                selected: isZh,
-                onTap: () {
-                  ref.read(localeProvider.notifier).state = const Locale('zh');
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // Theme toggle
-          _buildThemeToggle(context, ref, c),
         ],
       ),
     );
@@ -783,67 +764,6 @@ class _SidebarNavState extends ConsumerState<SidebarNav> {
                 color: isOpen ? AppColors.primary : c.sidebarText,
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLangChip(
-    CoralDeskColors c, {
-    required String label,
-    required bool selected,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(6),
-          color: selected ? AppColors.primary : Colors.transparent,
-          border: Border.all(
-            color: selected ? AppColors.primary : c.chatListBorder,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: selected ? Colors.white : c.sidebarText,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildThemeToggle(
-    BuildContext context,
-    WidgetRef ref,
-    CoralDeskColors c,
-  ) {
-    final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
-    return InkWell(
-      borderRadius: BorderRadius.circular(8),
-      onTap: () {
-        ref.read(themeModeProvider.notifier).state = isDark
-            ? ThemeMode.light
-            : ThemeMode.dark;
-      },
-      child: Row(
-        children: [
-          Icon(
-            isDark ? Icons.dark_mode : Icons.light_mode,
-            size: 18,
-            color: c.sidebarText,
-          ),
-          const SizedBox(width: 10),
-          Text(
-            isDark
-                ? AppLocalizations.of(context)!.darkMode
-                : AppLocalizations.of(context)!.lightMode,
-            style: TextStyle(fontSize: 13, color: c.sidebarText),
           ),
         ],
       ),

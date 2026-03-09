@@ -367,6 +367,15 @@ async fn load_embedding_api_key(config_path: &std::path::Path) -> Option<String>
 pub async fn init_runtime() -> String {
     crate::logging::init_rust_logging();
 
+    // ── Discover and enable bundled Python & Bun runtimes ──
+    let bundled = crate::bundled_runtimes::prepend_bundled_runtimes_to_path();
+    if !bundled.is_empty() {
+        tracing::info!(
+            paths = ?bundled.iter().map(|p| p.display().to_string()).collect::<Vec<_>>(),
+            "Bundled runtimes injected into PATH"
+        );
+    }
+
     match zeroclaw::Config::load_or_init().await {
         Ok(mut config) => {
             // ── Browser auto-setup: ensure agent-browser is installed ──

@@ -13,6 +13,9 @@ env:
   RUST_VERSION: "1.92.0"
   ZEROCLAW_REPO: "zibo-chen/zeroclaw"
   ZEROCLAW_REF: "main-deskclaw"
+  # Bundled runtime versions
+  PYTHON_BUILD_TAG: "20260303"
+  PYTHON_VERSION: "3.12.13"
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -59,16 +62,49 @@ jobs:
       - name: Build macOS app
         run: flutter build macos --release
 
+      - name: Bundle runtimes (Python + Bun)
+        env:
+          PYTHON_BUILD_TAG: ${{ env.PYTHON_BUILD_TAG }}
+          PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
+        run: |
+          chmod +x installers/download_runtimes.sh
+          bash installers/download_runtimes.sh \
+            "build/macos/Build/Products/Release/coraldesk.app/Contents/Resources/runtimes" \
+            macos aarch64
+
       - name: Package macOS app
         run: |
           cd build/macos/Build/Products/Release
           ditto -c -k --sequesterRsrc --keepParent coraldesk.app coraldesk-macos.zip
 
+      - name: Create DMG installer
+        run: |
+          # Install create-dmg
+          brew install create-dmg
+          # Create DMG
+          create-dmg \
+            --volname "CoralDesk" \
+            --volicon "assets/icons/app_icon.icns" \
+            --window-pos 200 120 \
+            --window-size 600 400 \
+            --icon-size 100 \
+            --icon "coraldesk.app" 150 185 \
+            --hide-extension "coraldesk.app" \
+            --app-drop-link 450 185 \
+            --no-internet-enable \
+            "build/CoralDesk-macos.dmg" \
+            "build/macos/Build/Products/Release/coraldesk.app" \
+          || true
+          # create-dmg returns non-zero if icon positioning fails, but DMG is still valid
+          test -f "build/CoralDesk-macos.dmg"
+
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
         with:
           name: coraldesk-macos
-          path: build/macos/Build/Products/Release/coraldesk-macos.zip
+          path: |
+            build/macos/Build/Products/Release/coraldesk-macos.zip
+            build/CoralDesk-macos.dmg
           if-no-files-found: error
 
   # ---------------------------------------------------------------------------
@@ -123,16 +159,34 @@ jobs:
       - name: Build Linux app
         run: flutter build linux --release
 
+      - name: Bundle runtimes (Python + Bun)
+        env:
+          PYTHON_BUILD_TAG: ${{ env.PYTHON_BUILD_TAG }}
+          PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
+        run: |
+          chmod +x installers/download_runtimes.sh
+          bash installers/download_runtimes.sh \
+            "build/linux/x64/release/bundle/runtimes" \
+            linux x86_64
+
       - name: Package Linux app
         run: |
           cd build/linux/x64/release
           tar -czf coraldesk-linux-x64.tar.gz bundle
 
+      - name: Build AppImage
+        run: |
+          sudo apt-get install -y libfuse2
+          chmod +x installers/linux/build_appimage.sh
+          bash installers/linux/build_appimage.sh
+
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
           name: coraldesk-linux-x64
-          path: build/linux/x64/release/coraldesk-linux-x64.tar.gz
+          path: |
+            build/linux/x64/release/coraldesk-linux-x64.tar.gz
+            build/CoralDesk-x86_64.AppImage
           if-no-files-found: error
 
   # ---------------------------------------------------------------------------
@@ -198,14 +252,28 @@ jobs:
           CXX_x86_64_pc_windows_msvc: cl
         run: flutter build windows --release
 
+      - name: Bundle runtimes (Python + Bun)
+        run: |
+          powershell -ExecutionPolicy Bypass -File installers\download_runtimes.ps1 `
+            -TargetDir "build\windows\x64\runner\Release\runtimes" `
+            -PythonBuildTag "${{ env.PYTHON_BUILD_TAG }}" `
+            -PythonVersion "${{ env.PYTHON_VERSION }}"
+
       - name: Package Windows app
         run: Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath build\coraldesk-windows-x64.zip
+
+      - name: Build Windows installer (Inno Setup)
+        run: |
+          # Inno Setup is pre-installed on windows-latest
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DMyAppVersion="${{ github.ref_name }}" installers\windows\setup.iss
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: coraldesk-windows-x64
-          path: build/coraldesk-windows-x64.zip
+          path: |
+            build/coraldesk-windows-x64.zip
+            build/installer/coraldesk-windows-x64-setup.exe
           if-no-files-found: error
 
   # ---------------------------------------------------------------------------
@@ -230,8 +298,11 @@ jobs:
           generate_release_notes: true
           files: |
             artifacts/coraldesk-macos/coraldesk-macos.zip
+            artifacts/coraldesk-macos/CoralDesk-macos.dmg
             artifacts/coraldesk-linux-x64/coraldesk-linux-x64.tar.gz
+            artifacts/coraldesk-linux-x64/CoralDesk-x86_64.AppImage
             artifacts/coraldesk-windows-x64/coraldesk-windows-x64.zip
+            artifacts/coraldesk-windows-x64/coraldesk-windows-x64-setup.exe
 
   # ---------------------------------------------------------------------------
   # Create unstable pre-release (on main branch pushes)
@@ -260,5 +331,8 @@ jobs:
           generate_release_notes: true
           files: |
             artifacts/coraldesk-macos/coraldesk-macos.zip
+            artifacts/coraldesk-macos/CoralDesk-macos.dmg
             artifacts/coraldesk-linux-x64/coraldesk-linux-x64.tar.gz
+            artifacts/coraldesk-linux-x64/CoralDesk-x86_64.AppImage
             artifacts/coraldesk-windows-x64/coraldesk-windows-x64.zip
+            artifacts/coraldesk-windows-x64/coraldesk-windows-x64-setup.exe

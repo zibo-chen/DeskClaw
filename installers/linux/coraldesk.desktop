@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=CoralDesk
+Comment=AI Desktop Assistant - Works for you, grows with you
+Exec=coraldesk
+Icon=coraldesk
+Terminal=false
+Categories=Utility;Office;Chat;
+Keywords=AI;Assistant;Chat;LLM;
+StartupWMClass=coraldesk

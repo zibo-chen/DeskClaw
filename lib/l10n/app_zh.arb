@@ -723,5 +723,50 @@
   "clipboardEmpty": "剪贴板为空",
   "configImportConfirmTitle": "导入配置",
   "configImportConfirmMessage": "在剪贴板中发现 {count} 个模型配置。导入将添加或覆盖现有配置，是否继续？",
-  "configExportEmpty": "没有可导出的模型配置"
+  "configExportEmpty": "没有可导出的模型配置",
+
+  "navAppSettings": "偏好设置",
+  "appSettingsTitle": "偏好设置",
+
+  "settingSectionAppearance": "外观",
+  "settingSectionGeneral": "通用",
+  "settingSectionAbout": "关于",
+
+  "settingLanguage": "语言",
+  "settingLanguageDesc": "选择界面显示语言",
+  "settingTheme": "主题",
+  "settingThemeDesc": "选择界面配色方案",
+
+  "followSystem": "跟随系统",
+  "english": "English",
+  "chinese": "中文",
+  "themeLight": "浅色",
+  "themeDark": "深色",
+
+  "settingSendShortcut": "发送消息",
+  "settingSendShortcutDesc": "发送消息的键盘快捷键",
+  "sendByEnter": "Enter",
+  "sendByCtrlEnter": "Ctrl + Enter",
+
+  "settingSidebarDefault": "侧边栏",
+  "settingSidebarDefaultDesc": "启动时侧边栏的默认状态",
+  "sidebarExpanded": "展开",
+  "sidebarCollapsed": "收起",
+
+  "aboutVersion": "版本",
+  "aboutBuildWith": "基于 Flutter 与 Rust 构建",
+  "aboutGitHub": "GitHub 仓库",
+  "aboutGitHubDesc": "查看源码、反馈问题",
+  "aboutCheckUpdate": "检查更新",
+  "aboutCheckUpdateDesc": "检查是否有新版本可用",
+  "aboutUpdateAvailable": "发现新版本：{version}",
+  "aboutUpdateCurrent": "当前已是最新版本",
+  "aboutUpdateError": "检查更新失败",
+  "aboutUpdateChecking": "正在检查更新…",
+  "aboutUpdateDownload": "下载",
+  "aboutLicense": "许可证",
+  "settingsResetTitle": "重置设置",
+  "settingsResetDesc": "将所有偏好设置恢复为默认值",
+  "settingsResetConfirm": "确定要将所有偏好设置恢复为默认值吗？",
+  "reset": "重置"
 }

@@ -10,13 +10,21 @@ class SettingsService {
 
   // ── Locale ──────────────────────────────────────────────
 
-  static String get locale => _prefs.getString('locale') ?? 'en';
+  /// 'system' | 'en' | 'zh'  — defaults to system
+  static String get locale => _prefs.getString('locale') ?? 'system';
   static set locale(String v) => _prefs.setString('locale', v);
 
   // ── Theme ───────────────────────────────────────────────
 
-  static String get themeMode => _prefs.getString('themeMode') ?? 'light';
+  /// 'system' | 'light' | 'dark'  — defaults to system
+  static String get themeMode => _prefs.getString('themeMode') ?? 'system';
   static set themeMode(String v) => _prefs.setString('themeMode', v);
+
+  // ── Send Message Shortcut ───────────────────────────────
+
+  /// 'enter' | 'ctrlEnter'  — defaults to enter
+  static String get sendShortcut => _prefs.getString('sendShortcut') ?? 'enter';
+  static set sendShortcut(String v) => _prefs.setString('sendShortcut', v);
 
   // ── Progressive Disclosure ──────────────────────────────
 
