@@ -54,9 +54,22 @@ function Invoke-NativeCommand {
     $process.StartInfo.RedirectStandardError = $true
     $process.StartInfo.CreateNoWindow = $true
 
-    foreach ($arg in $Arguments) {
-        [void]$process.StartInfo.ArgumentList.Add($arg)
+    $escapedArguments = foreach ($arg in $Arguments) {
+        if ($null -eq $arg) { continue }
+
+        $escapedArg = [string]$arg
+        if ($escapedArg.Length -eq 0) {
+            '""'
+            continue
+        }
+
+        if ($escapedArg -match '[\s"]') {
+            '"' + (($escapedArg -replace '(\\*)"', '$1$1\\"') -replace '(\\+)$', '$1$1') + '"'
+        } else {
+            $escapedArg
+        }
     }
+    $process.StartInfo.Arguments = [string]::Join(' ', $escapedArguments)
 
     [void]$process.Start()
     $stdout = $process.StandardOutput.ReadToEnd()
