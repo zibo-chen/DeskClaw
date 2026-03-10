@@ -1,7 +1,8 @@
 //! Bundled runtime discovery and PATH injection.
 //!
-//! CoralDesk ships with embedded Python and Bun runtimes so that agents can
-//! execute code without requiring the user to install interpreters manually.
+//! CoralDesk ships with embedded Python, Bun, and agent-browser so that agents
+//! can execute code and automate browsers without requiring the user to install
+//! interpreters or tools manually.
 //!
 //! On startup, [`prepend_bundled_runtimes_to_path`] locates the `runtimes/`
 //! directory relative to the running executable and prepends the interpreter
@@ -9,13 +10,17 @@
 //! `PATH` after `env_clear()`, all shell commands will discover the bundled
 //! binaries automatically.
 //!
+//! [`find_bundled_agent_browser`] returns the absolute path to the pre-installed
+//! `agent-browser` CLI wrapper, or `None` if not found. This allows the browser
+//! tool to work out-of-the-box without any runtime installation step.
+//!
 //! ### Layout per platform
 //!
-//! | Platform | Python binary path | Bun binary path |
-//! |----------|-------------------|-----------------|
-//! | macOS | `…/Contents/Resources/runtimes/python/bin/python3` | `…/Contents/Resources/runtimes/bun/bun` |
-//! | Linux | `<bundle>/runtimes/python/bin/python3` | `<bundle>/runtimes/bun/bun` |
-//! | Windows | `<Release>/runtimes/python/python.exe` | `<Release>/runtimes/bun/bun.exe` |
+//! | Platform | Python binary path | Bun binary path | agent-browser path |
+//! |----------|-------------------|-----------------|-------------------|
+//! | macOS | `…/Contents/Resources/runtimes/python/bin/python3` | `…/Contents/Resources/runtimes/bun/bun` | `…/Contents/Resources/runtimes/agent-browser/agent-browser` |
+//! | Linux | `<bundle>/runtimes/python/bin/python3` | `<bundle>/runtimes/bun/bun` | `<bundle>/runtimes/agent-browser/agent-browser` |
+//! | Windows | `<Release>/runtimes/python/python.exe` | `<Release>/runtimes/bun/bun.exe` | `<Release>/runtimes/agent-browser/agent-browser.cmd` |
 
 use std::path::{Path, PathBuf};
 
@@ -93,6 +98,93 @@ pub fn prepend_bundled_runtimes_to_path() -> Vec<PathBuf> {
     }
 
     prepended
+}
+
+/// Return the absolute path to the bundled `agent-browser` wrapper, or `None`
+/// if it doesn't exist in the runtimes directory.
+///
+/// The wrapper script is platform-specific:
+/// - macOS / Linux: `runtimes/agent-browser/agent-browser` (shell script)
+/// - Windows: `runtimes/agent-browser/agent-browser.cmd`
+pub fn find_bundled_agent_browser() -> Option<PathBuf> {
+    let runtimes_dir = find_runtimes_dir()?;
+
+    let ab_name = if cfg!(target_os = "windows") {
+        "agent-browser.cmd"
+    } else {
+        "agent-browser"
+    };
+
+    let candidate = runtimes_dir.join("agent-browser").join(ab_name);
+    if candidate.exists() {
+        tracing::info!(path = %candidate.display(), "Bundled agent-browser found");
+        Some(candidate)
+    } else {
+        tracing::debug!(
+            expected = %candidate.display(),
+            "Bundled agent-browser not found"
+        );
+        None
+    }
+}
+
+/// Auto-detect the system Chrome/Chromium/Edge executable path.
+///
+/// Sets `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` so Playwright-based tools
+/// (including agent-browser) use the system browser instead of requiring
+/// a Playwright-managed browser download.
+///
+/// Returns `true` if a system browser was found and the env var was set.
+pub fn setup_system_browser_for_playwright() -> bool {
+    // Skip if already configured
+    if std::env::var("PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH").is_ok() {
+        tracing::debug!("PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH already set, skipping auto-detect");
+        return true;
+    }
+
+    let candidates: &[&str] = if cfg!(target_os = "macos") {
+        &[
+            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            "/Applications/Chromium.app/Contents/MacOS/Chromium",
+            "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+            "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
+        ]
+    } else if cfg!(target_os = "windows") {
+        &[
+            r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+            r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+            r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+            r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+            r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe",
+        ]
+    } else {
+        // Linux: check well-known paths, then fall back to which-based lookup
+        &[
+            "/usr/bin/google-chrome-stable",
+            "/usr/bin/google-chrome",
+            "/usr/bin/chromium-browser",
+            "/usr/bin/chromium",
+            "/usr/bin/microsoft-edge-stable",
+            "/snap/bin/chromium",
+        ]
+    };
+
+    for candidate in candidates {
+        let path = Path::new(candidate);
+        if path.exists() {
+            tracing::info!(
+                browser = %candidate,
+                "Auto-detected system browser for Playwright"
+            );
+            std::env::set_var("PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH", candidate);
+            return true;
+        }
+    }
+
+    tracing::warn!(
+        "No system Chrome/Chromium/Edge found. Browser automation may require manual browser configuration."
+    );
+    false
 }
 
 /// Locate the `runtimes/` directory based on the current executable's location.

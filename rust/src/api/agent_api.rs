@@ -378,8 +378,9 @@ pub async fn init_runtime() -> String {
 
     match zeroclaw::Config::load_or_init().await {
         Ok(mut config) => {
-            // ── Browser auto-setup: ensure agent-browser is installed ──
-            let agent_browser_path = crate::api::browser_bootstrap::ensure_agent_browser().await;
+            // ── Browser setup: locate bundled agent-browser & configure system browser ──
+            crate::bundled_runtimes::setup_system_browser_for_playwright();
+            let agent_browser_path = crate::api::browser_bootstrap::find_agent_browser();
             crate::api::browser_bootstrap::apply_browser_defaults(&mut config, &agent_browser_path);
             tracing::info!(
                 browser_enabled = config.browser.enabled,
@@ -555,7 +556,7 @@ pub async fn reload_config_from_disk() -> String {
     match zeroclaw::Config::load_or_init().await {
         Ok(mut config) => {
             // Re-apply browser defaults
-            let agent_browser_path = crate::api::browser_bootstrap::ensure_agent_browser().await;
+            let agent_browser_path = crate::api::browser_bootstrap::find_agent_browser();
             crate::api::browser_bootstrap::apply_browser_defaults(&mut config, &agent_browser_path);
 
             // Reload auxiliary settings from disk

@@ -100,9 +100,84 @@ if [ ! -f "$BUN_BIN" ]; then
 fi
 echo "  ✓ Bun: $($BUN_BIN --version 2>&1 || echo 'version check skipped')"
 
+# ── Install agent-browser via Bun ─────────────────────────────
+# Pre-install agent-browser (Playwright-based browser automation CLI) so that
+# the application works out-of-the-box without requiring users to run npm/bun
+# install manually. Playwright's own browser download is skipped — the app
+# will auto-detect and use the system Chrome/Chromium/Edge at runtime.
+
+echo "→ Installing agent-browser via bundled Bun ..."
+AB_DIR="${TARGET_DIR}/agent-browser"
+mkdir -p "$AB_DIR"
+
+# Create a minimal package.json so Bun can install into this directory
+cat > "${AB_DIR}/package.json" <<'PKGJSON'
+{ "name": "deskclaw-agent-browser", "private": true }
+PKGJSON
+
+# Skip Playwright browser download — we use the system browser at runtime
+PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
+PLAYWRIGHT_BROWSERS_PATH=0 \
+  "$BUN_BIN" add --cwd "$AB_DIR" agent-browser 2>&1 | tail -5
+
+# Create a platform-appropriate wrapper script that:
+#   1. Uses the bundled Bun as the JS runtime
+#   2. Sets PLAYWRIGHT env vars to use the system browser
+#   3. Forwards all CLI args to the real agent-browser entry point
+AB_ENTRY=$(find "${AB_DIR}/node_modules/agent-browser" -name "cli.js" -o -name "index.js" -o -name "agent-browser.js" 2>/dev/null | head -1)
+if [ -z "$AB_ENTRY" ]; then
+  # Fallback: look for the bin entry via node_modules/.bin
+  AB_ENTRY=$(readlink -f "${AB_DIR}/node_modules/.bin/agent-browser" 2>/dev/null || true)
+fi
+if [ -z "$AB_ENTRY" ]; then
+  echo "WARNING: Could not locate agent-browser entry point, browser automation may not work" >&2
+else
+  # Store relative path from wrapper to entry point
+  AB_ENTRY_REL=$(python3 -c "import os.path; print(os.path.relpath('$AB_ENTRY', '$AB_DIR'))" 2>/dev/null || echo "$AB_ENTRY")
+
+  cat > "${AB_DIR}/agent-browser" <<WRAPPER
+#!/usr/bin/env bash
+# Auto-generated wrapper — launches agent-browser with the bundled Bun runtime
+# and auto-detected system browser. Do not edit manually.
+SCRIPT_DIR="\$(cd "\$(dirname "\$0")" && pwd)"
+RUNTIMES_DIR="\$(cd "\$SCRIPT_DIR/.." && pwd)"
+BUN="\$RUNTIMES_DIR/bun/bun"
+
+# Auto-detect system Chrome/Chromium for Playwright
+if [ -z "\$PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH" ]; then
+  for candidate in \\
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \\
+    "/Applications/Chromium.app/Contents/MacOS/Chromium" \\
+    "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge" \\
+    "\$(command -v google-chrome-stable 2>/dev/null)" \\
+    "\$(command -v google-chrome 2>/dev/null)" \\
+    "\$(command -v chromium-browser 2>/dev/null)" \\
+    "\$(command -v chromium 2>/dev/null)" \\
+    "\$(command -v microsoft-edge-stable 2>/dev/null)" \\
+  ; do
+    if [ -n "\$candidate" ] && [ -x "\$candidate" ]; then
+      export PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH="\$candidate"
+      break
+    fi
+  done
+fi
+
+exec "\$BUN" "\$SCRIPT_DIR/${AB_ENTRY_REL}" "\$@"
+WRAPPER
+  chmod +x "${AB_DIR}/agent-browser"
+
+  # Verify
+  if "${AB_DIR}/agent-browser" --version >/dev/null 2>&1; then
+    AB_VER=$("${AB_DIR}/agent-browser" --version 2>&1 || true)
+    echo "  ✓ agent-browser: ${AB_VER}"
+  else
+    echo "  ✓ agent-browser: installed (version check skipped)"
+  fi
+fi
+
 # ── Summary ───────────────────────────────────────────────────
 
 echo ""
 echo "Runtimes installed to ${TARGET_DIR}:"
-du -sh "${TARGET_DIR}/python" "${TARGET_DIR}/bun" 2>/dev/null || true
+du -sh "${TARGET_DIR}/python" "${TARGET_DIR}/bun" "${TARGET_DIR}/agent-browser" 2>/dev/null || true
 echo "Done."

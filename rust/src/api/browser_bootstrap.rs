@@ -1,105 +1,64 @@
-//! Browser bootstrap: auto-install `agent-browser` CLI and configure defaults.
+//! Browser bootstrap: locate bundled `agent-browser` and configure defaults.
 //!
-//! On first launch (or when agent-browser is missing) this module:
-//! 1. Resolves the bundled Node.js prefix at `~/.deskclaw/node`.
-//! 2. Runs `npm install -g agent-browser` using that prefix.
-//! 3. Returns the absolute path to the installed binary so the config can
-//!    point `agent_browser_command` at it directly (avoiding PATH issues
-//!    inside macOS .app bundles).
+//! CoralDesk pre-bundles `agent-browser` (installed via Bun at build time) in
+//! the `runtimes/agent-browser/` directory. This module locates the bundled
+//! binary and configures the browser tool to use it out-of-the-box, without
+//! requiring any runtime installation steps.
+//!
+//! The Playwright system-browser auto-detection is handled by
+//! [`crate::bundled_runtimes::setup_system_browser_for_playwright`] so that
+//! agent-browser uses the local Chrome/Chromium/Edge instead of requiring its
+//! own browser download.
 
-use std::path::PathBuf;
-use tokio::process::Command;
-
-/// Resolve `~/.deskclaw/node` prefix directory.
-fn deskclaw_node_prefix() -> Option<PathBuf> {
-    dirs::home_dir().map(|h| h.join(".deskclaw").join("node"))
-}
-
-/// Absolute path where `agent-browser` binary is expected after global npm install.
-fn agent_browser_bin_path() -> Option<PathBuf> {
-    deskclaw_node_prefix().map(|prefix| prefix.join("bin").join("agent-browser"))
-}
-
-/// Check if the `agent-browser` binary exists and is executable.
-#[allow(dead_code)]
-fn is_agent_browser_installed() -> bool {
-    agent_browser_bin_path()
-        .map(|p| p.exists())
-        .unwrap_or(false)
-}
-
-/// Install `agent-browser` globally into the bundled Node.js prefix.
+/// Locate the `agent-browser` CLI binary.
 ///
-/// Returns `Ok(path)` with the absolute binary path on success.
-async fn install_agent_browser() -> Result<PathBuf, String> {
-    let prefix = deskclaw_node_prefix()
-        .ok_or_else(|| "Cannot determine home directory for ~/.deskclaw/node".to_string())?;
-
-    let npm = prefix.join("bin").join("npm");
-    if !npm.exists() {
-        return Err(format!(
-            "Bundled npm not found at {}. Node.js bootstrap may be incomplete.",
-            npm.display()
-        ));
+/// Search order:
+/// 1. **Bundled**: `runtimes/agent-browser/agent-browser` (pre-installed at build time)
+/// 2. **PATH fallback**: check if `agent-browser` is available on the system PATH
+///
+/// Returns the absolute path to the binary, or an error description if not found.
+pub fn find_agent_browser() -> String {
+    // 1. Check bundled runtimes (preferred — works out-of-the-box)
+    if let Some(bundled) = crate::bundled_runtimes::find_bundled_agent_browser() {
+        tracing::info!(path = %bundled.display(), "Using bundled agent-browser");
+        return bundled.to_string_lossy().to_string();
     }
 
-    tracing::info!("Installing agent-browser via npm into {}", prefix.display());
-
-    let output = Command::new(npm.as_os_str())
-        .arg("install")
-        .arg("-g")
-        .arg("agent-browser")
-        .env(
-            "PATH",
-            format!(
-                "{}:/usr/bin:/bin:/usr/sbin:/sbin",
-                prefix.join("bin").display()
-            ),
-        )
-        .stdout(std::process::Stdio::piped())
-        .stderr(std::process::Stdio::piped())
-        .output()
-        .await
-        .map_err(|e| format!("Failed to spawn npm: {e}"))?;
-
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(format!("npm install -g agent-browser failed: {stderr}"));
+    // 2. Fallback: check if agent-browser exists on PATH
+    if let Some(path_binary) = find_on_path("agent-browser") {
+        tracing::info!(path = %path_binary.display(), "Using system agent-browser from PATH");
+        return path_binary.to_string_lossy().to_string();
     }
 
-    let bin = agent_browser_bin_path()
-        .ok_or_else(|| "Cannot determine agent-browser binary path".to_string())?;
+    tracing::warn!(
+        "agent-browser not found in bundled runtimes or PATH. \
+         Browser automation will be unavailable unless installed manually."
+    );
+    "error: agent-browser not found".to_string()
+}
 
-    if bin.exists() {
-        tracing::info!("agent-browser installed at {}", bin.display());
-        Ok(bin)
+/// Search for an executable on `PATH`.
+fn find_on_path(name: &str) -> Option<std::path::PathBuf> {
+    let path_var = std::env::var_os("PATH")?;
+    let exe_name = if cfg!(target_os = "windows") {
+        format!("{name}.cmd")
     } else {
-        Err(format!(
-            "npm install succeeded but binary not found at {}",
-            bin.display()
-        ))
-    }
-}
-
-/// Ensure `agent-browser` is available, installing it if needed.
-///
-/// Returns the absolute path to the binary, or an error description.
-/// This is called during app startup so the browser tool works out-of-box.
-pub async fn ensure_agent_browser() -> String {
-    if let Some(bin) = agent_browser_bin_path() {
-        if bin.exists() {
-            tracing::debug!("agent-browser already installed at {}", bin.display());
-            return bin.to_string_lossy().to_string();
+        name.to_string()
+    };
+    for dir in std::env::split_paths(&path_var) {
+        let candidate = dir.join(&exe_name);
+        if candidate.is_file() {
+            return Some(candidate);
+        }
+        // On Windows also check .exe
+        if cfg!(target_os = "windows") {
+            let exe_candidate = dir.join(format!("{name}.exe"));
+            if exe_candidate.is_file() {
+                return Some(exe_candidate);
+            }
         }
     }
-
-    match install_agent_browser().await {
-        Ok(path) => path.to_string_lossy().to_string(),
-        Err(e) => {
-            tracing::warn!("agent-browser auto-install failed: {e}");
-            format!("error: {e}")
-        }
-    }
+    None
 }
 
 /// Apply desktop-friendly browser defaults to the loaded config.
@@ -108,7 +67,7 @@ pub async fn ensure_agent_browser() -> String {
 /// - `browser.enabled = true`
 /// - `browser.allowed_domains = ["*"]`  (all public domains)
 /// - `browser.backend = "agent_browser"`
-/// - `browser.agent_browser_command` = absolute path to the installed binary
+/// - `browser.agent_browser_command` = absolute path to the located binary
 ///
 /// Only applies defaults when the user hasn't explicitly configured browser
 /// settings in their config.toml (detected by checking if `allowed_domains`

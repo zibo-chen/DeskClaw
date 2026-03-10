@@ -1005,7 +1005,7 @@ fn wire__crate__api__browser_bootstrap__ensure_agent_browser_impl(
                 transform_result_sse::<_, ()>(
                     (move || async move {
                         let output_ok = Result::<_, ()>::Ok(
-                            crate::api::browser_bootstrap::ensure_agent_browser().await,
+                            crate::api::browser_bootstrap::find_agent_browser(),
                         )?;
                         Ok(output_ok)
                     })()

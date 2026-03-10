@@ -88,6 +88,78 @@ $BunBin = Join-Path $BunDir "bun.exe"
 $bunVer = & $BunBin --version 2>&1
 Write-Host "  OK Bun: $bunVer"
 
+# ── Install agent-browser via Bun ─────────────────────────────
+# Pre-install agent-browser (Playwright-based browser automation CLI) so that
+# the application works out-of-the-box without requiring users to run npm/bun
+# install manually. Playwright's own browser download is skipped — the app
+# will auto-detect and use the system Chrome/Edge at runtime.
+
+Write-Host "-> Installing agent-browser via bundled Bun ..."
+$AbDir = Join-Path $TargetDir "agent-browser"
+New-Item -ItemType Directory -Force -Path $AbDir | Out-Null
+
+# Create minimal package.json
+$PkgJson = '{ "name": "deskclaw-agent-browser", "private": true }'
+Set-Content -Path (Join-Path $AbDir "package.json") -Value $PkgJson
+
+# Skip Playwright browser downloads — we use the system browser at runtime
+$env:PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1"
+$env:PLAYWRIGHT_BROWSERS_PATH = "0"
+& $BunBin add --cwd $AbDir agent-browser 2>&1 | Select-Object -Last 5
+
+# Locate the entry point
+$AbEntry = Get-ChildItem -Path (Join-Path $AbDir "node_modules\agent-browser") -Recurse -Include "cli.js","index.js","agent-browser.js" -ErrorAction SilentlyContinue | Select-Object -First 1
+if (-Not $AbEntry) {
+    # Fallback: look for the bin link
+    $AbBinLink = Join-Path $AbDir "node_modules\.bin\agent-browser"
+    if (Test-Path $AbBinLink) {
+        $AbEntry = Get-Item $AbBinLink
+    }
+}
+
+if ($AbEntry) {
+    $AbEntryRel = [System.IO.Path]::GetRelativePath($AbDir, $AbEntry.FullName)
+
+    # Create a .cmd wrapper for Windows
+    $WrapperContent = @"
+@echo off
+REM Auto-generated wrapper — launches agent-browser with the bundled Bun runtime
+REM and auto-detected system browser. Do not edit manually.
+set "SCRIPT_DIR=%~dp0"
+set "RUNTIMES_DIR=%SCRIPT_DIR%.."
+set "BUN=%RUNTIMES_DIR%\bun\bun.exe"
+
+REM Auto-detect system Chrome/Edge for Playwright
+if not defined PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH (
+    if exist "C:\Program Files\Google\Chrome\Application\chrome.exe" (
+        set "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=C:\Program Files\Google\Chrome\Application\chrome.exe"
+    ) else if exist "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" (
+        set "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+    ) else if exist "C:\Program Files\Microsoft\Edge\Application\msedge.exe" (
+        set "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=C:\Program Files\Microsoft\Edge\Application\msedge.exe"
+    ) else if exist "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" (
+        set "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+    )
+)
+
+"%BUN%" "%SCRIPT_DIR%$AbEntryRel" %*
+"@
+    Set-Content -Path (Join-Path $AbDir "agent-browser.cmd") -Value $WrapperContent
+
+    $abVer = & (Join-Path $AbDir "agent-browser.cmd") --version 2>&1
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "  OK agent-browser: $abVer"
+    } else {
+        Write-Host "  OK agent-browser: installed (version check skipped)"
+    }
+} else {
+    Write-Warning "Could not locate agent-browser entry point, browser automation may not work"
+}
+
+# Clean up env vars
+Remove-Item Env:\PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD -ErrorAction SilentlyContinue
+Remove-Item Env:\PLAYWRIGHT_BROWSERS_PATH -ErrorAction SilentlyContinue
+
 # ── Summary ───────────────────────────────────────────────────
 
 Write-Host ""
